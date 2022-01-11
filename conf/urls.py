@@ -17,15 +17,14 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 # from rest_framework_swagger.views import get_swagger_view
-
-import member
 from member.views import MemberViewSet
 
 router = routers.DefaultRouter()
-router.register('members', viewset=MemberViewSet)
+router.register('member', viewset=MemberViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # path('api/document', get_swagger_view(title='Rest API Document')),
-    path('api/v1/', include((router.urls, 'members'), namespace='api')),
+    # path('', include(router.urls))
+    # path('document/', get_swagger_view(title='Rest API Document')),
+    path('v1/', include((router.urls, 'member'), namespace='api')),
 ]
