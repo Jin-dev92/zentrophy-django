@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     # 'django-ninja',
     # server-app
     'member',
+    'post',
 ]
 
 MIDDLEWARE = [
