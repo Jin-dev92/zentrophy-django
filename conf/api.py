@@ -47,6 +47,6 @@ def delete_member_by_id(request, member_id: int):
 
 # post API
 @api.get("/post/{post_type}", response=List[PostListScheme], description="글 관련 데이터를 list로 가져옴. FAQ = 0, 공지사항 = 1")
-def get_post_list_by_type(request, post_type: int):
-    # qs = Post.objects.get(type=post_type)
-    return
+def get_post_list_by_type(request, post_type: PostType):
+    qs = Post.objects.get(post_type=post_type)
+    return qs
