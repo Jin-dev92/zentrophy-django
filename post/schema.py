@@ -17,8 +17,8 @@ class PostListSchema(Schema):
     content: str
     author: str
     type: int
-    is_created: datetime
-    is_updated: datetime
+    is_created: str
+    is_updated: str
 
 
 class PostInsertSchema(Schema):
@@ -26,3 +26,9 @@ class PostInsertSchema(Schema):
     content: str
     author: str  # @todo 나중에 user 와 연결 후 삭제
     type: int
+
+
+class PostModifySchema(Schema):
+    title: str
+    content: str
+    author: str  # @todo 나중에 user 와 연결 후 삭제
