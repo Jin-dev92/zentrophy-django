@@ -3,7 +3,7 @@ from ninja import NinjaAPI
 
 from member.models import Member
 from member.schema import MemberListSchema, MemberInsertScheme
-from post.constant import PostType
+from django.shortcuts import get_object_or_404
 from post.models import Post
 from post.schema import PostListScheme
 
@@ -21,35 +21,31 @@ def get_member_list(request):
 
 @api.get("/member/{member_id}", response={200: MemberListSchema}, description="id로 해당 멤버 검색")  # todo 메시지 스키마
 def get_member_by_id(request, member_id: int):
-    queryset = Member.objects.get(id=member_id)
+    queryset = get_object_or_404(Member, id=member_id)
     return queryset
 
 
 @api.post("/member", description="멤버 생성")
 def create_member(request, payload: MemberInsertScheme):
     Member.objects.create(**payload.dict())
-    # return "생성"  # todo 상태코드에 따른 response 값 스키마 작업 후 넣어주자
 
 
 @api.put("/member/{member_id}", description="멤버 수정")
 def modify_member(request, member_id: int, payload: MemberInsertScheme):
-    qs = Member.objects.get(id=member_id)
+    qs = get_object_or_404(id=member_id)
     for attr, value in payload.dict().items():
         setattr(qs, attr, value)
         qs.save()
-    return "수정"  # todo 상태코드에 따른 response 값 스키마 작업 후 넣어주자
 
 
 @api.delete("/member/{member_id}", description="멤버 삭제")
 def delete_member_by_id(request, member_id: int):
-    queryset = Member.objects.get(id=member_id)
+    queryset = get_object_or_404(Member, id=member_id)
     queryset.delete()
-    # return "삭제"  # todo 상태코드에 따른 response 값 스키마 작업 후 넣어주자
 
 
 # post API
-@api.get("/post/{post_type}", response={200: List[PostListScheme]},
-         description="글 관련 데이터를 list로 가져옴. FAQ = 0, 공지사항 = 1")
-def get_post_list_by_type(request, post_type: PostType):
-    qs = Post.objects.get(post_type=post_type)
+@api.get("/post/{type}", description="글 관련 데이터를 list로 가져옴. FAQ = 0, 공지사항 = 1", response={200: List[PostListScheme]})
+def get_post_list_by_type(request, type: int):
+    qs = get_object_or_404(Post, type=type)
     return qs

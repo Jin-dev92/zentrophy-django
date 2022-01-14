@@ -1,6 +1,6 @@
-from enum import Enum
+from django.db import models
 
 
-class PostType(Enum):
+class PostType(models.TextChoices):
     FAQ = 0,  # FAQ
     NOTICE = 1,  # 공지사항

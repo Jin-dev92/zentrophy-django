@@ -1,5 +1,3 @@
-from email.policy import default
-
 from django.db import models
 from product.constant import ProductLabel
 from product.schema import ProductDescription, VehicleColor, ProductOptions
@@ -31,11 +29,12 @@ class Product(models.Model):
     def toggle_display(self):  # 필요없을거같긴함
         self.is_display = not self.is_display
 
-    def push_product_options(self, options: ProductOptions):
-        self.product_options = options
+    # def push_product_options(self, options: ProductOptions):
+    #     self.product_options = options
+    #
+    # def remove_product_options(self, options: ProductOptions):
+    #     self.product_options = options
 
-    def remove_product_options(self, options: ProductOptions):
-        self.product_options = options
         # description = models.TextField(null=True, blank=True)  # 묶으면 좋을듯?
     # shipping_instructions = models.TextField(null=True, blank=True)
     # product_instructions = models.TextField(null=True, blank=True)
@@ -50,7 +49,7 @@ class Vehicle(models.Model):
     subsidy = models.IntegerField(default=0)  # 보조금
     extra_subsidy = models.IntegerField(default=0)  # 추가 보조금 선택 가능하게 해야됨.
     is_display = models.BooleanField(default=False)
-    color = VehicleColor # todo 리스트
+    # color = VehicleColor  # todo 리스트화
 
     # file_url
     def toggle_display(self):
