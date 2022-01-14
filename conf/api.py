@@ -1,11 +1,11 @@
 from typing import List
 from ninja import NinjaAPI
+from django.shortcuts import get_object_or_404
 
 from member.models import Member
 from member.schema import MemberListSchema, MemberInsertScheme
-from django.shortcuts import get_object_or_404
 from post.models import Post
-from post.schema import PostListScheme
+from post.schema import PostListSchema, PostInsertSchema
 
 # from ninja.responses import codes_4xx
 
@@ -45,7 +45,26 @@ def delete_member_by_id(request, member_id: int):
 
 
 # post API
-@api.get("/post/{type}", description="글 관련 데이터를 list로 가져옴. FAQ = 0, 공지사항 = 1", response={200: List[PostListScheme]})
+@api.get("/post/{type}", description="글 관련 데이터를 obj로 가져옴. FAQ = 0, 공지사항 = 1", response={200: List[PostListSchema]})
 def get_post_list_by_type(request, type: int):
     qs = get_object_or_404(Post, type=type)
     return qs
+
+
+@api.post("/post", description="글 관련 데이터 삽입")
+def create_post(request, payload: PostInsertSchema):
+    Post.objects.create(**payload.dict())
+
+
+@api.put("/post/{no}", description="글 수정")
+def update_post_list_by_type(request, payload: PostInsertSchema, no: int):
+    qs = get_object_or_404(no=no)
+    for attr, value in payload.dict().items():
+        setattr(qs, attr, value)
+        qs.save()
+
+
+@api.delete("/post/{no}", description="글 삭제")
+def delete_member_by_id(request, no: int):
+    queryset = get_object_or_404(Member, id=no)
+    queryset.delete()
