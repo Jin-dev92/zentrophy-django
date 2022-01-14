@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from member.models import Member
 from member.schema import MemberListSchema, MemberInsertScheme
 from post.models import Post
-from post.schema import PostListSchema, PostInsertSchema
+from post.schema import PostListSchema, PostInsertSchema, PostModifySchema
 
 # from ninja.responses import codes_4xx
 
@@ -57,7 +57,7 @@ def create_post(request, payload: PostInsertSchema):
 
 
 @api.put("/post/{no}", description="글 수정")
-def update_post_list_by_type(request, payload: PostInsertSchema, no: int):
+def update_post_list_by_type(request, payload: PostModifySchema, no: int):
     qs = get_object_or_404(no=no)
     for attr, value in payload.dict().items():
         setattr(qs, attr, value)
