@@ -5,7 +5,7 @@ from post.constant import PostType
 
 
 class Post(models.Model):
-    no = models.AutoField(primary_key=True)
+    # no = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200)
     content = models.TextField()
     author = models.CharField(max_length=200)
