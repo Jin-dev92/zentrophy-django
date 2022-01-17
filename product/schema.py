@@ -36,7 +36,7 @@ class VehicleColor(Schema):  # 모터사이클 색상 스키마
 class ProductInsertSchema(Schema):
     product_name: str
     product_price: int = 0
-    product_label: ProductLabel = ProductLabel['NEW']  # ProductLabel.NEW
+    product_label: ProductLabel = ProductLabel.NEW  # ProductLabel.NEW
     product_options: List[ProductOptions] = []  # 상품에 들어가는 상품 옵션, 여러개가 들어갈 수 있음.
     is_display: bool = False
     display_line: ProductDisplayLineSchema = None

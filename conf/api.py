@@ -78,7 +78,6 @@ def delete_member_by_id(request, no: int):
     queryset.delete()
 
 
-# product
-@api.post("/product", description="상품 등록 , 스키마 : ProductInsertSchema")
+@api.post("/product", description="상품 등록")
 def create_product(request, payload: ProductInsertSchema):
     Product.objects.create(**payload.dict())
