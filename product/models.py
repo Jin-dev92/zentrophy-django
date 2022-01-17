@@ -1,3 +1,4 @@
+# import orjson
 from django.db import models
 from product.constant import ProductLabel
 from product.schema import ProductDescription, VehicleColor, ProductOptions
@@ -18,12 +19,20 @@ class Product(models.Model):
     product_no = models.AutoField(primary_key=True)
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
-    product_label = models.PositiveSmallIntegerField(choices=ProductLabel.choices())
-    product_options = models.TextField
+    product_label = models.IntegerField(choices=ProductLabel.choices, default=ProductLabel.NEW)
+    product_options = models.TextField(blank=True)
     is_display = models.BooleanField(default=False)
-    display_line = models.ForeignKey(ProductDisplayLine, on_delete=models.SET_NULL, null=True)
+    display_line = models.CharField(max_length=200, null=True)
+    # display_line = models.ForeignKey(ProductDisplayLine, on_delete=models.SET_NULL, null=True)
     is_refundable = models.BooleanField(default=False)
-    description = models.TextField
+    description = models.TextField(blank=True)
+
+    # def parse_string2_json(self):
+    #     if isinstance(self.product_options, ProductOptions) | isinstance(self.description, ProductDescription):
+    #         # orjson.loads()
+    #         return
+    #     else:
+    #         raise TypeError
 
 
 # ProductDescription
@@ -51,7 +60,8 @@ class Vehicle(models.Model):
     subsidy = models.IntegerField(default=0)  # 보조금
     extra_subsidy = models.IntegerField(default=0)  # 추가 보조금 선택 가능하게 해야됨.
     is_display = models.BooleanField(default=False)
-    color : models.TextField
+    color: models.TextField  # vehicleColor
+
     # color = VehicleColor  # todo 리스트화
 
     # file_url

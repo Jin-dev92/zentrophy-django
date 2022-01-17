@@ -1,15 +1,23 @@
 from typing import List
+# package
 from ninja import NinjaAPI
 from django.shortcuts import get_object_or_404
-
-from member.models import Member
-from member.schema import MemberListSchema, MemberInsertScheme
-from post.models import Post
-from post.schema import PostListSchema, PostInsertSchema, PostModifySchema
-
 # from ninja.responses import codes_4xx
 
-api = NinjaAPI()
+# util
+from util.util import ORJSONParser
+# models & schema
+# member
+from member.models import Member
+from member.schema import MemberListSchema, MemberInsertScheme
+# post
+from post.models import Post
+from post.schema import PostListSchema, PostInsertSchema, PostModifySchema
+# product
+from product.models import Product
+from product.schema import ProductInsertSchema
+
+api = NinjaAPI(parser=ORJSONParser())
 
 
 # memberAPI
@@ -68,3 +76,9 @@ def update_post_list_by_type(request, payload: PostModifySchema, no: int):
 def delete_member_by_id(request, no: int):
     queryset = get_object_or_404(Member, id=no)
     queryset.delete()
+
+
+# product
+@api.post("/product", description="상품 등록 , 스키마 : ProductInsertSchema")
+def create_product(request, payload: ProductInsertSchema):
+    Product.objects.create(**payload.dict())
