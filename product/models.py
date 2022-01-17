@@ -18,26 +18,28 @@ class Product(models.Model):
     product_no = models.AutoField(primary_key=True)
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
-    product_label = ProductLabel
-    # product_options = List<ProductOptions> # 리스트화
+    product_label = models.PositiveSmallIntegerField(choices=ProductLabel.choices())
+    product_options = models.TextField
     is_display = models.BooleanField(default=False)
     display_line = models.ForeignKey(ProductDisplayLine, on_delete=models.SET_NULL, null=True)
     is_refundable = models.BooleanField(default=False)
-    description = ProductDescription
+    description = models.TextField
 
-    # file_url = models.FileField()
-    def toggle_display(self):  # 필요없을거같긴함
-        self.is_display = not self.is_display
 
-    # def push_product_options(self, options: ProductOptions):
-    #     self.product_options = options
-    #
-    # def remove_product_options(self, options: ProductOptions):
-    #     self.product_options = options
+# ProductDescription
+# file_url = models.FileField()
+# def toggle_display(self):  # 필요없을거같긴함
+#     self.is_display = not self.is_display
 
-        # description = models.TextField(null=True, blank=True)  # 묶으면 좋을듯?
-    # shipping_instructions = models.TextField(null=True, blank=True)
-    # product_instructions = models.TextField(null=True, blank=True)
+# def push_product_options(self, options: ProductOptions):
+#     self.product_options = options
+#
+# def remove_product_options(self, options: ProductOptions):
+#     self.product_options = options
+
+# description = models.TextField(null=True, blank=True)  # 묶으면 좋을듯?
+# shipping_instructions = models.TextField(null=True, blank=True)
+# product_instructions = models.TextField(null=True, blank=True)
 
 
 class Vehicle(models.Model):
@@ -49,6 +51,7 @@ class Vehicle(models.Model):
     subsidy = models.IntegerField(default=0)  # 보조금
     extra_subsidy = models.IntegerField(default=0)  # 추가 보조금 선택 가능하게 해야됨.
     is_display = models.BooleanField(default=False)
+    color : models.TextField
     # color = VehicleColor  # todo 리스트화
 
     # file_url
