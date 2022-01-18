@@ -1,6 +1,6 @@
 from typing import List
-
 from ninja import Schema
+# from numpy import np
 
 from product.constant import ProductOptionsLabel, ProductLabel
 
@@ -39,6 +39,17 @@ class ProductInsertSchema(Schema):
     product_label: ProductLabel = ProductLabel.NEW  # ProductLabel.NEW
     product_options: List[ProductOptions] = []  # 상품에 들어가는 상품 옵션, 여러개가 들어갈 수 있음.
     is_display: bool = False
-    display_line: ProductDisplayLineSchema = None
+    # display_line: ProductDisplayLineSchema = None
     is_refundable: bool = False
     description: ProductDescription = None
+
+
+class VehicleInsertSchema(Schema):
+    vehicle_name: str
+    zero_to_fifty: int = 0
+    max_speed: int = 0
+    max_output: int = 0
+    subsidy: int = 0
+    extra_subsidy: int = 0
+    is_display: bool = False
+    color: VehicleColor = None

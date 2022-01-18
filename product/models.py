@@ -4,9 +4,9 @@ from product.constant import ProductLabel
 from product.schema import ProductDescription, VehicleColor, ProductOptions
 
 
-class ProductDisplayLine(models.Model):  # 상품 진열 라인
-    display_line_no = models.AutoField(primary_key=True)
-    display_line_name = models.CharField(max_length=20, null=False)
+# class ProductDisplayLine(models.Model):  # 상품 진열 라인
+#     display_line_no = models.AutoField(primary_key=True)
+#     display_line_name = models.CharField(max_length=20, null=False)
 
 
 class VehicleSubsidy(models.Model):
@@ -22,33 +22,10 @@ class Product(models.Model):
     product_label = models.IntegerField(choices=ProductLabel.choices, default=ProductLabel.NEW)
     product_options = models.TextField(blank=True)
     is_display = models.BooleanField(default=False)
-    display_line = models.CharField(max_length=200, null=True)
-    # display_line = models.ForeignKey(ProductDisplayLine, on_delete=models.SET_NULL, null=True)
+    # display_line = models.TextField(null=True)
+    # display_line = models.ForeignKey(ProductDisplayLine.display_line_no, on_delete=models.SET_NULL, null=True)
     is_refundable = models.BooleanField(default=False)
     description = models.TextField(blank=True)
-
-    # def parse_string2_json(self):
-    #     if isinstance(self.product_options, ProductOptions) | isinstance(self.description, ProductDescription):
-    #         # orjson.loads()
-    #         return
-    #     else:
-    #         raise TypeError
-
-
-# ProductDescription
-# file_url = models.FileField()
-# def toggle_display(self):  # 필요없을거같긴함
-#     self.is_display = not self.is_display
-
-# def push_product_options(self, options: ProductOptions):
-#     self.product_options = options
-#
-# def remove_product_options(self, options: ProductOptions):
-#     self.product_options = options
-
-# description = models.TextField(null=True, blank=True)  # 묶으면 좋을듯?
-# shipping_instructions = models.TextField(null=True, blank=True)
-# product_instructions = models.TextField(null=True, blank=True)
 
 
 class Vehicle(models.Model):
@@ -57,13 +34,11 @@ class Vehicle(models.Model):
     zero_to_fifty = models.IntegerField(default=0)
     max_speed = models.IntegerField(default=0)
     max_output = models.IntegerField(default=0)
-    subsidy = models.IntegerField(default=0)  # 보조금
+    subsidy = models.IntegerField(default=0)  # 보조금 나중에 app으로 뺄것.
     extra_subsidy = models.IntegerField(default=0)  # 추가 보조금 선택 가능하게 해야됨.
     is_display = models.BooleanField(default=False)
-    color: models.TextField  # vehicleColor
+    color = models.JSONField
 
-    # color = VehicleColor  # todo 리스트화
-
-    # file_url
+    # color: models.TextField  # vehicleColor
     def toggle_display(self):
         self.is_display = not self.is_display
