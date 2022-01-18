@@ -1,3 +1,4 @@
+import json
 from typing import List
 # package
 from ninja import NinjaAPI
@@ -14,8 +15,8 @@ from member.schema import MemberListSchema, MemberInsertScheme
 from post.models import Post
 from post.schema import PostListSchema, PostInsertSchema, PostModifySchema
 # product
-from product.models import Product
-from product.schema import ProductInsertSchema
+from product.models import Product, Vehicle
+from product.schema import ProductInsertSchema, VehicleInsertSchema
 
 api = NinjaAPI(parser=ORJSONParser())
 
@@ -81,3 +82,16 @@ def delete_member_by_id(request, no: int):
 @api.post("/product", description="상품 등록")
 def create_product(request, payload: ProductInsertSchema):
     Product.objects.create(**payload.dict())
+
+
+@api.post("/vehicle", description="모터사이클 등록")
+def create_vehicle(request, payload: VehicleInsertSchema):
+    # print("@@@@@@@@@@@")
+    # print(payload.dict())
+    # result = payload.dict().get('color')
+    # print(result['color'])
+    # color2json = payload.dict().get('color')
+    # print(json.dumps(color2json))
+    # result = payload.dict()
+    # result.update({'color': json.dumps(result.get('color'))})
+    Vehicle.objects.create(**payload.dict())
