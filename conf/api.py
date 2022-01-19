@@ -1,12 +1,13 @@
 import json
 from typing import List
 # package
+import orjson
 from ninja import NinjaAPI
 from django.shortcuts import get_object_or_404
 # from ninja.responses import codes_4xx
 
 # util
-from util.util import ORJSONParser
+from util.util import ORJSONParser, ORJSONRenderer
 # models & schema
 # member
 from member.models import Member
@@ -18,7 +19,7 @@ from post.schema import PostListSchema, PostInsertSchema, PostModifySchema
 from product.models import Product, Vehicle
 from product.schema import ProductInsertSchema, VehicleInsertSchema
 
-api = NinjaAPI(parser=ORJSONParser())
+api = NinjaAPI(parser=ORJSONParser(), renderer=ORJSONRenderer)
 
 
 # memberAPI
@@ -86,12 +87,4 @@ def create_product(request, payload: ProductInsertSchema):
 
 @api.post("/vehicle", description="모터사이클 등록")
 def create_vehicle(request, payload: VehicleInsertSchema):
-    # print("@@@@@@@@@@@")
-    # print(payload.dict())
-    # result = payload.dict().get('color')
-    # print(result['color'])
-    # color2json = payload.dict().get('color')
-    # print(json.dumps(color2json))
-    # result = payload.dict()
-    # result.update({'color': json.dumps(result.get('color'))})
     Vehicle.objects.create(**payload.dict())
