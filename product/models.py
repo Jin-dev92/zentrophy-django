@@ -19,20 +19,18 @@ class Vehicle(models.Model):
     zero_to_fifty = models.IntegerField(default=0)
     max_speed = models.IntegerField(default=0)
     max_output = models.IntegerField(default=0)
-    # subsidy = models.IntegerField(default=0)  # 보조금 나중에 app으로 뺄것.
-    # extra_subsidy = models.IntegerField(default=0)  # 추가 보조금 선택 가능하게 해야됨.
+    able_subsidy = models.BooleanField(default=False)
+    able_extra_subsidy = models.BooleanField(default=False)
     is_display = models.BooleanField(default=False)
-    # vehicle_subsidy_id = models.OneToOneField(VehicleSubsidy,)
     # def toggle_display(self):
     #     self.is_display = not self.is_display
 
 
-class VehicleSubsidy(models.Model):
-    id = models.AutoField(primary_key=True)
-    vehicle_id = models.OneToOneField(Vehicle, on_delete=models.CASCADE)
-    subsidy_name = models.CharField(max_length=100)
-    subsidy_amount = models.IntegerField(default=0)
-    extra_subsidy = models.IntegerField(default=0)
+# class VehicleSubsidy(models.Model):
+#     id = models.AutoField(primary_key=True)
+#     subsidy_name = models.CharField(max_length=100)
+#     subsidy_amount = models.IntegerField(default=0)
+#     extra_subsidy = models.IntegerField(default=0)
 
 
 class ProductDisplayLine(models.Model):  # 상품 진열 라인
