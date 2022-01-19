@@ -52,4 +52,4 @@ class VehicleInsertSchema(Schema):
     subsidy: int = 0
     extra_subsidy: int = 0
     is_display: bool = False
-    color: VehicleColor = None
+    vehicle_color: List[VehicleColor] = None
