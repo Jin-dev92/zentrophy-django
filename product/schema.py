@@ -5,13 +5,13 @@ from ninja import Schema
 from product.constant import ProductOptionsLabel, ProductLabel
 
 
-# from product.models import ProductDisplayLine
-
 class ProductDisplayLineSchema(Schema):
+    product_id: int
     display_line_name: str
 
 
 class ProductOptions(Schema):
+    # product_id: int
     option_name: str = None  # 옵션 이름
     stock_count: int = 0  # 재고 수량
     option_description: str = None  # 옵션 설명
@@ -37,9 +37,9 @@ class ProductInsertSchema(Schema):
     product_name: str
     product_price: int = 0
     product_label: ProductLabel = ProductLabel.NEW  # ProductLabel.NEW
-    product_options: List[ProductOptions] = []  # 상품에 들어가는 상품 옵션, 여러개가 들어갈 수 있음.
+    product_options: List[ProductOptions] = None  # 상품에 들어가는 상품 옵션, 여러개가 들어갈 수 있음.
     is_display: bool = False
-    # display_line: ProductDisplayLineSchema = None
+    display_line: ProductDisplayLineSchema = None
     is_refundable: bool = False
     description: ProductDescription = None
 
@@ -49,7 +49,15 @@ class VehicleInsertSchema(Schema):
     zero_to_fifty: int = 0
     max_speed: int = 0
     max_output: int = 0
-    subsidy: int = 0
-    extra_subsidy: int = 0
     is_display: bool = False
     vehicle_color: List[VehicleColor] = None
+
+
+class ProductListSchema(Schema):
+    id: int
+    product_name: str
+    product_price: int
+    product_label: str
+    is_display: bool
+    is_refundable: bool
+    description: ProductDescription
