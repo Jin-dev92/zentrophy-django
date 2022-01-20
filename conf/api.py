@@ -102,8 +102,6 @@ def get_product_list_by_id(request, id: int):
 @api.post("/product", description="상품 등록")
 def create_product(request, payload: ProductInsertSchema):
     product = payload.dict()
-    print("@@@@@@@@@")
-    print(product['description'])
     product_queryset = Product.objects.create(
         product_name=product['product_name'],
         product_price=product['product_price'],
