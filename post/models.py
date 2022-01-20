@@ -1,4 +1,3 @@
-# import Choices as Choices
 from django.db import models
 from post.constant import PostType
 
@@ -16,4 +15,4 @@ class Post(TimeStampModel):
     title = models.CharField(max_length=200)
     content = models.TextField()
     author = models.CharField(max_length=200)
-    type = models.PositiveSmallIntegerField(choices=PostType.choices, default=PostType.NOTICE)
+    post_type = models.IntegerField(choices=PostType.choices, default=PostType.NOTICE)

@@ -22,9 +22,6 @@ class Vehicle(models.Model):
     able_subsidy = models.BooleanField(default=False)
     able_extra_subsidy = models.BooleanField(default=False)
     is_display = models.BooleanField(default=False)
-    # def toggle_display(self):
-    #     self.is_display = not self.is_display
-
 
 # class VehicleSubsidy(models.Model):
 #     id = models.AutoField(primary_key=True)
@@ -35,11 +32,11 @@ class Vehicle(models.Model):
 
 class ProductDisplayLine(models.Model):  # 상품 진열 라인
     id = models.AutoField(primary_key=True)
-    product_id = models.ForeignKey(Product, on_delete=models.CASCADE, null=False, default=None)
+    product_id = models.OneToOneField(Product, on_delete=models.CASCADE, null=False)
     display_line_name = models.CharField(max_length=20, null=False)
 
 
-class ProductOptionsModel(models.Model):
+class ProductOptions(models.Model):
     id = models.AutoField(primary_key=True)
     product_id = models.ForeignKey(Product, on_delete=models.CASCADE, null=False)
     option_name: models.CharField(max_length=200)
@@ -48,7 +45,8 @@ class ProductOptionsModel(models.Model):
     is_apply = models.BooleanField(default=False)
     product_options_label = models.PositiveSmallIntegerField(
         choices=ProductOptionsLabel.choices,
-        default=ProductOptionsLabel.NORMAL
+        default=ProductOptionsLabel.NORMAL,
+        help_text="0 : 일반형, 1 : 입력형, 2: 해당 없음"
     )
 
     class Meta:  # 이 옵션을 선언하면 해당 모델은 따로 테이블을 만들지 않는다.
