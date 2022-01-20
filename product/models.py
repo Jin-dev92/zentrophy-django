@@ -3,14 +3,20 @@ from django.db import models
 from product.constant import ProductLabel, ProductOptionsLabel
 
 
+class ProductDisplayLine(models.Model):  # 상품 진열 라인
+    id = models.AutoField(primary_key=True)
+    display_line_name = models.CharField(max_length=20, null=False)
+
+
 class Product(models.Model):
     id = models.AutoField(primary_key=True)
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
     product_label = models.PositiveSmallIntegerField(choices=ProductLabel.choices, default=ProductLabel.NEW)
+    product_display_line_id = models.ForeignKey(ProductDisplayLine, on_delete=models.SET_DEFAULT, default=0)
     is_display = models.BooleanField(default=False)
     is_refundable = models.BooleanField(default=False)
-    description = models.JSONField
+    description = models.JSONField(default=dict)
 
 
 class Vehicle(models.Model):
@@ -23,17 +29,12 @@ class Vehicle(models.Model):
     able_extra_subsidy = models.BooleanField(default=False)
     is_display = models.BooleanField(default=False)
 
+
 # class VehicleSubsidy(models.Model):
 #     id = models.AutoField(primary_key=True)
 #     subsidy_name = models.CharField(max_length=100)
 #     subsidy_amount = models.IntegerField(default=0)
 #     extra_subsidy = models.IntegerField(default=0)
-
-
-class ProductDisplayLine(models.Model):  # 상품 진열 라인
-    id = models.AutoField(primary_key=True)
-    product_id = models.OneToOneField(Product, on_delete=models.CASCADE, null=False)
-    display_line_name = models.CharField(max_length=20, null=False)
 
 
 class ProductOptions(models.Model):
@@ -53,7 +54,7 @@ class ProductOptions(models.Model):
         abstract = True
 
 
-class VehicleColorModel(models.Model):
+class VehicleColor(models.Model):
     id: models.AutoField(primary_key=True)
     vehicle_id: models.ForeignKey(Vehicle, on_delete=models.CASCADE, null=True)
     color_name: models.CharField(max_length=20)
