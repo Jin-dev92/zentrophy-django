@@ -16,8 +16,9 @@ from member.schema import MemberListSchema, MemberInsertScheme
 from post.models import Post
 from post.schema import PostListSchema, PostInsertSchema, PostModifySchema
 # product
-from product.models import Product, Vehicle, ProductOptions
-from product.schema import ProductInsertSchema, VehicleInsertSchema, ProductListSchema
+from product.models import Product, Vehicle, ProductOptions, ProductDisplayLine
+from product.schema import ProductInsertSchema, VehicleInsertSchema, ProductListSchema, ProductDisplayInsertSchema, \
+    ProductDisplayLineSchema, VehicleListSchema
 
 api = NinjaAPI(parser=ORJSONParser())
 
@@ -101,11 +102,14 @@ def get_product_list_by_id(request, id: int):
 @api.post("/product", description="상품 등록")
 def create_product(request, payload: ProductInsertSchema):
     product = payload.dict()
+    print("@@@@@@@@@")
+    print(product['description'])
     product_queryset = Product.objects.create(
         product_name=product['product_name'],
         product_price=product['product_price'],
         product_label=product['product_label'],
         is_display=product['is_display'],
+        product_display_line_id=product['product_display_line_id'],
         is_refundable=product['is_refundable'],
         description=product['description']
     )
@@ -121,10 +125,33 @@ def create_product(request, payload: ProductInsertSchema):
         )
 
 
+# display_line
+@api.get("/display_line", description="상품 진열 라인 조회", response={200: List[ProductDisplayLineSchema]})
+def get_display_line_list(request):
+    return ProductDisplayLine.objects.all()
+
+
+@api.post("/display_line", description="상품 진열 라인 등록")
+def create_display_line(request, payload: ProductDisplayInsertSchema):
+    ProductDisplayLine.objects.create(
+        display_line_name=payload.dict()['display_line_name']
+    )
+
+
 # vehicle
+@api.get("/vehicle", description="모터사이클 리스트", response=List[VehicleListSchema])
+def get_vehicle_list(request):
+    return Vehicle.objects.all()
+
+
+@api.get("/vehicle/{id}", description="모터사이클 리스트", response=List[VehicleListSchema])
+def get_vehicle_list_by_Id(request, id: int):
+    return get_object_or_404(Vehicle, id=id)
+
+
 @api.post("/vehicle", description="모터사이클 등록")
 def create_vehicle(request, payload: VehicleInsertSchema):
-    Vehicle.objects.create(**payload.dict())
+    vehicle = payload.dict()
 
 
 # placement
