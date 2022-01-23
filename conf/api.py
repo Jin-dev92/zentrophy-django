@@ -5,9 +5,10 @@ from django.shortcuts import get_object_or_404
 # from ninja.responses import codes_4xx
 
 # util
+from placement.constant import PlacementType
 from placement.models import Placement
-from placement.schema import PlacementInsertSchema, PlacementModifySchema
-from util.util import ORJSONParser, ORJSONRenderer
+from placement.schema import PlacementInsertSchema, PlacementModifySchema, PlacementListSchema
+from util.util import ORJSONParser
 # models & schema
 # member
 from member.models import Member
@@ -16,7 +17,7 @@ from member.schema import MemberListSchema, MemberInsertScheme
 from post.models import Post
 from post.schema import PostListSchema, PostInsertSchema, PostModifySchema
 # product
-from product.models import Product, Vehicle, ProductOptions, ProductDisplayLine
+from product.models import Product, Vehicle, ProductOptions, ProductDisplayLine, VehicleColor
 from product.schema import ProductInsertSchema, VehicleInsertSchema, ProductListSchema, ProductDisplayInsertSchema, \
     ProductDisplayLineSchema, VehicleListSchema
 
@@ -101,26 +102,32 @@ def get_product_list_by_id(request, id: int):
 
 @api.post("/product", description="상품 등록")
 def create_product(request, payload: ProductInsertSchema):
-    product = payload.dict()
+    # product = payload.dict()
+    # product_options
+    product = {k: v for k, v in payload.dict().items() if k not in 'product_options'}
+    product_options = payload.dict()['product_options']
+    # print(product)
     product_queryset = Product.objects.create(
-        product_name=product['product_name'],
-        product_price=product['product_price'],
-        product_label=product['product_label'],
-        is_display=product['is_display'],
-        product_display_line_id=product['product_display_line_id'],
-        is_refundable=product['is_refundable'],
-        description=product['description']
+        **product
+        # product_name=product['product_name'],
+        # product_price=product['product_price'],
+        # product_label=product['product_label'],
+        # is_display=product['is_display'],
+        # product_display_line_id=product['product_display_line_id'],
+        # is_refundable=product['is_refundable'],
+        # description=product['description']
     )
-
-    for product_option in product['product_options']:
-        ProductOptions.objects.create(
-            product_id=product_queryset.id,
-            option_name=product_option['option_name'],
-            stock_count=product_option['stock_count'],
-            option_description=product_option['option_description'],
-            is_apply=product_option['is_apply'],
-            product_options_label=product_option['product_options_label']
-        )
+    for _ in range(product_options):
+        ProductOptions.objects.create(product_id=product_queryset.id)
+    # for product_option in product_options:
+    #     ProductOptions.objects.create(
+    #         product_id=product_queryset.id,
+    #         # option_name=product_option['option_name'],
+    #         # stock_count=product_option['stock_count'],
+    #         # option_description=product_option['option_description'],
+    #         # is_apply=product_option['is_apply'],
+    #         # product_options_label=product_option['product_options_label']
+    #     )
 
 
 # display_line
@@ -131,25 +138,54 @@ def get_display_line_list(request):
 
 @api.post("/display_line", description="상품 진열 라인 등록")
 def create_display_line(request, payload: ProductDisplayInsertSchema):
+    display_line = payload.dict()
     ProductDisplayLine.objects.create(
-        display_line_name=payload.dict()['display_line_name']
+        display_line_name=display_line['display_line_name']
     )
 
 
+@api.put("/display_line/{id}")
+def modify_display_line_by_id(request, payload: ProductDisplayInsertSchema, id: int):
+    qs = get_object_or_404(ProductDisplayLine, id=id)
+    for attr, value in payload.dict().items():
+        setattr(qs, attr, value)
+        qs.save()
+
+
+@api.delete("/display_line/{id}")
+def delete_display_line_by_id(request, id: int):
+    get_object_or_404(ProductDisplayLine, id=id).delete()
+
+
 # vehicle
-@api.get("/vehicle", description="모터사이클 리스트", response=List[VehicleListSchema])
+@api.get("/vehicle", description="모터사이클 리스트", response={200: List[VehicleListSchema]})
 def get_vehicle_list(request):
     return Vehicle.objects.all()
 
 
-@api.get("/vehicle/{id}", description="모터사이클 리스트", response=List[VehicleListSchema])
-def get_vehicle_list_by_Id(request, id: int):
+@api.get("/vehicle/{id}", description="id로 모터사이클 리스트", response={200: List[VehicleListSchema]})
+def get_vehicle_list_by_id(request, id: int):
     return get_object_or_404(Vehicle, id=id)
 
 
 @api.post("/vehicle", description="모터사이클 등록")
 def create_vehicle(request, payload: VehicleInsertSchema):
-    vehicle = payload.dict()
+    vehicle = {k: v for k, v in payload.dict().items() if k not in 'vehicle_color'}
+    vehicle_color = payload.dict()['vehicle_color']
+    vehicle_queryset = Vehicle.objects.create(**vehicle)
+    for _ in range(vehicle_color):
+        VehicleColor.objects.create(vehicle_id=vehicle_queryset.id)
+        # todo 이미지 파일 저장
+
+
+@api.get("/place/${placement_type}", description="타입으로 플레이스 리스트 가져오기")
+def get_placement_list_by_type(request, placement_type: PlacementType):
+    return get_object_or_404(Placement, placement_type=placement_type)
+
+
+@api.get("/place/${id}", description="플레이스 id로 해당 플레이스 정보 가져오기", response={200: List[PlacementListSchema]})
+def get_placement_list_by_id(request, id: int):
+    return get_object_or_404(id=id)
 
 
 # placement

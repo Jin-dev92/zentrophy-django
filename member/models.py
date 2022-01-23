@@ -9,3 +9,8 @@ class Member(models.Model):
     user_mail = models.EmailField(max_length=200, unique=True, null=False)
     phone_number = models.CharField(max_length=12, null=False)
     address = models.CharField(max_length=200, null=False)
+# class social(models.Model):
+#     id = model.
+#
+#     class Meta:
+#         abstract: True

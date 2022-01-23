@@ -13,7 +13,12 @@ class Product(models.Model):
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
     product_label = models.PositiveSmallIntegerField(choices=ProductLabel.choices, default=ProductLabel.NEW)
-    product_display_line_id = models.ForeignKey(ProductDisplayLine, on_delete=models.SET_DEFAULT, default=0)
+    product_display_line_id = models.ForeignKey(
+        ProductDisplayLine,
+        default=None,
+        null=True,
+        on_delete=models.SET_DEFAULT
+    )
     is_display = models.BooleanField(default=False)
     is_refundable = models.BooleanField(default=False)
     description = models.JSONField(default=dict)
