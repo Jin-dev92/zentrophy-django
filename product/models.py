@@ -12,7 +12,7 @@ class Product(models.Model):
     id = models.AutoField(primary_key=True)
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
-    product_label = models.PositiveSmallIntegerField(choices=ProductLabel.choices, default=ProductLabel.NEW)
+    product_label = models.PositiveSmallIntegerField(default=ProductLabel.NEW)
     product_display_line_id = models.ForeignKey(
         ProductDisplayLine,
         default=None,
@@ -50,7 +50,6 @@ class ProductOptions(models.Model):
     option_description = models.TextField(blank=True)
     is_apply = models.BooleanField(default=False)
     product_options_label = models.PositiveSmallIntegerField(
-        choices=ProductOptionsLabel.choices,
         default=ProductOptionsLabel.NORMAL,
         help_text="0 : 일반형, 1 : 입력형, 2: 해당 없음"
     )
