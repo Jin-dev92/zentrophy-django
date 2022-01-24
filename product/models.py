@@ -58,10 +58,7 @@ class Product(TimeStampModel):
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
     product_label = models.PositiveSmallIntegerField(default=ProductLabel.NEW)
-    # product_display_line = models.ForeignKey('product.ProductDisplayLine', default=None, on_delete=models.SET_NULL,
-    #                                          null=True)
-    # product_options = models.ForeignKey('product.ProductOptions', on_delete=models.SET_NULL, null=True)
-
+    product_display_line_id = models.ManyToManyField('product.ProductDisplayLine')
     is_display = models.BooleanField(default=False)
     is_refundable = models.BooleanField(default=False)
     description = models.JSONField(default=dict)
