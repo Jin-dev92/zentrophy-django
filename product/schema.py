@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 from ninja import Schema
 # from numpy import np
@@ -14,13 +15,28 @@ class ProductDisplayInsertSchema(Schema):
     display_line_name: str
 
 
-class ProductOptions(Schema):
+class ProductImageListSchema(Schema):
+    # id: int
+    # product_options_id: int
+    origin_image: str = None
+
+
+class ProductOptionsListSchema(Schema):
     product_id: int
     option_name: str = None  # 옵션 이름
     stock_count: int = 0  # 재고 수량
     option_description: str = None  # 옵션 설명
     is_apply: bool = False  # 옵션 적용 여부
-    product_options_label: ProductOptionsLabel  # 기본형, 입력형, 옵션없음
+    product_options_label: ProductOptionsLabel = ProductOptionsLabel.NORMAL  # 기본형, 입력형, 옵션없음
+    product_image: List[ProductImageListSchema] = None
+
+
+class ProductOptionsInsertSchema(Schema):
+    option_name: str  # 옵션 이름
+    stock_count: int  # 재고 수량
+    option_description: str = None  # 옵션 설명
+    is_apply: bool = False  # 옵션 적용 여부
+    product_options_label: ProductOptionsLabel = ProductOptionsLabel.NORMAL  # 기본형, 입력형, 옵션없음
 
 
 class ProductDescription(Schema):
@@ -41,9 +57,9 @@ class ProductInsertSchema(Schema):
     product_name: str
     product_price: int = 0
     product_label: ProductLabel = ProductLabel.NEW  # ProductLabel.NEW
-    product_options: List[ProductOptions] = None  # 상품에 들어가는 상품 옵션, 여러개가 들어갈 수 있음.
+    product_options: List[ProductOptionsInsertSchema] = None  # 상품에 들어가는 상품 옵션, 여러개가 들어갈 수 있음.
     is_display: bool = False
-    product_display_line_id: int = None
+    product_display_line_id: int = 0
     is_refundable: bool = False
     description: ProductDescription = None
 
@@ -77,4 +93,8 @@ class ProductListSchema(Schema):
     product_label: str
     is_display: bool
     is_refundable: bool
-    description: ProductDescription
+    description: ProductDescription = None
+    product_display_line_id: int = None
+    product_options: List[ProductOptionsListSchema] = None
+    is_created: datetime
+    is_updated: datetime

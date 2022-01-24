@@ -1,6 +1,6 @@
 from django.db import models
 from post.constant import PostType
-from util.util import TimeStampModel
+from util.models import TimeStampModel
 
 
 class Post(TimeStampModel):
