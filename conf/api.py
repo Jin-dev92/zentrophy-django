@@ -1,6 +1,8 @@
+from pprint import pprint
 from typing import List
 # package
-from ninja import NinjaAPI
+from ninja import NinjaAPI, File
+from ninja.files import UploadedFile
 from django.shortcuts import get_object_or_404
 # from ninja.responses import codes_4xx
 
@@ -8,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from placement.constant import PlacementType
 from placement.models import Placement
 from placement.schema import PlacementInsertSchema, PlacementModifySchema, PlacementListSchema
+from product.constant import ProductListSort
 from util.util import ORJSONParser
 # models & schema
 # member
@@ -17,11 +20,12 @@ from member.schema import MemberListSchema, MemberInsertScheme
 from post.models import Post
 from post.schema import PostListSchema, PostInsertSchema, PostModifySchema
 # product
-from product.models import Product, Vehicle, ProductOptions, ProductDisplayLine, VehicleColor
+from product.models import Product, Vehicle, ProductOptions, ProductDisplayLine, VehicleColor, ProductImage
 from product.schema import ProductInsertSchema, VehicleInsertSchema, ProductListSchema, ProductDisplayInsertSchema, \
     ProductDisplayLineSchema, VehicleListSchema
 
 api = NinjaAPI(parser=ORJSONParser())
+current_product_sort_state = ProductListSort.UPDATE_AT
 
 
 # member
@@ -88,46 +92,52 @@ def update_post_list_by_id(request, payload: PostModifySchema, id: int):
 def delete_post_by_id(request, id: int):
     get_object_or_404(Post, id=id).delete()
 
+    # UPDATE_AT = 0
+    # SALE = 1
+    # STOCK_COUNT = 2
+    # DISPLAY_LINE = 3
+
 
 # product
-@api.get("/product", description="상품 리스트 가져오기", response={200: List[ProductListSchema]})
-def get_product_list(request):
-    return Product.objects.all()
+@api.get("/product",
+         description="상품 리스트 가져오기 sort 등록순: 0, 판매순 : 1 , 재고수량순: 2, 진열 라인 순: 3",
+         response={200: List[ProductListSchema]},
+         )
+def get_product_list(request, sort: ProductListSort):
+    field_name = None
+    if sort == ProductListSort.UPDATE_AT:
+        field_name = "is_created"
+    elif sort == ProductListSort.SALE:
+        field_name = "sale_count"
+    elif sort == ProductListSort.STOCK_COUNT:
+        field_name = "stock_count"
+    elif sort == ProductListSort.DISPLAY_LINE:
+        field_name = "product_display_line_id"
+
+    if current_product_sort_state == sort:
+        field_name = "-" + field_name
+        # current_product_sort_state.value = sort
+
+    return Product.objects.all().order_by(field_name)
 
 
-@api.get("/product/{id}", description="해당 상품 리스트 가져오기", response={200: List[ProductListSchema]})
+@api.get("/product/{id}",
+         description="해당 상품 가져오기",
+         response={200: ProductListSchema})
 def get_product_list_by_id(request, id: int):
     get_object_or_404(Product, id=id)
 
 
 @api.post("/product", description="상품 등록")
-def create_product(request, payload: ProductInsertSchema):
-    # product = payload.dict()
-    # product_options
+def create_product(request, payload: ProductInsertSchema, files: List[UploadedFile] = File(...)):
     product = {k: v for k, v in payload.dict().items() if k not in 'product_options'}
     product_options = payload.dict()['product_options']
-    # print(product)
-    product_queryset = Product.objects.create(
-        **product
-        # product_name=product['product_name'],
-        # product_price=product['product_price'],
-        # product_label=product['product_label'],
-        # is_display=product['is_display'],
-        # product_display_line_id=product['product_display_line_id'],
-        # is_refundable=product['is_refundable'],
-        # description=product['description']
-    )
-    for _ in range(product_options):
-        ProductOptions.objects.create(product_id=product_queryset.id)
-    # for product_option in product_options:
-    #     ProductOptions.objects.create(
-    #         product_id=product_queryset.id,
-    #         # option_name=product_option['option_name'],
-    #         # stock_count=product_option['stock_count'],
-    #         # option_description=product_option['option_description'],
-    #         # is_apply=product_option['is_apply'],
-    #         # product_options_label=product_option['product_options_label']
-    #     )
+    product_queryset = Product.objects.create(**product)
+
+    for _ in range(product_options):  # 프로덕트 옵션 저장
+        product_options_queryset = ProductOptions.objects.create(product_id=product_queryset.id)
+        for _ in range(files):
+            ProductImage.objects.create(product_options_id=product_options_queryset.id)
 
 
 # display_line
