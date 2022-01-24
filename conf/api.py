@@ -1,11 +1,10 @@
-from pprint import pprint
 from typing import List
 # package
 from ninja import NinjaAPI, File
 from ninja.files import UploadedFile
 from django.shortcuts import get_object_or_404
 # from ninja.responses import codes_4xx
-
+from django.db import transaction
 # util
 from placement.constant import PlacementType
 from placement.models import Placement
@@ -129,15 +128,24 @@ def get_product_list_by_id(request, id: int):
 
 
 @api.post("/product", description="상품 등록")
+@transaction.atomic(using='default')
 def create_product(request, payload: ProductInsertSchema, files: List[UploadedFile] = File(...)):
-    product = {k: v for k, v in payload.dict().items() if k not in 'product_options'}
+    product = {k: v for k, v in payload.dict().items() if k not in {'product_options', 'product_display_line_id'}}
     product_options = payload.dict()['product_options']
-    product_queryset = Product.objects.create(**product)
-
-    for _ in range(product_options):  # 프로덕트 옵션 저장
-        product_options_queryset = ProductOptions.objects.create(product_id=product_queryset.id)
-        for _ in range(files):
-            ProductImage.objects.create(product_options_id=product_options_queryset.id)
+    print("@")
+    try:
+        with transaction.atomic():
+            product_queryset = Product.objects.create(**product)
+            product_queryset.product_display_line_id.add(payload.dict().get("product_display_line_id"))
+            # print(product_queryset.objects.values())
+            for _ in range(product_options):  # 프로덕트 옵션 저장
+                product_options_queryset = ProductOptions.objects.create(product_id=product_queryset.id)
+                for _ in range(files):
+                    ProductImage.objects.create(product_options_id=product_options_queryset.id)
+    except Exception:
+        print(Exception)
+        return "fail"
+    return "success"
 
 
 # display_line
