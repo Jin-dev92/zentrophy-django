@@ -45,7 +45,8 @@ class ProductDescription(Schema):
     refund_instructions: str = None  # 환불 정책
 
 
-class VehicleColor(Schema):  # 모터사이클 색상 스키마
+class VehicleColor(Schema):  # 모터사이클 색상 스키마\
+    # vehicle : str
     color_name: str
     stock_count: int = 0
     hex_code: str = None
@@ -73,6 +74,7 @@ class VehicleListSchema(Schema):
     able_subsidy: bool
     able_extra_subsidy: bool
     is_display: bool
+    vehicle_color: List[VehicleColor] = None
 
 
 class VehicleInsertSchema(Schema):

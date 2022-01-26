@@ -10,14 +10,36 @@ class ProductDisplayLine(models.Model):  # 상품 진열 라인
     id = models.AutoField(primary_key=True)
     display_line_name = models.CharField(max_length=20, null=False)
 
+    def __str__(self):
+        return self.display_line_name
+
 
 class ProductImage(TimeStampModel):
     id = models.AutoField(primary_key=True)
     product = models.ForeignKey('product.Product', on_delete=models.CASCADE, null=True,
-                                related_name='product_image_product')
+                                related_name='product_image')
     product_options = models.ForeignKey('product.ProductOptions', on_delete=models.CASCADE, null=True,
-                                        related_name='product_image_product_options')
+                                        related_name='product_image_options')
     origin_image = ImageField(upload_to="thumb/%Y/%M/%D/%HH/%MM/%SS" + str(int(random.random() * 100000)))
+
+    def __str__(self):
+        return self.origin_image.name
+
+    def upload_to_server(self):
+        print(self.origin_image)
+
+    def get_image_name(self):
+        return self.origin_image.name
+
+
+class VehicleImage(TimeStampModel):
+    id = models.AutoField(primary_key=True)
+    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True,
+                                related_name='vehicle_image')
+    origin_image = ImageField(upload_to="thumb/%Y/%M/%D/%HH/%MM/%SS" + str(int(random.random() * 100000)))
+
+    def __str__(self):
+        return self.origin_image.name
 
     def upload_to_server(self):
         print(self.origin_image)
@@ -29,7 +51,7 @@ class ProductImage(TimeStampModel):
 class ProductOptions(models.Model):
     id = models.AutoField(primary_key=True)
     product = models.ForeignKey("product.Product", on_delete=models.CASCADE, null=True, related_name='product_options')
-    option_name: models.CharField(max_length=200)
+    option_name = models.CharField(max_length=200, blank=True)
     stock_count = models.IntegerField(default=0)
     option_description = models.TextField(blank=True)
     is_apply = models.BooleanField(default=False)
@@ -38,6 +60,9 @@ class ProductOptions(models.Model):
         help_text="0 : 일반형, 1 : 입력형, 2: 해당 없음"
     )
     sale_count = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.option_name
 
     def sale(self):
         self.stock_count = self.stock_count - 1
@@ -48,13 +73,16 @@ class ProductOptions(models.Model):
 
 
 class VehicleColor(models.Model):
-    id: models.AutoField(primary_key=True)
-    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True)
-    color_name: models.CharField(max_length=20)
-    stock_count: models.IntegerField(default=0)
-    hex_code: models.CharField(max_length=7)
-    on_sale: models.BooleanField(default=False)
-    price: models.IntegerField(default=0)
+    id = models.AutoField(primary_key=True)
+    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True, related_name='vehicle_color')
+    color_name = models.CharField(max_length=20, blank=True)
+    stock_count = models.IntegerField(default=0)
+    hex_code = models.CharField(max_length=7, blank=True)
+    on_sale = models.BooleanField(default=False)
+    price = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.color_name
 
 
 class Product(TimeStampModel):
@@ -67,6 +95,9 @@ class Product(TimeStampModel):
     is_refundable = models.BooleanField(default=False)
     description = models.JSONField(default=dict)
 
+    def __str__(self):
+        return self.product_name
+
 
 class Vehicle(models.Model):
     id = models.AutoField(primary_key=True)
@@ -77,3 +108,6 @@ class Vehicle(models.Model):
     able_subsidy = models.BooleanField(default=False)
     able_extra_subsidy = models.BooleanField(default=False)
     is_display = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.vehicle_name

@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'sorl.thumbnail',
     # server-app
-    'member',
     'post',
     'product',
     'placement',

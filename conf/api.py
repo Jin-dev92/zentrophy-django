@@ -28,10 +28,10 @@ current_product_sort_state = ProductListSort.UPDATE_AT
 
 
 # # member
-# @api.get("/member", response={200: List[MemberListSchema]}, description="DB 내의 모든 멤버 list")
-# def get_member_list(request):
-#     queryset = Member.objects.all()
-#     return queryset
+# @api.get("/user")
+# def get_user_list(request):
+# queryset = auth.User.objects.all()
+# return User
 #
 #
 # @api.get("/member/{member_id}", response={200: MemberListSchema}, description="id로 해당 멤버 검색")  # todo 메시지 스키마
@@ -123,7 +123,7 @@ def get_product_list(request, sort: ProductListSort):
     return Product.objects.prefetch_related(
         'product_options',
         'product_display_line',
-        'product_image_product').all()
+        'product_image').all()
 
 
 @api.get("/product/{id}",
@@ -147,15 +147,20 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
             product_queryset.product_display_line_id.add(product_display_line.values()[0].get("id"))
             # ManyToManyField는 이런식으로 넣어줘야 됨
             for product_option in product_options:  # 프로덕트 옵션 저장
-                print("product_queryset.id : ", product_queryset.id)
                 product_options_queryset = ProductOptions.objects.create(
-                    product=Product.objects.get(id=product_queryset.id))
+                    product=Product.objects.get(id=product_queryset.id),
+                    option_name=product_option.option_name,
+                    stock_count=product_option.stock_count,
+                    option_description=product_option.option_description,
+                    is_apply=product_option.is_apply,
+                    product_options_label=product_option.product_options_label,
+                )
                 for file in files:
                     ProductImage.objects.create(
                         product=Product.objects.get(id=product_queryset.id),
                         product_options=ProductOptions.objects.get(id=product_options_queryset.id))
+
     except Exception:
-        print(Exception)
         return "fail : " + Exception
     return "success"
 
@@ -194,47 +199,89 @@ def delete_display_line_by_id(request, id: int):
 # vehicle
 @api.get("/vehicle", description="모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"])
 def get_vehicle_list(request):
-    return Vehicle.objects.all()
+    result = Vehicle.objects.prefetch_related('vehicle_color').all()
+    return result
 
 
 @api.get("/vehicle/{id}", description="id로 모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"])
 def get_vehicle_list_by_id(request, id: int):
-    return get_object_or_404(Vehicle, id=id)
+    return get_object_or_404(Vehicle, id=id).objects.prefetch_related('vehicle_color').all()
 
 
+@transaction.atomic(using='default')
 @api.post("/vehicle", description="모터사이클 등록", tags=["vehicle"])
 def create_vehicle(request, payload: VehicleInsertSchema):
     vehicle = {k: v for k, v in payload.dict().items() if k not in 'vehicle_color'}
-    vehicle_color = payload.dict()['vehicle_color']
-    vehicle_queryset = Vehicle.objects.create(**vehicle)
-    for _ in range(vehicle_color):
-        VehicleColor.objects.create(vehicle=vehicle_queryset.id)
-        # todo 이미지 파일 저장
+    vehicle_color = payload.dict().get('vehicle_color')
+    try:
+        with transaction.atomic():
+            vehicle_queryset = Vehicle.objects.create(**vehicle)
+            for color in vehicle_color:
+                VehicleColor.objects.create(
+                    vehicle=Vehicle.objects.get(id=vehicle_queryset.id),
+                    color_name=color['color_name'],
+                    stock_count=color['stock_count'],
+                    hex_code=color['hex_code'],
+                    on_sale=color['on_sale'],
+                    price=color['price']
+                )
+                # vehicle_queryset.vehicle_color_set.add(vehicle_color_queryset)
+    except Exception as e:
+        print(e)
 
 
-@api.get("/place/${placement_type}", description="타입으로 플레이스 리스트 가져오기", tags=["vehicle"])
-def get_placement_list_by_type(request, placement_type: PlacementType):
-    return get_object_or_404(Placement, placement_type=placement_type)
+@api.put("/vehicle/{id}", description="모터사이클 수정", tags=["vehicle"])
+def modify_vehicle(request, payload: VehicleInsertSchema, id: int):
+    qs = get_object_or_404(Vehicle, id=id).objects.prefetch_related('vehicle_color')
+    # vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
+    # vehicle_color = payload.dict().get('vehicle_color')
+    qs.update(**payload.dict())
+    # .objects.update(**payload.dict())
+    # for attr, value in payload.dict().items():
+    #     setattr(qs, attr, value)
+    # qs.save()
+    return id
 
 
-@api.get("/place/${id}", description="플레이스 id로 해당 플레이스 정보 가져오기", response={200: List[PlacementListSchema]},
-         tags=["vehicle"])
-def get_placement_list_by_id(request, id: int):
-    return get_object_or_404(id=id)
+@api.delete("/vehicle/{id}", description="모터사이클 수정", tags=["vehicle"])
+def delete_vehicle(id: int):
+    get_object_or_404(Vehicle, id=id).delete()
+
+
+@api.delete("/vehicle_color/{id}", description="모터사이클 수정", tags=["vehicle"])
+def delete_vehicle_color(id: int):
+    get_object_or_404(VehicleColor, id=id).delete()
 
 
 # placement
-@api.post("/place", description="플레이스 생성", tags=["place"])
+@api.get("/place/${placement_type}",
+         description="타입으로 플레이스 리스트 가져오기",
+         tags=["place"],
+         response={200: List[PlacementListSchema]}
+         )
+def get_placement_list_by_type(request, placement_type: PlacementType):
+    print(get_object_or_404(Placement, placement_type=placement_type))
+    # get_object_or_404(Placement, placement_type=placement_type)
+    # return
+
+
+@api.post("/place", description="플레이스 생성, # operation_start,operation_end hh:mm 형식으로 보내주세요 다른 형식도 되긴할듯", tags=["place"])
 def create_placement(request, payload: PlacementInsertSchema):
     Placement.objects.create(**payload.dict())
 
 
+@api.get("/place/${id}", description="플레이스 id로 해당 플레이스 정보 가져오기", response={200: List[PlacementListSchema]},
+         tags=["place"])
+def get_placement_list_by_id(request, id: int):
+    return get_object_or_404(id=id)
+
+
 @api.put("/place/{id}", description="플레이스 수정", tags=["place"])
 def modify_placement(request, payload: PlacementModifySchema, id: int):
-    qs = get_object_or_404(Placement, id=id)
-    for attr, value in payload.dict().items():
-        setattr(qs, attr, value)
-        qs.save()
+    get_object_or_404(Placement, id=id).objects.update(*payload.dict())
+    # for attr, value in payload.dict().items():
+    #     setattr(qs, attr, value)
+    #     qs.save()
 
 
 @api.delete("/place/{id}", description="플레이스 삭제", tags=["place"])
