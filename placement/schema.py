@@ -1,4 +1,5 @@
-from enum import IntEnum
+# from datetime import datetime, date, time
+from datetime import time
 
 from ninja import Schema
 
@@ -11,8 +12,8 @@ class PlacementListSchema(Schema):
     placement_owner: str
     placement_address: str
     placement_type: PlacementType
-    operation_start: str
-    operation_end: str
+    operation_start: time
+    operation_end: time
     operation_state: OperationState
 
 
@@ -21,8 +22,8 @@ class PlacementInsertSchema(Schema):
     placement_owner: str
     placement_address: str
     placement_type: PlacementType
-    operation_start: str
-    operation_end: str
+    operation_start: time
+    operation_end: time
     operation_state: OperationState
 
 
@@ -31,6 +32,6 @@ class PlacementModifySchema(Schema):
     placement_owner: str
     placement_address: str
     placement_type: PlacementType
-    operation_start: str
-    operation_end: str
+    operation_start: time
+    operation_end: time
     operation_state: OperationState

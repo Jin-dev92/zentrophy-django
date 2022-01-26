@@ -9,3 +9,6 @@ class Post(TimeStampModel):
     content = models.TextField()
     author = models.CharField(max_length=200)
     post_type = models.PositiveSmallIntegerField(default=PostType.NOTICE)
+
+    def __str__(self):
+        return self.title
