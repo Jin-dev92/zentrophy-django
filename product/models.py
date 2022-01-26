@@ -13,7 +13,10 @@ class ProductDisplayLine(models.Model):  # 상품 진열 라인
 
 class ProductImage(TimeStampModel):
     id = models.AutoField(primary_key=True)
-    product_options_id = models.ForeignKey('product.ProductOptions', on_delete=models.CASCADE, null=True)
+    product = models.ForeignKey('product.Product', on_delete=models.CASCADE, null=True,
+                                related_name='product_image_product')
+    product_options = models.ForeignKey('product.ProductOptions', on_delete=models.CASCADE, null=True,
+                                        related_name='product_image_product_options')
     origin_image = ImageField(upload_to="thumb/%Y/%M/%D/%HH/%MM/%SS" + str(int(random.random() * 100000)))
 
     def upload_to_server(self):
@@ -25,6 +28,7 @@ class ProductImage(TimeStampModel):
 
 class ProductOptions(models.Model):
     id = models.AutoField(primary_key=True)
+    product = models.ForeignKey("product.Product", on_delete=models.CASCADE, null=True, related_name='product_options')
     option_name: models.CharField(max_length=200)
     stock_count = models.IntegerField(default=0)
     option_description = models.TextField(blank=True)
@@ -45,7 +49,7 @@ class ProductOptions(models.Model):
 
 class VehicleColor(models.Model):
     id: models.AutoField(primary_key=True)
-    vehicle_id = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True)
+    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True)
     color_name: models.CharField(max_length=20)
     stock_count: models.IntegerField(default=0)
     hex_code: models.CharField(max_length=7)
@@ -58,7 +62,7 @@ class Product(TimeStampModel):
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
     product_label = models.PositiveSmallIntegerField(default=ProductLabel.NEW)
-    product_display_line_id = models.ManyToManyField('product.ProductDisplayLine')
+    product_display_line = models.ManyToManyField('product.ProductDisplayLine', related_name='product_display_line')
     is_display = models.BooleanField(default=False)
     is_refundable = models.BooleanField(default=False)
     description = models.JSONField(default=dict)

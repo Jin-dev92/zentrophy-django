@@ -94,7 +94,7 @@ class ProductListSchema(Schema):
     is_display: bool
     is_refundable: bool
     description: ProductDescription = None
-    product_display_line_id: int = None
+    # product_display_line: ProductDisplayLineSchema = None
     product_options: List[ProductOptionsListSchema] = None
     is_created: datetime
     is_updated: datetime
