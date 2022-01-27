@@ -2,7 +2,7 @@ from typing import List
 # package
 from ninja import NinjaAPI, File
 from ninja.files import UploadedFile
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 # from ninja.responses import codes_4xx
 from django.db import transaction
 # util
@@ -60,13 +60,12 @@ current_product_sort_state = ProductListSort.UPDATE_AT
 
 
 # post
-@api.get("/post/{post_type}", response={200: PostListSchema},
+@api.get("/post/{post_type}", response={200: List[PostListSchema]},
          description="타입으로 글 관련 데이터를 obj로 가져옴. FAQ = 0, 공지사항 = 1",
          tags=["post"]
          )
 def get_post_list_by_type(request, post_type: int):
-    qs = get_object_or_404(Post, post_type=post_type)
-    return qs
+    return get_list_or_404(Post, post_type=post_type)
 
 
 @api.get("/post/{id}", response={200: PostListSchema},
@@ -132,7 +131,7 @@ def get_product_list(request, sort: ProductListSort):
          tags=["product"]
          )
 def get_product_list_by_id(request, id: int):
-    get_object_or_404(Product, id=id)
+    return get_object_or_404(Product, id=id)
 
 
 @api.post("/product", description="상품 등록", tags=["product"])
@@ -149,11 +148,11 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
             for product_option in product_options:  # 프로덕트 옵션 저장
                 product_options_queryset = ProductOptions.objects.create(
                     product=Product.objects.get(id=product_queryset.id),
-                    option_name=product_option.option_name,
-                    stock_count=product_option.stock_count,
-                    option_description=product_option.option_description,
-                    is_apply=product_option.is_apply,
-                    product_options_label=product_option.product_options_label,
+                    option_name=product_option['option_name'],
+                    stock_count=product_option['stock_count'],
+                    option_description=product_option['option_description'],
+                    is_apply=product_option['is_apply'],
+                    product_options_label=product_option['product_options_label'],
                 )
                 for file in files:
                     ProductImage.objects.create(
@@ -254,15 +253,13 @@ def delete_vehicle_color(id: int):
 
 
 # placement
-@api.get("/place/${placement_type}",
+@api.get("/place/{placement_type}",
          description="타입으로 플레이스 리스트 가져오기",
          tags=["place"],
          response={200: List[PlacementListSchema]}
          )
 def get_placement_list_by_type(request, placement_type: PlacementType):
-    print(get_object_or_404(Placement, placement_type=placement_type))
-    # get_object_or_404(Placement, placement_type=placement_type)
-    # return
+    return get_list_or_404(Placement, placement_type=placement_type)
 
 
 @api.post("/place", description="플레이스 생성, # operation_start,operation_end hh:mm 형식으로 보내주세요 다른 형식도 되긴할듯", tags=["place"])
@@ -270,13 +267,13 @@ def create_placement(request, payload: PlacementInsertSchema):
     Placement.objects.create(**payload.dict())
 
 
-@api.get("/place/${id}", description="플레이스 id로 해당 플레이스 정보 가져오기", response={200: List[PlacementListSchema]},
+@api.get("/place", description="플레이스 id로 해당 플레이스 정보 가져오기", response={200: List[PlacementListSchema]},
          tags=["place"])
 def get_placement_list_by_id(request, id: int):
-    return get_object_or_404(id=id)
+    return get_list_or_404(Placement, id=id)
 
 
-@api.put("/place/{id}", description="플레이스 수정", tags=["place"])
+@api.put("/place", description="플레이스 수정", tags=["place"])
 def modify_placement(request, payload: PlacementModifySchema, id: int):
     get_object_or_404(Placement, id=id).objects.update(*payload.dict())
     # for attr, value in payload.dict().items():
