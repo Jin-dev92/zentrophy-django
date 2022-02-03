@@ -48,11 +48,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'sorl.thumbnail',
-    # server-app
+    # applications
     'post',
     'product',
     'placement',
-    'history',
+    # 'history',
 ]
 
 MIDDLEWARE = [
@@ -133,3 +133,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = '/accounts/login/'  # 로그인 기본값
+LOGOUT_URL = '/accounts/logout/'  # 로그아웃 기본값
+LOGIN_REDIRECT_URL = '/'  # 반드시 정의할 것!

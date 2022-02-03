@@ -6,6 +6,10 @@ from ninja import Schema
 from product.constant import ProductOptionsLabel, ProductLabel
 
 
+class VehicleImageSchema(Schema):
+    origin_image: str = None
+
+
 class ProductDisplayLineSchema(Schema):
     id: int
     display_line_name: str
@@ -16,8 +20,6 @@ class ProductDisplayInsertSchema(Schema):
 
 
 class ProductImageListSchema(Schema):
-    # id: int
-    # product_options_id: int
     origin_image: str = None
 
 
@@ -86,6 +88,7 @@ class VehicleInsertSchema(Schema):
     able_subsidy: bool = False
     able_extra_subsidy: bool = False
     vehicle_color: List[VehicleColor] = None
+    vehicle_image: List[VehicleImageSchema] = None
 
 
 class ProductListSchema(Schema):
