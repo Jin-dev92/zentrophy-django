@@ -1,5 +1,3 @@
-import random
-
 from django.db import models
 from product.constant import ProductLabel, ProductOptionsLabel
 from sorl.thumbnail import ImageField
@@ -18,34 +16,16 @@ class ProductImage(TimeStampModel):
     id = models.AutoField(primary_key=True)
     product = models.ForeignKey('product.Product', on_delete=models.CASCADE, null=True,
                                 related_name='product_image')
-    product_options = models.ForeignKey('product.ProductOptions', on_delete=models.CASCADE, null=True,
-                                        related_name='product_image_options')
-    origin_image = ImageField(upload_to="thumb/%Y/%M/%D/%HH/%MM/%SS" + str(int(random.random() * 100000)))
-
-    def __str__(self):
-        return self.origin_image.name
-
-    def upload_to_server(self):
-        print(self.origin_image)
-
-    def get_image_name(self):
-        return self.origin_image.name
+    origin_image = ImageField(upload_to="thumb/%Y/%M", null=True)
 
 
 class VehicleImage(TimeStampModel):
     id = models.AutoField(primary_key=True)
-    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True,
-                                related_name='vehicle_image')
-    origin_image = ImageField(upload_to="thumb/%Y/%M/%D/%HH/%MM/%SS" + str(int(random.random() * 100000)))
+    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True)
+    origin_image = ImageField(upload_to="thumb/%Y/%M", null=True)
 
     def __str__(self):
-        return self.origin_image.name
-
-    def upload_to_server(self):
-        print(self.origin_image)
-
-    def get_image_name(self):
-        return self.origin_image.name
+        return self.id
 
 
 class ProductOptions(models.Model):
