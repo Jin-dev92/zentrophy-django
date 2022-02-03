@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'post',
     'product',
     'placement',
-    # 'history',
+    'order',
 ]
 
 MIDDLEWARE = [
