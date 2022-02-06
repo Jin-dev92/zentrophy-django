@@ -22,12 +22,6 @@ def get_list_order(request):
 def get_list_order_by_id(request, id: int):
     get_object_or_404(Order, id=id).delete()
 
-    # owner: int
-    # product: int = None
-    # vehicle: int = None
-    # extra_subside: List[int] = None
-    # amount: int = 0
-
 
 @router.post("", description="주문 생성")
 @transaction.atomic(using='default')
@@ -46,12 +40,6 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
             is_created_order.extra_subside.add(ExtraSubside.objects.in_bulk(id_list=list(extra_subsides)))
             is_created_order.vehicle.add(Vehicle.objects.in_bulk(id_list=list(vehicles)))
             is_created_order.product.add(Product.objects.in_bulk(id_list=list(products)))
-            # for extra_subside in extra_subsides:
-            #     is_created_order.extra_subside.add(ExtraSubside.objects.get(id=extra_subside))
-            # for vehicle in vehicles:
-            #     is_created_order.vehicle.add(Vehicle.objects.get(id=vehicle))
-            # for product in products:
-            #     is_created_order.product.add(Product.objects.get(id=product))
         for file in files:
             NecessaryDocumentFile.objects.create(
                 file=file,
@@ -59,7 +47,6 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
             )
 
     except Exception as e:
-        # return e
         raise e
 
 

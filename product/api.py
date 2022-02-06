@@ -4,6 +4,8 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, File, Router
 # from conf.api import api
+# from util.globalVar import GlobalVar
+from conf.globalVar import GlobalVar
 from product.constant import ProductListSort
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
@@ -56,27 +58,37 @@ def get_product_list_by_id(request, id: int):
 def create_product(request, payload: ProductInsertSchema, files: List[UploadedFile] = File(...)):
     product = {k: v for k, v in payload.dict().items() if k not in {'product_options', 'product_display_line_id'}}
     product_options = payload.dict()['product_options']
+    product_display_line_id_list = list(payload.dict()['product_display_line_id'])
     try:
         with transaction.atomic():
             product_queryset = Product.objects.create(**product)
-            product_display_line = ProductDisplayLine.objects.filter(id=payload.dict().get("product_display_line_id"))
-            product_queryset.product_display_line_id.add(product_display_line.values()[0].get("id"))
-            # ManyToManyField는 이런식으로 넣어줘야 됨
-            for product_option in product_options:  # 프로덕트 옵션 저장
-                ProductOptions.objects.create(
-                    product=Product.objects.get(id=product_queryset.id),
-                    option_name=product_option['option_name'],
-                    stock_count=product_option['stock_count'],
-                    option_description=product_option['option_description'],
-                    is_apply=product_option['is_apply'],
-                    product_options_label=product_option['product_options_label'],
-                )
-                for file in files:
-                    ProductImage.objects.create(product=Product.objects.get(id=product_queryset.id))
+            if len(product_display_line_id_list) > 2:
+                raise Exception(GlobalVar.ErrorMessage.DISPLAY_LINE_DONT_EXCEEDED_SIZE)  # 나중에 defaultReponse 만들기
+            product_queryset.product_display_line.in_bulk(id_list=product_display_line_id_list)
+            bulk_prepare_product_options_list = [ProductOptions(product=Product.objects.get(id=product_queryset.id),
+                                                                **product_option) for product_option in product_options]
+            ProductOptions.objects.bulk_create(bulk_prepare_product_options_list)
+            # for product_option in product_options:  # 프로덕트 옵션 저장
+            #     ProductOptions.objects.create(
+            #         product=Product.objects.get(id=product_queryset.id),
+            #         option_name=product_option['option_name'],
+            #         stock_count=product_option['stock_count'],
+            #         option_description=product_option['option_description'],
+            #         is_apply=product_option['is_apply'],
+            #         product_options_label=product_option['product_options_label'],
+            #     )
+            # ProductImage.objects.bulk_create(files)
+            bulk_prepare_file_list = [ProductImage(product=Product.objects.get(id=product_queryset.id),
+                                                   origin_image=file) for file in files]
+            ProductImage.objects.bulk_create(bulk_prepare_file_list)
+            # for file in files:
+            #     ProductImage.objects.create(
+            #         product=Product.objects.get(id=product_queryset.id),
+            #         origin_image=file
+            #     )
 
     except Exception as e:
-        return "fail : " + e
-    return "success"
+        raise e
 
 
 @router.get("/display_line",

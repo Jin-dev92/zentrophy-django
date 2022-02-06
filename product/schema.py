@@ -62,7 +62,7 @@ class ProductInsertSchema(Schema):
     product_label: ProductLabel = ProductLabel.NEW  # ProductLabel.NEW
     product_options: List[ProductOptionsInsertSchema] = None  # 상품에 들어가는 상품 옵션, 여러개가 들어갈 수 있음.
     is_display: bool = False
-    product_display_line_id: int = 0
+    product_display_line_id: List[int] = None
     is_refundable: bool = False
     description: ProductDescription = None
 
