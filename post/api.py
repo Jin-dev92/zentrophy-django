@@ -18,7 +18,7 @@ def get_post_list_by_type(request, post_type: int):
 
 
 @router.get("/{id}", response={200: PostListSchema},
-            description="id로 글 관련 데이터를 obj로 가져옴.",
+            description="pk로 글 관련 데이터를 obj로 가져옴.",
             tags=["post"]
             )
 def get_post_list_by_id(request, id: int):

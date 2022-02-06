@@ -16,13 +16,13 @@ class ProductImage(TimeStampModel):
     id = models.AutoField(primary_key=True)
     product = models.ForeignKey('product.Product', on_delete=models.CASCADE, null=True,
                                 related_name='product_image')
-    origin_image = ImageField(upload_to="thumb/%Y/%M", null=True)
+    origin_image = ImageField(upload_to="product/%Y/%M", null=True)
 
 
 class VehicleImage(TimeStampModel):
     id = models.AutoField(primary_key=True)
     vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True)
-    origin_image = ImageField(upload_to="thumb/%Y/%M", null=True)
+    origin_image = ImageField(upload_to="vehicle/%Y/%M", null=True)
 
     def __str__(self):
         return self.id
@@ -91,3 +91,4 @@ class Vehicle(models.Model):
 
     def __str__(self):
         return self.vehicle_name
+

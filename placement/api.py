@@ -19,7 +19,7 @@ def get_placement_list_by_type(request, placement_type: PlacementType):
     return get_list_or_404(Placement, placement_type=placement_type)
 
 
-@router.get("/", description="플레이스 id로 해당 플레이스 정보 가져오기", response={200: List[PlacementListSchema]},
+@router.get("/", description="플레이스 pk로 해당 플레이스 정보 가져오기", response={200: List[PlacementListSchema]},
             tags=["place"]
             )
 def get_placement_list_by_id(request, id: int):

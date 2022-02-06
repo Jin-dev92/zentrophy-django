@@ -13,7 +13,7 @@ from post.api import router as post_router
 
 api = NinjaAPI(parser=ORJSONParser(), csrf=True)
 
-api_list = [
+API_LIST = [
     {
         'prefix': "/member",
         'router': member_router,
@@ -42,5 +42,5 @@ api_list = [
 ]
 # api_list.
 # 라우팅 설정
-for item in api_list:
+for item in API_LIST:
     api.add_router(prefix=item['prefix'], router=item['router'], tags=item['tags'])

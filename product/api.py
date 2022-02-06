@@ -115,7 +115,7 @@ def get_vehicle_list(request):
     return result
 
 
-@router.get("/vehicle/{id}", description="id로 모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"])
+@router.get("/vehicle/{id}", description="pk로 모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"])
 def get_vehicle_list_by_id(request, id: int):
     return get_object_or_404(Vehicle, id=id).objects.prefetch_related('vehicle_color').all()
 
