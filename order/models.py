@@ -10,8 +10,7 @@ class Order(TimeStampModel):
     id = models.AutoField(primary_key=True)
     owner = models.ForeignKey(Member,
                               on_delete=models.SET_NULL,
-                              null=True,
-                              related_name='order_owner')  # 주문자
+                              null=True)
     product = models.ManyToManyField(Product)
     vehicle = models.ManyToManyField(Vehicle)
     extra_subside = models.ManyToManyField('order.ExtraSubside')
