@@ -15,38 +15,45 @@ router = Router()
 
 @router.get("/", description="전체 주문 조회", response={200: List[OrderListSchema]})
 def get_list_order(request):
-    return Order.objects.all()
+    queryset = Order.objects.select_related('owner').prefetch_related('extra_subside', 'order_files').all()
+    return queryset
 
 
 @router.get("/${id}", description="pk로 특정 주문 조회", response={200: OrderListSchema})
 def get_list_order_by_id(request, id: int):
-    get_object_or_404(Order, id=id).delete()
+    queryset = Order.objects.select_related('owner').prefetch_related('extra_subside', 'order_files').filter(id=id)
+    return queryset
 
 
 @router.post("/", description="주문 생성")
 @transaction.atomic(using='default')
 def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] = File(...)):
     payload_dict = payload.dict()
-    owner = payload_dict['owner']
     extra_subsides = payload_dict['extra_subside']  # 추가 보조금 리스트
-    vehicles = payload_dict['vehicle']  # 구매한 탈것 리스트
-    products = payload_dict['product']  # 구매한 product_id 리스트
-    print("@@@@@@@@@@")
-    print(type(ExtraSubside.objects.in_bulk(id_list=list(extra_subsides))))
+    owner = Member.objects.get(id=payload_dict['owner'])
+    # print(len(owner))
+    # return
+    # vehicles = payload_dict['vehicle']  # 구매한 탈것 리스트
+    # products = payload_dict['product']  # 구매한 product_id 리스트
+    # print("@@@@@@@@@@")
+    # print(type(ExtraSubside.objects.in_bulk(id_list=list(extra_subsides))))
+    # for_bulk_file_list = [NecessaryDocumentFile(file=file,
+    #                                             order=is_created_order) for file in files]
     try:
         with transaction.atomic():
             is_created_order = Order.objects.create(
-                owner=Member.objects.get(id=owner),
-                amount=payload_dict['amount']
+                owner=owner,
+                payment_info=payload_dict['payment_info'],
             )  # 주문 생성
-            is_created_order.extra_subside.add(ExtraSubside.objects.in_bulk(id_list=list(extra_subsides)))
-            is_created_order.vehicle.add(Vehicle.objects.in_bulk(id_list=list(vehicles)))
-            is_created_order.product.add(Product.objects.in_bulk(id_list=list(products)))
-        for file in files:
-            NecessaryDocumentFile.objects.create(
-                file=file,
-                order=is_created_order.id
-            )
+            is_created_order.extra_subside.add(**ExtraSubside.objects.in_bulk(id_list=extra_subsides))
+            for_bulk_file_list = [NecessaryDocumentFile(file=file,
+                                                        order=is_created_order) for file in files]
+            NecessaryDocumentFile.objects.bulk_create(for_bulk_file_list)
+        # for file in files:
+        #     NecessaryDocumentFile.objects.create(
+        #         file=file,
+        #         order=is_created_order.id
+        #     )
 
     except Exception as e:
         raise e

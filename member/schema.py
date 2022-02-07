@@ -2,13 +2,13 @@ from ninja import Schema
 
 
 class MemberInsertSchema(Schema):
-    username: str
-    email: str
+    username: str = None
+    email: str = None
     # password: str
-    address: str
-    address_detail: str
-    phone_number: str
-    zipCode: str
+    address: str = None
+    address_detail: str = None
+    number: str = None
+    zipCode: str = None
     is_business: bool = False
 
 
@@ -19,7 +19,7 @@ class MemberListSchema(Schema):
     # password: str
     address: str
     address_detail: str
-    phone_number: str
+    number: str
     zipCode: str
     is_business: bool
 
