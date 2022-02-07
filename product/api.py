@@ -16,7 +16,7 @@ router = Router()
 current_product_sort = ProductListSort.UPDATE_AT
 
 
-@router.get("",
+@router.get("/",
             description="상품 리스트 가져오기 sort 등록순: 0, 판매순 : 1 , 재고수량순: 2, 진열 라인 순: 3",
             response={200: List[ProductListSchema]},
             tags=["product"]
@@ -41,7 +41,7 @@ def get_product_list(request, sort: ProductListSort):
     return Product.objects.all().prefetch_related(
         'product_options',
         'product_display_line',
-        'product_image').order_by(current_product_sort)
+        'product_image').order_by(field_name)
 
 
 @router.get("/{id}",
@@ -53,8 +53,8 @@ def get_product_list_by_id(request, id: int):
     return get_object_or_404(Product, id=id)
 
 
-@router.post("", description="상품 등록", tags=["product"])
 @transaction.atomic(using='default')
+@router.post("/", description="상품 등록", tags=["product"])
 def create_product(request, payload: ProductInsertSchema, files: List[UploadedFile] = File(...)):
     product = {k: v for k, v in payload.dict().items() if k not in {'product_options', 'product_display_line_id'}}
     product_options = payload.dict()['product_options']
@@ -67,42 +67,64 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
             product_queryset.product_display_line.in_bulk(id_list=product_display_line_id_list)
             bulk_prepare_product_options_list = [ProductOptions(product=Product.objects.get(id=product_queryset.id),
                                                                 **product_option) for product_option in product_options]
-            ProductOptions.objects.bulk_create(bulk_prepare_product_options_list)
             bulk_prepare_file_list = [
                 ProductImage(product=Product.objects.get(id=product_queryset.id), origin_image=file) for file in files]
+            ProductOptions.objects.bulk_create(bulk_prepare_product_options_list)
             ProductImage.objects.bulk_create(bulk_prepare_file_list)
 
     except Exception as e:
-        raise e
+        raise Exception(e)
 
 
-@router.get("/display_line",
-            description="상품 진열 라인 조회",
-            response={200: List[ProductDisplayLineSchema]},
-            tags=["product"])
-def get_display_line(request):
-    qs = ProductDisplayLine.objects.all()
-    return qs
+@transaction.atomic(using='default')
+@router.put("/", description="상품 수정", tags=["product"])
+def modify_product(request, payload: ProductInsertSchema, id: int, files: List[UploadedFile] = File(...)):
+    try:
+        with transaction.atomic():
+            product = get_object_or_404(Product, id=id)
+            product_params = {k: v for k, v in payload.dict().items() if
+                              k not in {'product_display_line_id', 'product_options'}}
+            product.objects.update(**product_params)
+            bulk_prepare_product_options_list = [ProductOptions(product=product.id, **payload.dict()['product_options']) for
+                                                 product_option in payload.dict()['product_options']]
+            product.product_display_line.bulk_update(payload.dict()['product_display_line_id'])  # product_display_line
+            product.product_options.bulk_update(bulk_prepare_product_options_list)
+            ProductImage.objects.filter(product=product.id).bulk_update(files)
+    except Exception as e:
+        raise Exception(e)
 
 
-@router.post("/display_line", description="상품 진열 라인 등록", tags=["product"])
-def create_display_line(request, payload: ProductDisplayInsertSchema):
-    display_line = payload.dict()
-    ProductDisplayLine.objects.create(
-        display_line_name=display_line['display_line_name']
-    )
+@router.delete("/", description="상품 삭제", tags=["product"])
+def delete_product(request, id: int):
+    return get_object_or_404(Product, id=id).delete()
 
 
-@router.put("/display_line", tags=["product"])
-def modify_display_line_by_id(request, payload: ProductDisplayInsertSchema, id: int):
-    qs = get_object_or_404(ProductDisplayLine, id=id)
-    qs.objects.update(**payload.dict())
-
-
-@router.delete("/display_line", tags=["product"])
-def delete_display_line_by_id(request, id: int):
-    get_object_or_404(ProductDisplayLine, id=id).delete()
-
+# @router.get("/display_line",
+#             description="상품 진열 라인 조회",
+#             response={200: List[ProductDisplayLineSchema]},
+#             tags=["product"])
+# def get_display_line(request):
+#     qs = ProductDisplayLine.objects.all()
+#     return qs
+#
+#
+# @router.post("/display_line", description="상품 진열 라인 등록", tags=["product"])
+# def create_display_line(request, payload: ProductDisplayInsertSchema):
+#     display_line = payload.dict()
+#     ProductDisplayLine.objects.create(
+#         display_line_name=display_line['display_line_name']
+#     )
+#
+#
+# @router.put("/display_line", tags=["product"])
+# def modify_display_line_by_id(request, payload: ProductDisplayInsertSchema, id: int):
+#     qs = get_object_or_404(ProductDisplayLine, id=id)
+#     qs.objects.update(**payload.dict())
+#
+#
+# @router.delete("/display_line", tags=["product"])
+# def delete_display_line_by_id(request, id: int):
+#     get_object_or_404(ProductDisplayLine, id=id).delete()
 
 @router.get("/vehicle", description="모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"])
 def get_vehicle_list(request):
