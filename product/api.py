@@ -59,33 +59,18 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
     product = {k: v for k, v in payload.dict().items() if k not in {'product_options', 'product_display_line_id'}}
     product_options = payload.dict()['product_options']
     product_display_line_id_list = list(payload.dict()['product_display_line_id'])
+    if len(product_display_line_id_list) > 2:
+        raise Exception(GlobalVar.ErrorMessage.DISPLAY_LINE_DONT_EXCEEDED_SIZE)  # 나중에 defaultReponse 만들기
     try:
         with transaction.atomic():
             product_queryset = Product.objects.create(**product)
-            if len(product_display_line_id_list) > 2:
-                raise Exception(GlobalVar.ErrorMessage.DISPLAY_LINE_DONT_EXCEEDED_SIZE)  # 나중에 defaultReponse 만들기
             product_queryset.product_display_line.in_bulk(id_list=product_display_line_id_list)
             bulk_prepare_product_options_list = [ProductOptions(product=Product.objects.get(id=product_queryset.id),
                                                                 **product_option) for product_option in product_options]
             ProductOptions.objects.bulk_create(bulk_prepare_product_options_list)
-            # for product_option in product_options:  # 프로덕트 옵션 저장
-            #     ProductOptions.objects.create(
-            #         product=Product.objects.get(id=product_queryset.id),
-            #         option_name=product_option['option_name'],
-            #         stock_count=product_option['stock_count'],
-            #         option_description=product_option['option_description'],
-            #         is_apply=product_option['is_apply'],
-            #         product_options_label=product_option['product_options_label'],
-            #     )
-            # ProductImage.objects.bulk_create(files)
-            bulk_prepare_file_list = [ProductImage(product=Product.objects.get(id=product_queryset.id),
-                                                   origin_image=file) for file in files]
+            bulk_prepare_file_list = [
+                ProductImage(product=Product.objects.get(id=product_queryset.id), origin_image=file) for file in files]
             ProductImage.objects.bulk_create(bulk_prepare_file_list)
-            # for file in files:
-            #     ProductImage.objects.create(
-            #         product=Product.objects.get(id=product_queryset.id),
-            #         origin_image=file
-            #     )
 
     except Exception as e:
         raise e
@@ -94,10 +79,10 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
 @router.get("/display_line",
             description="상품 진열 라인 조회",
             response={200: List[ProductDisplayLineSchema]},
-            tags=["product"]
-            )
-def get_display_line_list(request):
-    return ProductDisplayLine.objects.all()
+            tags=["product"])
+def get_display_line(request):
+    qs = ProductDisplayLine.objects.all()
+    return qs
 
 
 @router.post("/display_line", description="상품 진열 라인 등록", tags=["product"])
@@ -108,15 +93,13 @@ def create_display_line(request, payload: ProductDisplayInsertSchema):
     )
 
 
-@router.put("/display_line/{id}", tags=["product"])
+@router.put("/display_line", tags=["product"])
 def modify_display_line_by_id(request, payload: ProductDisplayInsertSchema, id: int):
     qs = get_object_or_404(ProductDisplayLine, id=id)
-    for attr, value in payload.dict().items():
-        setattr(qs, attr, value)
-        qs.save()
+    qs.objects.update(**payload.dict())
 
 
-@router.delete("/display_line/{id}", tags=["product"])
+@router.delete("/display_line", tags=["product"])
 def delete_display_line_by_id(request, id: int):
     get_object_or_404(ProductDisplayLine, id=id).delete()
 
