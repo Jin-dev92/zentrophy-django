@@ -8,8 +8,8 @@ class ProductDisplayLine(models.Model):  # 상품 진열 라인
     id = models.AutoField(primary_key=True)
     display_line_name = models.CharField(max_length=20, null=False)
 
-    # def __str__(self):
-    #     return self.display_line_name
+    def __str__(self):
+        return self.display_line_name
 
 
 class ProductImage(TimeStampModel):
@@ -70,7 +70,7 @@ class Product(TimeStampModel):
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
     product_label = models.PositiveSmallIntegerField(default=ProductLabel.NEW)
-    product_display_line = models.ManyToManyField('product.ProductDisplayLine', related_name='product_display_line')
+    product_display_line = models.ManyToManyField('product.ProductDisplayLine')
     is_display = models.BooleanField(default=False)
     is_refundable = models.BooleanField(default=False)
     description = models.JSONField(default=dict)
@@ -91,4 +91,3 @@ class Vehicle(models.Model):
 
     def __str__(self):
         return self.vehicle_name
-
