@@ -9,36 +9,48 @@ from util.util import ORJSONParser
 from member.api import router as member_router
 from order.api import router as order_router
 from placement.api import router as placement_router
-from product.api import router as product_router
+from product.api import product_router as product_router
+from product.api import vehicle_router as vehicle_router
+from product.api import display_line_router as display_line_router
 from post.api import router as post_router
 
 api = NinjaAPI(parser=ORJSONParser())
 
 API_LIST = [
     {
-        'prefix': "/member",
+        'prefix': "/member/",
         'router': member_router,
         'tags': ["member"]
     },
     {
-        'prefix': "/place",
+        'prefix': "/place/",
         'router': placement_router,
         'tags': ["place"]
     },
     {
-        'prefix': "/product",
+        'prefix': "/product/",
         'router': product_router,
         'tags': ["product"]
     },
     {
-        'prefix': "/post",
+        'prefix': "/post/",
         'router': post_router,
         'tags': ["post"]
     },
     {
-        'prefix': "/order",
+        'prefix': "/order/",
         'router': order_router,
         'tags': ["order"]
+    },
+    {
+        'prefix': "/vehicle/",
+        'router': vehicle_router,
+        'tags': ["vehicle"]
+    },
+    {
+        'prefix': "/display_line/",
+        'router': display_line_router,
+        'tags': ["product"]
     },
 ]
 
