@@ -31,6 +31,8 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
     extra_subsides = payload_dict['extra_subside']  # 추가 보조금 리스트
     vehicles = payload_dict['vehicle']  # 구매한 탈것 리스트
     products = payload_dict['product']  # 구매한 product_id 리스트
+    print("@@@@@@@@@@")
+    print(type(ExtraSubside.objects.in_bulk(id_list=list(extra_subsides))))
     try:
         with transaction.atomic():
             is_created_order = Order.objects.create(

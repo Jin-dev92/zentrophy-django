@@ -69,7 +69,7 @@ class Product(TimeStampModel):
     id = models.AutoField(primary_key=True)
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
-    product_label = models.PositiveSmallIntegerField(default=ProductLabel.NEW)
+    product_label = models.PositiveSmallIntegerField(default=ProductLabel.NEW)  # 여러개 받을수 있게 해야함
     product_display_line = models.ManyToManyField('product.ProductDisplayLine')
     is_display = models.BooleanField(default=False)
     is_refundable = models.BooleanField(default=False)
