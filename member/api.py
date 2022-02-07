@@ -14,8 +14,8 @@ def get_list_member(request):
     return Member.objects.all()
 
 
-@router.get("", description="특정 회원 pk로 찾기", response=MemberListSchema)
-def get_list_member_by_id(request):
+@router.get("/{id}", description="특정 회원 pk로 찾기", response=MemberListSchema)
+def get_list_member_by_id(request, id: int):
     return get_object_or_404(Member, id=id)
 
 

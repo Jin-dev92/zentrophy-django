@@ -13,7 +13,7 @@ from product.models import Vehicle, Product
 router = Router()
 
 
-@router.get("", description="전체 주문 조회", response={200: List[OrderListSchema]})
+@router.get("/", description="전체 주문 조회", response={200: List[OrderListSchema]})
 def get_list_order(request):
     return Order.objects.all()
 
@@ -23,7 +23,7 @@ def get_list_order_by_id(request, id: int):
     get_object_or_404(Order, id=id).delete()
 
 
-@router.post("", description="주문 생성")
+@router.post("/", description="주문 생성")
 @transaction.atomic(using='default')
 def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] = File(...)):
     payload_dict = payload.dict()
@@ -50,11 +50,11 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
         raise e
 
 
-@router.put("", description="주문 수정")
+@router.put("/", description="주문 수정")
 def modify_order(request, payload: OrderCreateSchema, id: int):
     return None
 
 
-@router.delete("", description="주문 삭제")
+@router.delete("/", description="주문 삭제")
 def delete_order(request, payload: OrderCreateSchema, id: int):
     return None

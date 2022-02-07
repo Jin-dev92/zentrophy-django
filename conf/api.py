@@ -1,5 +1,6 @@
 # package
 from ninja import NinjaAPI
+# from ninja.security import
 # from ninja.responses import codes_4xx
 # util
 from util.util import ORJSONParser
@@ -11,7 +12,7 @@ from placement.api import router as placement_router
 from product.api import router as product_router
 from post.api import router as post_router
 
-api = NinjaAPI(parser=ORJSONParser(), csrf=True)
+api = NinjaAPI(parser=ORJSONParser())
 
 API_LIST = [
     {
@@ -40,6 +41,11 @@ API_LIST = [
         'tags': ["order"]
     },
 ]
+
+
+
+
+
 # api_list.
 # 라우팅 설정
 for item in API_LIST:
