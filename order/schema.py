@@ -20,11 +20,16 @@ class CardInfo(Schema):
     payment_method: int = None
 
 
+class OrderedProductInfo(Schema):
+    product_name: str = None
+    amount: str = None
+    price: int = 0
+    total_price: int = 0
+
+
 class OrderPaymentInfoSchema(Schema):  # 나이스 페이 결제 후 response 되는 데이터를 확인해야함
-    cardInfo: CardInfo = None
-    amount: int = None
-    price: int = None
-    total_price: int = None
+    card_info: CardInfo = None
+    product_info: OrderedProductInfo = None
 
 
 class OrderListSchema(Schema):
@@ -33,11 +38,10 @@ class OrderListSchema(Schema):
     payment_info: OrderPaymentInfoSchema = None
     # file: str = None
     # necessary_document_file: str
-    # extra_subside: List[int] = None
     extra_subside: List[int]
+    state: OrderState = OrderState.ACCEPT_ORDER
     is_created: datetime
     is_updated: datetime
-    state: OrderState = OrderState.ACCEPT_ORDER
 
 
 class OrderCreateSchema(Schema):

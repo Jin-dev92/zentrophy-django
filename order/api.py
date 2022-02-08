@@ -8,7 +8,6 @@ from django.db import transaction
 from member.models import Member
 from order.models import Order, ExtraSubside, NecessaryDocumentFile
 from order.schema import OrderListSchema, OrderCreateSchema
-from product.models import Vehicle, Product
 
 router = Router()
 
@@ -49,11 +48,7 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
             for_bulk_file_list = [NecessaryDocumentFile(file=file,
                                                         order=is_created_order) for file in files]
             NecessaryDocumentFile.objects.bulk_create(for_bulk_file_list)
-        # for file in files:
-        #     NecessaryDocumentFile.objects.create(
-        #         file=file,
-        #         order=is_created_order.id
-        #     )
+
 
     except Exception as e:
         raise e

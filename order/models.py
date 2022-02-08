@@ -10,6 +10,7 @@ class Order(TimeStampModel):
                               on_delete=models.SET_NULL,
                               null=True)
     payment_info = models.JSONField(null=True)
+    subside = models.IntegerField(default=0)
     extra_subside = models.ManyToManyField('order.ExtraSubside')
     state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
 
