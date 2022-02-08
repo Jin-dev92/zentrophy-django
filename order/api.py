@@ -30,19 +30,12 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
     payload_dict = payload.dict()
     extra_subsides = payload_dict['extra_subside']  # 추가 보조금 리스트
     owner = Member.objects.get(id=payload_dict['owner'])
-    # print(len(owner))
-    # return
-    # vehicles = payload_dict['vehicle']  # 구매한 탈것 리스트
-    # products = payload_dict['product']  # 구매한 product_id 리스트
-    # print("@@@@@@@@@@")
-    # print(type(ExtraSubside.objects.in_bulk(id_list=list(extra_subsides))))
-    # for_bulk_file_list = [NecessaryDocumentFile(file=file,
-    #                                             order=is_created_order) for file in files]
     try:
         with transaction.atomic():
             is_created_order = Order.objects.create(
                 owner=owner,
                 payment_info=payload_dict['payment_info'],
+                is_able_subside=payload_dict['is_able_subside']
             )  # 주문 생성
             is_created_order.extra_subside.add(**ExtraSubside.objects.in_bulk(id_list=extra_subsides))
             for_bulk_file_list = [NecessaryDocumentFile(file=file,
@@ -51,7 +44,7 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
 
 
     except Exception as e:
-        raise e
+        raise Exception(e)
 
 
 @router.put("/", description="주문 수정")
@@ -60,5 +53,5 @@ def modify_order(request, payload: OrderCreateSchema, id: int):
 
 
 @router.delete("/", description="주문 삭제")
-def delete_order(request, payload: OrderCreateSchema, id: int):
-    return None
+def delete_order(request, id: int):
+    return Order.objects.filter(id=id).delete()

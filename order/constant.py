@@ -7,3 +7,4 @@ class OrderState(IntEnum):
     WAIT_PAYMENT = 2
     PREPARE_DELIVERY = 3
     IS_COMPLETE = 4
+    IS_CANCELED = 5

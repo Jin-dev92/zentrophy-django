@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'sorl.thumbnail',
     # applications
-    'post',
+    # 'post',
     'product',
     'placement',
     'order',

@@ -1,7 +1,5 @@
 # package
 from ninja import NinjaAPI
-# from ninja.security import
-# from ninja.responses import codes_4xx
 # util
 from util.util import ORJSONParser
 # models & schema
@@ -12,7 +10,6 @@ from placement.api import router as placement_router
 from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from product.api import display_line_router as display_line_router
-from post.api import router as post_router
 
 api = NinjaAPI(parser=ORJSONParser())
 
@@ -31,11 +28,6 @@ API_LIST = [
         'prefix': "/product/",
         'router': product_router,
         'tags': ["product"]
-    },
-    {
-        'prefix': "/post/",
-        'router': post_router,
-        'tags': ["post"]
     },
     {
         'prefix': "/order/",
