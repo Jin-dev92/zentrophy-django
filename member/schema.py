@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from ninja import Schema
 
 
@@ -16,12 +18,13 @@ class MemberListSchema(Schema):
     id: int
     username: str
     email: str
-    # password: str
     address: str
     address_detail: str
-    number: str
+    member_info_number: str
     zipCode: str
     is_business: bool
+    is_created: datetime
+    is_updated: datetime
 
 
 class AdminInsertSchema(Schema):
