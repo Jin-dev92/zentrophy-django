@@ -1,6 +1,8 @@
 from django.db import models
 
 from placement.constant import PlacementType, OperationState
+from util.models import TimeStampModel
+from sorl.thumbnail import ImageField
 
 
 class Placement(models.Model):
@@ -15,3 +17,9 @@ class Placement(models.Model):
 
     def __str__(self):
         return self.placement_name
+
+
+class PlacementImage(TimeStampModel):
+    id = models.AutoField(primary_key=True)
+    place = models.ForeignKey(Placement, on_delete=models.CASCADE)
+    file = ImageField(upload_to="place/%Y/%M")

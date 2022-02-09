@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from ninja import Router, File
 from ninja.files import UploadedFile
@@ -7,20 +7,18 @@ from django.db import transaction
 
 from member.models import Member
 from order.models import Order, ExtraSubside, NecessaryDocumentFile
-from order.schema import OrderListSchema, OrderCreateSchema
+from order.schema import OrderListSchema, OrderCreateSchema, OrderModifySchema
 
 router = Router()
 
 
-@router.get("/", description="전체 주문 조회", response={200: List[OrderListSchema]})
-def get_list_order(request):
-    queryset = Order.objects.select_related('owner').prefetch_related('extra_subside', 'order_files').all()
-    return queryset
-
-
-@router.get("/${id}", description="pk로 특정 주문 조회", response={200: OrderListSchema})
-def get_list_order_by_id(request, id: int):
-    queryset = Order.objects.select_related('owner').prefetch_related('extra_subside', 'order_files').filter(id=id)
+@router.get("/", description="전체 주문 조회, id param 넣으면 id로 조회", response={200: List[OrderListSchema]})
+def get_list_order(request, id: Optional[int] = None):
+    params = dict()
+    if id is not None:
+        params['id'] = id
+    queryset = Order.objects.select_related('owner').prefetch_related('extra_subside', 'order_files') \
+        .filter(**params).all()
     return queryset
 
 
@@ -29,7 +27,7 @@ def get_list_order_by_id(request, id: int):
 def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] = File(...)):
     payload_dict = payload.dict()
     extra_subsides = payload_dict['extra_subside']  # 추가 보조금 리스트
-    owner = Member.objects.get(id=payload_dict['owner'])
+    owner = Member.objects.get(id=payload_dict['owner_id'])
     try:
         with transaction.atomic():
             is_created_order = Order.objects.create(
@@ -47,9 +45,9 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
         raise Exception(e)
 
 
-@router.put("/", description="주문 수정")
-def modify_order(request, payload: OrderCreateSchema, id: int):
-    return None
+@router.put("/", description="주문 상태 변경")
+def modify_order(request, id: int, state: int):
+    return get_object_or_404(Order, id=id).order_change_state(state)
 
 
 @router.delete("/", description="주문 삭제")

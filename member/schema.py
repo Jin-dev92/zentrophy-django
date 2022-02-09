@@ -23,8 +23,8 @@ class MemberListSchema(Schema):
     member_info_number: str
     zipCode: str
     is_business: bool
-    is_created: datetime
-    is_updated: datetime
+    # is_created: datetime = None
+    # is_updated: datetime = None
 
 
 class AdminInsertSchema(Schema):
