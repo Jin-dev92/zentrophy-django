@@ -6,6 +6,7 @@ from django.shortcuts import get_list_or_404, get_object_or_404
 from django.db import transaction
 
 from member.models import Member
+from order.constant import OrderState
 from order.models import Order, ExtraSubside, NecessaryDocumentFile
 from order.schema import OrderListSchema, OrderCreateSchema, OrderModifySchema
 
@@ -46,7 +47,7 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
 
 
 @router.put("/", description="주문 상태 변경")
-def modify_order(request, id: int, state: int):
+def modify_order(request, id: int, state: OrderState):
     return get_object_or_404(Order, id=id).order_change_state(state)
 
 

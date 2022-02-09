@@ -35,6 +35,7 @@ class OrderDeliveryInfo(Schema):
 
 
 class OrderPaymentInfoSchema(Schema):  # 나이스 페이 결제 후 response 되는 데이터를 확인해야함
+    order_no: int
     card_info: CardInfo = None
     product_info: OrderedProductInfo = None
     delivery_info: OrderDeliveryInfo = None
