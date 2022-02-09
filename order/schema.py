@@ -45,8 +45,6 @@ class OrderListSchema(Schema):
     id: int
     owner: MemberListSchema = None
     payment_info: OrderPaymentInfoSchema = None
-    # file: str = None
-    # necessary_document_file: str
     is_able_subside: bool
     extra_subside: List[int]
     state: OrderState = OrderState.ACCEPT_ORDER
@@ -55,6 +53,11 @@ class OrderListSchema(Schema):
 
 
 class OrderCreateSchema(Schema):
-    owner: int
+    owner_id: int
+    payment_info: OrderPaymentInfoSchema = None
+    extra_subside: List[ExtraSubsideSchema] = None
+
+
+class OrderModifySchema(Schema):
     payment_info: OrderPaymentInfoSchema = None
     extra_subside: List[ExtraSubsideSchema] = None

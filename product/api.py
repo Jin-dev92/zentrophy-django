@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -23,38 +23,52 @@ current_product_sort = ProductListSort.UPDATE_AT
                     response={200: List[ProductListSchema]},
                     tags=["product"]
                     )
-def get_product_list(request, sort: ProductListSort):
+def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = None):
+    params = dict()
+    if id is not None:
+        params['id'] = id
     field_name = None
     global current_product_sort
     if sort == ProductListSort.UPDATE_AT:
         field_name = "is_created"
     elif sort == ProductListSort.SALE:
-        field_name = "sale_count"
+        field_name = "product_options__sale_count"
     elif sort == ProductListSort.STOCK_COUNT:
-        field_name = "stock_count"
+        field_name = "product_options__stock_count"
     elif sort == ProductListSort.DISPLAY_LINE:
-        field_name = "product_display_line"
+        field_name = "product_display_line__id"
 
     if sort == current_product_sort:
         field_name = "-" + field_name
     else:
         current_product_sort = sort
-
-    return Product.objects.all().prefetch_related(
+    # print(str(Product.objects.filter(**params).all().prefetch_related(
+    #     'product_options',
+    #     'product_display_line',
+    #     'product_image').query))
+    # print(str(Product.objects.filter(**params).prefetch_related(
+    #     'product_options',
+    #     'product_display_line',
+    #     'product_image').all().query))
+    return Product.objects.filter(**params).all().prefetch_related(
         'product_options',
         'product_display_line',
         'product_image').order_by(field_name)
+    # all().prefetch_related(
+    # 'product_options',
+    # 'product_display_line',
+    # 'product_image').order_by(field_name)
 
 
-@product_router.get("/{id}",
-                    description="해당 상품 가져오기",
-                    response={200: ProductListSchema},
-                    tags=["product"]
-                    )
-def get_product_list_by_id(request, id: int):
-    return Product.objects.filter(Product, id=id).prefetch_related('product_display_line',
-                                                                   'product_options',
-                                                                   'product_image')
+# @product_router.get("/{id}",
+#                     description="해당 상품 가져오기",
+#                     response={200: ProductListSchema},
+#                     tags=["product"]
+#                     )
+# def get_product_list_by_id(request, id: int):
+#     return Product.objects.filter(Product, id=id).prefetch_related('product_display_line',
+#                                                                    'product_options',
+#                                                                    'product_image')
 
 
 @transaction.atomic(using='default')
