@@ -27,9 +27,10 @@ class OrderedProductInfo(Schema):  # 변경?
     amount: str = None
     price: int = 0
     total_price: int = 0
+    license_code: str = None # 상품의 경우, null, 모터사이클의 경우 리턴되는 라이센스 코드를 넣어준다.
 
 
-class OrderDeliveryInfo(Schema):
+class OrderDeliveryInfo(Schema):  # 배송사 정보
     delivery_name: str
     delivery_number: str
 
