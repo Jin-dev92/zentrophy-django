@@ -150,3 +150,5 @@ LOGOUT_URL = '/accounts/logout/'  # 로그아웃 기본값
 LOGIN_REDIRECT_URL = '/'  # 반드시 정의할 것!
 LOGOUT_REDIRECT_URL = None
 AUTH_USER_MODEL = 'auth.User'
+
+LICENSE_NUMBER_LENGTH = 16
