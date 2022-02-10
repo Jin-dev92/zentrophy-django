@@ -12,6 +12,7 @@ router = Router()
 @router.get("/", description="회원 목록", response=List[MemberListSchema])
 def get_list_member(request, id: Optional[int] = None, email: Optional[str] = None, username: Optional[str] = None,
                     sort: Optional[int] = None):
+
     return Member.objects.filter().all().order_by()
 
 

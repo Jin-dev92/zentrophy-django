@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import os
 from pathlib import Path
 
+from conf.contant import Env
+
+ENV = Env.DEVELOPMENT
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,9 +26,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-plug1-6zblo)q^z1n2mjdiws96now4r!=l2@&0o$=82dxs3@^2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = ENV is Env.DEVELOPMENT
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_URL_LIST = []
+if len(ALLOWED_URL_LIST) == 0:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [url for url in ALLOWED_URL_LIST]
+# ALLOWED_HOSTS = [url if len(ALLOWED_URL_LIST) > 0 else ['*'] for url in ALLOWED_URL_LIST]
 
 # 2.5MB - 2621440
 # 5MB - 5242880
@@ -53,7 +62,8 @@ INSTALLED_APPS = [
     'product',
     'placement',
     'order',
-    'member'
+    'member',
+    'history'
 ]
 
 MIDDLEWARE = [

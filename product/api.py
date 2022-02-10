@@ -46,29 +46,10 @@ def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = 
     #     'product_options',
     #     'product_display_line',
     #     'product_image').query))
-    # print(str(Product.objects.filter(**params).prefetch_related(
-    #     'product_options',
-    #     'product_display_line',
-    #     'product_image').all().query))
     return Product.objects.filter(**params).all().prefetch_related(
         'product_options',
         'product_display_line',
         'product_image').order_by(field_name)
-    # all().prefetch_related(
-    # 'product_options',
-    # 'product_display_line',
-    # 'product_image').order_by(field_name)
-
-
-# @product_router.get("/{id}",
-#                     description="해당 상품 가져오기",
-#                     response={200: ProductListSchema},
-#                     tags=["product"]
-#                     )
-# def get_product_list_by_id(request, id: int):
-#     return Product.objects.filter(Product, id=id).prefetch_related('product_display_line',
-#                                                                    'product_options',
-#                                                                    'product_image')
 
 
 @transaction.atomic(using='default')
@@ -147,19 +128,17 @@ def delete_display_line_by_id(request, id: int):
 
 
 @vehicle_router.get("/", description="모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"])
-def get_vehicle_list(request):
-    result = Vehicle.objects.prefetch_related('vehicle_color').all()
+def get_vehicle_list(request, id: Optional[int] = None):
+    params = dict()
+    if id is not None:
+        params['id'] = id
+
+    result = Vehicle.objects.filter(**params).prefetch_related('vehicle_color').all()
     return result
 
 
-@vehicle_router.get("/{id}", description="pk로 모터사이클 리스트", response={200: List[VehicleListSchema]},
-                    tags=["vehicle"])
-def get_vehicle_list_by_id(request, id: int):
-    return get_object_or_404(Vehicle, id=id).objects.prefetch_related('vehicle_color').all()
-
-
 @transaction.atomic(using='default')
-@vehicle_router.post("/", description="모터사이클 등록", tags=["vehicle"])
+@vehicle_router.post("/", description="모터사이클 등록")
 def create_vehicle(request, payload: VehicleInsertSchema):
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color', 'vehicle_image'}}
     vehicle_color = payload.dict().get('vehicle_color')
@@ -187,7 +166,7 @@ def create_vehicle(request, payload: VehicleInsertSchema):
 
 
 @transaction.atomic(using='default')
-@vehicle_router.put("/", description="모터사이클 수정", tags=["vehicle"])
+@vehicle_router.put("/", description="모터사이클 수정")
 def modify_vehicle(request, payload: VehicleInsertSchema, id: int):
     payload_vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color', 'vehicle_image'}}
     payload_vehicle_color = payload.dict().get('vehicle_color')
@@ -206,11 +185,11 @@ def modify_vehicle(request, payload: VehicleInsertSchema, id: int):
         return e
 
 
-@vehicle_router.delete("/", description="모터사이클 수정", tags=["vehicle"])
+@vehicle_router.delete("/", description="모터사이클 수정")
 def delete_vehicle(id: int):
     get_object_or_404(Vehicle, id=id).delete()
 
 
-@vehicle_router.delete("/vehicle_color", description="모터사이클 수정", tags=["vehicle"])
-def delete_vehicle_color(id: int):
-    get_object_or_404(VehicleColor, id=id).delete()
+# @vehicle_router.delete("/vehicle_color", description="모터사이클 수정")
+# def delete_vehicle_color(id: int):
+#     get_object_or_404(VehicleColor, id=id).delete()
