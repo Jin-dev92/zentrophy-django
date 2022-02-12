@@ -1,6 +1,5 @@
 from django.db import models
 
-# Create your models here.
 from conf.settings import LICENSE_NUMBER_LENGTH
 from history.constant import RefundStatus, AfterServiceStatus
 from order.models import Order
@@ -32,9 +31,8 @@ class Refund(History):
 
 class AfterService(History):
     place = models.ForeignKey(Placement, on_delete=models.CASCADE)
+    owner = models.ForeignKey('member.Member', on_delete=models.CASCADE, null=True)
     registration_number = models.CharField(max_length=LICENSE_NUMBER_LENGTH, unique=True)
-    # license_code = models.CharField(max_length=200,
-    #                                 null=True)  # @todo 라이센스 코드에 관한 내용 듣고 바꾸기? 유저 정보 안에 보유한 모터사이클을 넣어둬야할듯?
     status = models.PositiveSmallIntegerField(default=AfterServiceStatus.APPLY_WAITING)
 
 
