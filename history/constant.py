@@ -13,3 +13,6 @@ class AfterServiceStatus(IntEnum):
     APPLY_COMPLETED = 1
     ON_PROGRESS = 2
     PROGRESS_COMPLETED = 3
+
+
+# class AfterServiceSort(IntEnum):

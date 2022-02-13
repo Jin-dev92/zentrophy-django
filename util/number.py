@@ -12,7 +12,7 @@ def generate_random_number(length: int = LICENSE_NUMBER_LENGTH):  # 2. A/S 접�
     global random_variation
     registration_number = "".join(random.choices(random_variation, k=length))  # 생성된 난수
     obj = AfterService.objects.filter(registration_number=registration_number).all()
-    if len(obj) > 0:
-        generate_random_number()
-    else:
+    if len(obj) == 0:
         return registration_number
+    else:
+        generate_random_number()

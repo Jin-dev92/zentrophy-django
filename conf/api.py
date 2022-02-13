@@ -12,7 +12,8 @@ from placement.api import router as placement_router
 from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from product.api import display_line_router as display_line_router
-from history.api import history_router as history_router
+# from history.api import history_router as history_router
+from history.api import after_service_router as after_service_router
 
 api = NinjaAPI(parser=ORJSONParser(), csrf=(settings.Env is Env.PRODUCTION))
 API_LIST = [
@@ -47,8 +48,8 @@ API_LIST = [
         'tags': ["product"]
     },
     {
-        'prefix': "/history/",
-        'router': history_router,
+        'prefix': "/as/",
+        'router': after_service_router,
         'tags': ["history"]
     },
 ]
