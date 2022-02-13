@@ -30,8 +30,8 @@ class Refund(History):
 
 
 class AfterService(History):
-    place = models.ForeignKey(Placement, on_delete=models.CASCADE)
-    owner = models.ForeignKey('member.Member', on_delete=models.CASCADE, null=True)
+    place = models.ForeignKey('placement.Placement', on_delete=models.CASCADE)
+    vehicle = models.ForeignKey('member.MemberOwnedVehicles', on_delete=models.CASCADE, null=True)
     registration_number = models.CharField(max_length=LICENSE_NUMBER_LENGTH, unique=True)
     status = models.PositiveSmallIntegerField(default=AfterServiceStatus.APPLY_WAITING)
 

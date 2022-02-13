@@ -48,7 +48,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MAX_UPLOAD_SIZE = "10485760"  # 업로드 되는 이미지 파일은 10MB를 넘지 않는다.
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -62,8 +61,8 @@ INSTALLED_APPS = [
     'product',
     'placement',
     'order',
+    'history',
     'member',
-    'history'
 ]
 
 MIDDLEWARE = [
@@ -133,7 +132,7 @@ TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
