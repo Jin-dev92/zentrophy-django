@@ -3,9 +3,8 @@ from typing import List, Optional
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, File, Router
-# from conf.api import api
-# from util.globalVar import GlobalVar
-from conf.globalVar import GlobalVar
+
+from conf.message import DISPLAY_LINE_DONT_EXCEEDED_SIZE
 from product.constant import ProductListSort
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
@@ -42,10 +41,6 @@ def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = 
         field_name = "-" + field_name
     else:
         current_product_sort = sort
-    # print(str(Product.objects.filter(**params).all().prefetch_related(
-    #     'product_options',
-    #     'product_display_line',
-    #     'product_image').query))
     return Product.objects.filter(**params).all().prefetch_related(
         'product_options',
         'product_display_line',
@@ -59,7 +54,7 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
     product_options = payload.dict()['product_options']
     product_display_line_id_list = list(payload.dict()['product_display_line_id'])
     if len(product_display_line_id_list) > 2:
-        raise Exception(GlobalVar.ErrorMessage.DISPLAY_LINE_DONT_EXCEEDED_SIZE)  # 나중에 defaultReponse 만들기
+        raise Exception(DISPLAY_LINE_DONT_EXCEEDED_SIZE)  # 나중에 defaultReponse 만들기
     try:
         with transaction.atomic():
             product_queryset = Product.objects.create(**product)
@@ -188,7 +183,6 @@ def modify_vehicle(request, payload: VehicleInsertSchema, id: int):
 @vehicle_router.delete("/", description="모터사이클 수정")
 def delete_vehicle(id: int):
     get_object_or_404(Vehicle, id=id).delete()
-
 
 # @vehicle_router.delete("/vehicle_color", description="모터사이클 수정")
 # def delete_vehicle_color(id: int):

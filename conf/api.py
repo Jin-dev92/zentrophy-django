@@ -13,7 +13,7 @@ from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from product.api import display_line_router as display_line_router
 # from history.api import history_router as history_router
-from history.api import after_service_router as after_service_router
+from history.api import after_service_router as after_service_router, refund_router, warranty_router
 
 api = NinjaAPI(parser=ORJSONParser(), csrf=(settings.Env is Env.PRODUCTION))
 API_LIST = [
@@ -52,8 +52,17 @@ API_LIST = [
         'router': after_service_router,
         'tags': ["history"]
     },
+    {
+        'prefix': "/refund/",
+        'router': refund_router,
+        'tags': ["history"]
+    },
+    {
+        'prefix': "/warranty/",
+        'router': warranty_router,
+        'tags': ["history"]
+    },
 ]
-
 # api_list.
 # 라우팅 설정
 for item in API_LIST:

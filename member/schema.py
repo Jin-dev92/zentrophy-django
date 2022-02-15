@@ -13,7 +13,7 @@ class MemberInsertSchema(Schema):
     # password: str
     address: str = None
     address_detail: str = None
-    number: str = None
+    member_info_number: str = None
     zipCode: str = None
     is_business: bool = False
 

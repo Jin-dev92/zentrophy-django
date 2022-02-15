@@ -5,7 +5,6 @@ from conf.settings import LICENSE_NUMBER_LENGTH
 from history.models import AfterService
 
 random_variation = string.digits + string.ascii_uppercase
-# RANDOM_MAX_LENGTH = 16
 
 
 def generate_random_number(length: int = LICENSE_NUMBER_LENGTH):  # 2. A/S 접수번호 - (랜덤생성, 16자리의 숫자 및 영문 대문자)
