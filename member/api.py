@@ -4,7 +4,8 @@ from ninja import Router
 from member.schema import MemberInsertSchema, AdminInsertSchema, MemberListSchema
 from member.models import Member
 from django.shortcuts import get_list_or_404, get_object_or_404
-from django.http import QueryDict
+
+from util.params import prepare_for_query
 
 router = Router()
 
@@ -12,13 +13,13 @@ router = Router()
 @router.get("/", description="회원 목록", response=List[MemberListSchema])
 def get_list_member(request, id: Optional[int] = None, email: Optional[str] = None, username: Optional[str] = None,
                     sort: Optional[int] = None):
-
-    return Member.objects.filter().all().order_by()
+    params = prepare_for_query(request=request, exceptions=['sort'])
+    return Member.objects.filter(**params).all().order_by()
 
 
 @router.post("/", description="회원 생성")
 def create_user(request, payload: MemberInsertSchema):
-    Member.objects.create(**payload.dict())
+    return Member.objects.create(**payload.dict())
 
 
 # @router.post("/admin", description="어드민 아이디 생성")
