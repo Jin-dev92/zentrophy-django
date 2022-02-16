@@ -14,8 +14,7 @@ class ProductDisplayLine(models.Model):  # 상품 진열 라인
 
 class ProductImage(TimeStampModel):
     id = models.AutoField(primary_key=True)
-    product = models.ForeignKey('product.Product', on_delete=models.CASCADE, null=True,
-                                related_name='product_image')
+    product = models.ForeignKey('product.Product', on_delete=models.CASCADE, null=True)
     origin_image = ImageField(upload_to="product/%Y/%M", null=True)
 
 
@@ -30,7 +29,7 @@ class VehicleImage(TimeStampModel):
 
 class ProductOptions(models.Model):
     id = models.AutoField(primary_key=True)
-    product = models.ForeignKey("product.Product", on_delete=models.CASCADE, null=True, related_name='product_options')
+    product = models.ForeignKey("product.Product", on_delete=models.CASCADE, null=True)
     option_name = models.CharField(max_length=200, blank=True)
     stock_count = models.IntegerField(default=0)
     option_description = models.TextField(blank=True)
@@ -54,7 +53,7 @@ class ProductOptions(models.Model):
 
 class VehicleColor(models.Model):
     id = models.AutoField(primary_key=True)
-    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True, related_name='vehicle_color')
+    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True)
     color_name = models.CharField(max_length=20, blank=True)
     stock_count = models.IntegerField(default=0)
     hex_code = models.CharField(max_length=7, blank=True)

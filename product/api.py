@@ -1,15 +1,18 @@
 from typing import List, Optional
 
 from django.db import transaction
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, File, Router
-
+from ninja.responses import Response
 from conf.message import DISPLAY_LINE_DONT_EXCEEDED_SIZE
 from product.constant import ProductListSort
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
     VehicleListSchema, VehicleInsertSchema
+from util.default import ResponseDefaultHeader
+from util.params import prepare_for_query
 
 product_router = Router()
 vehicle_router = Router()
@@ -19,14 +22,11 @@ current_product_sort = ProductListSort.UPDATE_AT
 
 @product_router.get("/",
                     description="상품 리스트 가져오기 sort 등록순: 0, 판매순 : 1 , 재고수량순: 2, 진열 라인 순: 3",
-                    response={200: List[ProductListSchema]},
+                    response=ResponseDefaultHeader.Schema,
                     tags=["product"]
                     )
 def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = None):
-    params = dict()
-    if id is not None:
-        params['id'] = id
-    field_name = None
+    params = prepare_for_query(request)
     global current_product_sort
     if sort == ProductListSort.UPDATE_AT:
         field_name = "is_created"
@@ -36,25 +36,36 @@ def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = 
         field_name = "product_options__stock_count"
     elif sort == ProductListSort.DISPLAY_LINE:
         field_name = "product_display_line__id"
+    else:
+        field_name = "is_created"
 
     if sort == current_product_sort:
         field_name = "-" + field_name
     else:
         current_product_sort = sort
-    return Product.objects.filter(**params).all().prefetch_related(
-        'product_options',
-        'product_display_line',
-        'product_image').order_by(field_name)
+
+    queryset = Product.objects.filter(**params).order_by(field_name).prefetch_related('productoptions_set', 'productimage_set',
+                                                                 'product_display_line')
+    # queryset = Product.objects.prefetch_related(Prefetch('productoptions_set',))
+    # print(queryset._prefetch_related_objects())
+    # print(queryset.productoptions)
+    # queryset = Product.objects.prefetch_related(Prefetch('productoptions_set'))
+    # queryset = ProductOptions.objects.select_related('product').all()
+    # print(queryset.query)
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        data=queryset.values()
+    )
 
 
 @transaction.atomic(using='default')
-@product_router.post("/", description="상품 등록", tags=["product"])
+@product_router.post("/", description="상품 등록", tags=["product"], response=ResponseDefaultHeader.Schema)
 def create_product(request, payload: ProductInsertSchema, files: List[UploadedFile] = File(...)):
     product = {k: v for k, v in payload.dict().items() if k not in {'product_options', 'product_display_line_id'}}
     product_options = payload.dict()['product_options']
     product_display_line_id_list = list(payload.dict()['product_display_line_id'])
     if len(product_display_line_id_list) > 2:
-        raise Exception(DISPLAY_LINE_DONT_EXCEEDED_SIZE)  # 나중에 defaultReponse 만들기
+        raise Exception(DISPLAY_LINE_DONT_EXCEEDED_SIZE)
     try:
         with transaction.atomic():
             product_queryset = Product.objects.create(**product)
@@ -68,6 +79,12 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
 
     except Exception as e:
         raise Exception(e)
+    finally:
+        return ResponseDefaultHeader(
+            code=Response.status_code,
+            message="상품 생성이 성공적으로 되었습니다.",
+            data=None
+        )
 
 
 @transaction.atomic(using='default')

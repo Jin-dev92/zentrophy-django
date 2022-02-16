@@ -50,18 +50,19 @@ API_LIST = [
     {
         'prefix': "/as/",
         'router': after_service_router,
-        'tags': ["history"]
+        'tags': ["A/S"]
     },
     {
         'prefix': "/refund/",
         'router': refund_router,
-        'tags': ["history"]
+        'tags': ["Refund"]
     },
     {
         'prefix': "/warranty/",
         'router': warranty_router,
-        'tags': ["history"]
+        'tags': ["Warranty"]
     },
+    # BatteryExchange
 ]
 # api_list.
 # 라우팅 설정

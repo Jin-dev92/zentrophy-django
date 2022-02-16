@@ -1,9 +1,7 @@
 from datetime import datetime
-
+from django.utils import timezone
 from ninja import Schema
-
 from history.constant import RefundMethod, RefundStatus, AfterServiceCategory
-from member.schema import MemberOwnedVehiclesListSchema
 from placement.schema import PlacementListSchema
 
 

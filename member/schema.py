@@ -35,11 +35,6 @@ class AdminInsertSchema(Schema):
     username: str
     email: str
     password: str
-    # address: str = None
-    # address_detail: str = None
-    # phone_number: str = None
-    # zipCode: str = None
-    # is_business: bool = None
 
 
 class MemberOwnedVehiclesListSchema(Schema):

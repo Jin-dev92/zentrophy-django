@@ -62,3 +62,8 @@ class ExtraSubside(models.Model):
     amount = models.IntegerField(default=0)
     description_1 = models.TextField(blank=True, help_text="보조금 신청 시 필요 서류 및 안내")  # 보조금 신청 시 필요 서류 및 안내
     description_2 = models.TextField(blank=True, help_text="보조금 신청 시 주의 사항")  # 보조금 신청 시 주의 사항
+
+
+class IntegratedFeePlan(models.Model):
+    zentrophy_fee = models.IntegerField(default=0)
+    battery_fee = models.IntegerField(default=0)
