@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from ninja import Schema
 # from numpy import np
 
@@ -42,16 +42,16 @@ class ProductOptionsInsertSchema(Schema):
 
 
 class ProductDescription(Schema):
-    product_description: str = None  # 상품 설명
-    shipping_instructions: str = None  # 배송 안내
-    refund_instructions: str = None  # 환불 정책
+    product_description: str = ""  # 상품 설명
+    shipping_instructions: str = ""  # 배송 안내
+    refund_instructions: str = ""  # 환불 정책
 
 
 class VehicleColor(Schema):  # 모터사이클 색상 스키마\
     # vehicle : str
     color_name: str
     stock_count: int = 0
-    hex_code: str = None
+    hex_code: str = ""
     on_sale: bool = False
     price: int = 0
 
@@ -62,7 +62,7 @@ class ProductInsertSchema(Schema):
     product_label: ProductLabel = ProductLabel.NEW  # ProductLabel.NEW
     product_options: List[ProductOptionsInsertSchema] = None  # 상품에 들어가는 상품 옵션, 여러개가 들어갈 수 있음.
     is_display: bool = False
-    product_display_line_id: List[int] = None
+    product_display_line_id: Optional[List[int]]
     is_refundable: bool = False
     description: ProductDescription = None
 

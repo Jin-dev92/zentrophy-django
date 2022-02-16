@@ -5,7 +5,7 @@ from ninja.responses import Response
 
 from conf.message import REFUSE_MUST_HAVE_REASON
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
-from history.models import AfterService, Refund, Warranty
+from history.models import AfterService, Refund, Warranty, BatteryExchange
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema
 from order.models import Order
 from placement.models import Placement
@@ -17,6 +17,7 @@ history_router = Router()
 refund_router = Router()
 after_service_router = Router()
 warranty_router = Router()
+battery_router = Router()
 
 
 @after_service_router.get("/", description="a/s 내역 보기", response=ResponseDefaultHeader.Schema)
@@ -35,16 +36,17 @@ def get_after_service_list(request, id: int = None, status: AfterServiceStatus =
 def create_after_service_history(request, payload: AfterServiceInsertSchema):
     place = get_object_or_404(Placement, id=payload.dict()['place_id'])
     member = get_object_or_404(Placement, id=payload.dict()['member_id'])
+    query_set = AfterService.objects.create(
+        place=place,
+        owner=member,
+        registration_number=generate_random_number(),
+        reservation_date=payload.dict()['reservation_date'],
+        detail=payload.dict()['detail'],
+        category=payload.dict()['category'],
+    )
     return ResponseDefaultHeader(
         code=Response.status_code,
-        data=AfterService.objects.create(
-            place=place,
-            owner=member,
-            registration_number=generate_random_number(),
-            reservation_date=payload.dict()['reservation_date'],
-            detail=payload.dict()['detail'],
-            category=payload.dict()['category'],
-        )
+        data=query_set
     )
 
 
@@ -87,9 +89,10 @@ def modify_refund(request, id: int, status: RefundStatus, reject_reason: str = N
     if status == RefundStatus.REFUSE and reject_reason is None:
         raise Exception(REFUSE_MUST_HAVE_REASON)
     params = prepare_for_query(request=request)
+    query_set = get_object_or_404(Refund, id=id).objects.update(**params)
     return ResponseDefaultHeader(
         code=Response.status_code,
-        data=get_object_or_404(Refund, id=id).objects.update(**params)
+        data=query_set
     )
 
 
@@ -128,4 +131,13 @@ def delete_warranty(request, id: int):
     return ResponseDefaultHeader(
         code=Response.status_code,
         data=qs
+    )
+
+
+@battery_router.get('/', description="", response=ResponseDefaultHeader.Schema)
+def get_battery_exchange_history_list(request):
+    query_set = BatteryExchange.objects
+    return ResponseDefaultHeader(
+        code=Response.status_code
+
     )

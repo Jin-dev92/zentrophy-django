@@ -14,10 +14,7 @@ class Member(TimeStampModel):
 
 
 class MemberOwnedVehicles(TimeStampModel):
-    order = models.ForeignKey('order.Order', on_delete=models.SET_NULL, null=True)
-    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.SET_NULL, null=True)
+    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.DO_NOTHING, null=True)
     owner = models.ForeignKey('member.Member', on_delete=models.CASCADE)
-    recent_exchange_history = models.ForeignKey('history.BatteryExchange', on_delete=models.SET_NULL, null=True,
-                                                default=None)
     license_code = models.CharField(max_length=20)
     battery_left = models.IntegerField(default=-1)  # -1의 경우 사용 불가.
