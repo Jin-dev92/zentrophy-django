@@ -30,7 +30,6 @@ class ProductOptionsListSchema(Schema):
     option_description: str = None  # 옵션 설명
     is_apply: bool = False  # 옵션 적용 여부
     product_options_label: ProductOptionsLabel = ProductOptionsLabel.NORMAL  # 기본형, 입력형, 옵션없음
-    product_image: List[ProductImageListSchema] = None
 
 
 class ProductOptionsInsertSchema(Schema):
@@ -92,14 +91,15 @@ class VehicleInsertSchema(Schema):
 
 
 class ProductListSchema(Schema):
-    id: int
-    product_name: str
-    product_price: int
-    product_label: str
-    is_display: bool
-    is_refundable: bool
+    id: int = None
+    product_name: str = None
+    product_price: int = None
+    product_label: str = None
+    is_display: bool = None
+    is_refundable: bool = None
     description: ProductDescription = None
-    # product_display_line: ProductDisplayLineSchema = None
+    product_display_line: List[ProductDisplayLineSchema] = None
     product_options: List[ProductOptionsListSchema] = None
-    is_created: datetime
-    is_updated: datetime
+    product_image: List[ProductImageListSchema] = None
+    is_created: datetime = None
+    is_updated: datetime = None
