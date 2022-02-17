@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, File, Router
 from ninja.responses import Response
 from conf.message import DISPLAY_LINE_DONT_EXCEEDED_SIZE
-from product.constant import ProductListSort
+from product.constant import ProductListSort, ProductOptionsLabel
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
@@ -22,18 +22,19 @@ current_product_sort = ProductListSort.UPDATE_AT
 
 @product_router.get("/",
                     description="상품 리스트 가져오기 sort 등록순: 0, 판매순 : 1 , 재고수량순: 2, 진열 라인 순: 3",
-                    response=ResponseDefaultHeader.Schema,
+                    response=List[ProductListSchema],
+                    # response=ResponseDefaultHeader.Schema,
                     tags=["product"]
                     )
 def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = None):
-    params = prepare_for_query(request)
+    params = prepare_for_query(request, ['sort'])
     global current_product_sort
     if sort == ProductListSort.UPDATE_AT:
         field_name = "is_created"
     elif sort == ProductListSort.SALE:
-        field_name = "product_options__sale_count"
+        field_name = "productoptions__sale_count"
     elif sort == ProductListSort.STOCK_COUNT:
-        field_name = "product_options__stock_count"
+        field_name = "productoptions__stock_count"
     elif sort == ProductListSort.DISPLAY_LINE:
         field_name = "product_display_line__id"
     else:
@@ -44,18 +45,16 @@ def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = 
     else:
         current_product_sort = sort
 
-    queryset = Product.objects.filter(**params).order_by(field_name).prefetch_related('productoptions_set', 'productimage_set',
-                                                                 'product_display_line')
-    # queryset = Product.objects.prefetch_related(Prefetch('productoptions_set',))
-    # print(queryset._prefetch_related_objects())
-    # print(queryset.productoptions)
-    # queryset = Product.objects.prefetch_related(Prefetch('productoptions_set'))
-    # queryset = ProductOptions.objects.select_related('product').all()
-    # print(queryset.query)
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        data=queryset.values()
-    )
+    products = Product.objects.prefetch_related(
+        Prefetch('productoptions_set', queryset=ProductOptions.objects.all(), to_attr='product_options'),
+        Prefetch('productimage_set', queryset=ProductImage.objects.all(), to_attr='product_image'),
+        'product_display_line',
+    ).filter(**params).order_by(field_name)
+    return products
+    # return ResponseDefaultHeader(
+    #     code=Response.status_code,
+    #     data=products
+    # )
 
 
 @transaction.atomic(using='default')
