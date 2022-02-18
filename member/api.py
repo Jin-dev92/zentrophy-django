@@ -22,9 +22,9 @@ def create_user(request, payload: MemberInsertSchema):
     return Member.objects.create(**payload.dict())
 
 
-@router.post("/admin", description="어드민 아이디 생성")
-def create_superuser(request, payload: AdminInsertSchema):  # 슈퍼유저 생성
-    return UserManager.create_superuser(**payload.dict())
+# @router.post("/admin", description="어드민 아이디 생성")
+# def create_superuser(request, payload: AdminInsertSchema):  # 슈퍼유저 생성
+#     UserManager.create_superuser(**payload.dict())
 
 
 @router.delete("/", description="회원 삭제")
