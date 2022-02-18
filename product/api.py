@@ -82,24 +82,32 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
 
 
 @transaction.atomic(using='default')
-@product_router.put("/", description="상품 수정", tags=["product"], response=ResponseDefaultHeader.Schema)
-def modify_product(request, payload: ProductInsertSchema, id: int,
-                   files: List[UploadedFile] = File(...)
-                   ):
-    print("@@@@@@@@@@@@ß")
-    print(files)
+@product_router.put("/", description="상품 수정", response=ResponseDefaultHeader.Schema)
+def modify_product(request, id: int, payload: ProductInsertSchema):
     try:
         with transaction.atomic():
-            product = get_object_or_404(Product, id=id)
+            product = Product.objects.filter(id=id)
             product_params = {k: v for k, v in payload.dict().items() if
                               k not in {'product_display_line_id', 'product_options'}}
-            product.objects.update(**product_params)
-            bulk_prepare_product_options_list = [ProductOptions(product=product.id, **payload.dict()['product_options'])
-                                                 for
-                                                 product_option in payload.dict()['product_options']]
-            product.product_display_line.bulk_update(payload.dict()['product_display_line_id'])  # product_display_line
-            product.productoptions_set.bulk_update(bulk_prepare_product_options_list)
-            product.productimage_set.bulk_update(files)
+
+            product.update(**product_params)
+            # ProductOptions.objects.filter(product=Product.objects.get(id=id)).delete()  # 나중에 업데이트 하는법 찾아서 바꾸기 ㅠ
+            # ProductImage.objects.filter(product=Product.objects.get(id=id)).delete()
+            # ProductOptions.objects.create(product=Product.objects.get(id=id), *payload.dict()['product_options'])
+            # ProductImage.objects.create(product=Product.objects.get(id=id), *payload.dict()['product_image'])
+            # ProductImage.objects.bulk_create()
+            # bulk_prepare_product_options_list: list = [
+            #     ProductOptions(product=Product.objects.get(id=id), *payload.dict()['product_options']) for
+            #     product_option in payload.dict()['product_options']]
+
+            # product_options = get_object_or_404(Product,id=id).productoptions_set
+            # product_options.update_or_create(*payload.dict()['product_options'])
+            # for option in payload.dict()['product_options']:
+
+            # for option in product_options.all():
+            #     option.objects.update_or_create(*payload.dict()['product_options'])
+            # get_object_or_404(Product, id=id).productoptions_set.bulk_update(objs=bulk_prepare_product_options_list,
+            #                                                                  fields=ProductInsertSchema.fields)
     except Exception as e:
         raise Exception(e)
     return ResponseDefaultHeader(
@@ -108,12 +116,13 @@ def modify_product(request, payload: ProductInsertSchema, id: int,
     )
 
 
-@product_router.delete("/", description="상품 삭제", tags=["product"])
+@product_router.delete("/", description="상품 삭제", tags=["product"], response=ResponseDefaultHeader.Schema)
 def delete_product(request, id: int):
+    qs = get_object_or_404(Product, id=id).delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="상품 삭제가 성공적으로 되었습니다.",
-        data=get_object_or_404(Product, id=id).delete()
+        data=qs
     )
 
 
@@ -148,44 +157,42 @@ def delete_display_line_by_id(request, id: int):
 @vehicle_router.get("/", description="모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"])
 def get_vehicle_list(request, id: Optional[int] = None):
     params = prepare_for_query(request)
-    result = Vehicle.objects.filter(**params).prefetch_related('vehicle_color').all()
+    result = Vehicle.objects.filter(**params).prefetch_related(
+        Prefetch('vehiclecolor_set', to_attr='vehicle_color'),
+        Prefetch('vehicleimage_set', to_attr='vehicle_image'),
+    )
     return result
 
 
 @transaction.atomic(using='default')
-@vehicle_router.post("/", description="모터사이클 등록")
-def create_vehicle(request, payload: VehicleInsertSchema):
-    vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color', 'vehicle_image'}}
+@vehicle_router.post("/", description="모터사이클 등록", response=ResponseDefaultHeader.Schema)
+def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFile] = File(...)):
+    vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
     vehicle_color = payload.dict().get('vehicle_color')
-    vehicle_image = payload.dict().get('vehicle_image')
 
     try:
         with transaction.atomic():
             vehicle_queryset = Vehicle.objects.create(**vehicle)
-            for color in vehicle_color:
-                VehicleColor.objects.create(
-                    vehicle=Vehicle.objects.get(id=vehicle_queryset.id),
-                    color_name=color['color_name'],
-                    stock_count=color['stock_count'],
-                    hex_code=color['hex_code'],
-                    on_sale=color['on_sale'],
-                    price=color['price']
-                )
-            for image in vehicle_image:
-                VehicleImage.objects.create(
-                    vehicle=Vehicle.objects.get(id=vehicle_queryset.id),
-                    origin_image=image
-                )
+            VehicleColor.objects.bulk_create([
+                VehicleColor(vehicle=Vehicle.objects.get(id=vehicle_queryset.id), **color) for color in vehicle_color
+            ])
+            VehicleImage.objects.bulk_create([
+                VehicleImage(vehicle=Vehicle.objects.get(id=vehicle_queryset.id), origin_image=file) for file in files
+            ])
     except Exception as e:
-        print(e)
+        raise Exception(e)
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        message="모터사이클이 성공적으로 추가 되었습니다"
+    )
 
 
 @transaction.atomic(using='default')
 @vehicle_router.put("/", description="모터사이클 수정")
 def modify_vehicle(request, payload: VehicleInsertSchema, id: int):
-    payload_vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color', 'vehicle_image'}}
+    payload_vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
     payload_vehicle_color = payload.dict().get('vehicle_color')
-    payload_vehicle_image = payload.dict().get('vehicle_image')
+    # payload_vehicle_image = payload.dict().get('vehicle_image')
 
     vehicle = Vehicle.objects.filter(id=id)
     vehicle_color = VehicleColor.objects.filter(vehicle=id)
@@ -195,7 +202,7 @@ def modify_vehicle(request, payload: VehicleInsertSchema, id: int):
         with transaction.atomic():
             vehicle.update(**payload_vehicle)
             vehicle_color.update_or_create(**payload_vehicle_color)
-            vehicle_image.update_or_create(**payload_vehicle_image)
+            # vehicle_image.update_or_create(**payload_vehicle_image)
     except Exception as e:
         return e
 
