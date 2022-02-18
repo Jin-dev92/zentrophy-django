@@ -23,7 +23,6 @@ current_product_sort = ProductListSort.UPDATE_AT
 @product_router.get("/",
                     description="상품 리스트 가져오기 sort 등록순: 0, 판매순 : 1 , 재고수량순: 2, 진열 라인 순: 3",
                     response=List[ProductListSchema],
-                    # response=ResponseDefaultHeader.Schema,
                     tags=["product"]
                     )
 def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = None):
@@ -51,10 +50,6 @@ def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = 
         'product_display_line',
     ).filter(**params).order_by(field_name)
     return products
-    # return ResponseDefaultHeader(
-    #     code=Response.status_code,
-    #     data=products
-    # )
 
 
 @transaction.atomic(using='default')
@@ -87,8 +82,12 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
 
 
 @transaction.atomic(using='default')
-@product_router.put("/", description="상품 수정", tags=["product"])
-def modify_product(request, payload: ProductInsertSchema, id: int, files: List[UploadedFile] = File(...)):
+@product_router.put("/", description="상품 수정", tags=["product"], response=ResponseDefaultHeader.Schema)
+def modify_product(request, payload: ProductInsertSchema, id: int,
+                   files: List[UploadedFile] = File(...)
+                   ):
+    print("@@@@@@@@@@@@ß")
+    print(files)
     try:
         with transaction.atomic():
             product = get_object_or_404(Product, id=id)
@@ -99,15 +98,23 @@ def modify_product(request, payload: ProductInsertSchema, id: int, files: List[U
                                                  for
                                                  product_option in payload.dict()['product_options']]
             product.product_display_line.bulk_update(payload.dict()['product_display_line_id'])  # product_display_line
-            product.product_options.bulk_update(bulk_prepare_product_options_list)
-            ProductImage.objects.filter(product=product.id).bulk_update(files)
+            product.productoptions_set.bulk_update(bulk_prepare_product_options_list)
+            product.productimage_set.bulk_update(files)
     except Exception as e:
         raise Exception(e)
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        message="상품 수정이 성공적으로 되었습니다."
+    )
 
 
 @product_router.delete("/", description="상품 삭제", tags=["product"])
 def delete_product(request, id: int):
-    get_object_or_404(Product, id=id).delete()
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        message="상품 삭제가 성공적으로 되었습니다.",
+        data=get_object_or_404(Product, id=id).delete()
+    )
 
 
 @display_line_router.get("/",
@@ -140,10 +147,7 @@ def delete_display_line_by_id(request, id: int):
 
 @vehicle_router.get("/", description="모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"])
 def get_vehicle_list(request, id: Optional[int] = None):
-    params = dict()
-    if id is not None:
-        params['id'] = id
-
+    params = prepare_for_query(request)
     result = Vehicle.objects.filter(**params).prefetch_related('vehicle_color').all()
     return result
 
@@ -198,8 +202,8 @@ def modify_vehicle(request, payload: VehicleInsertSchema, id: int):
 
 @vehicle_router.delete("/", description="모터사이클 수정")
 def delete_vehicle(id: int):
-    get_object_or_404(Vehicle, id=id).delete()
-
-# @vehicle_router.delete("/vehicle_color", description="모터사이클 수정")
-# def delete_vehicle_color(id: int):
-#     get_object_or_404(VehicleColor, id=id).delete()
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        message="상품 삭제가 성공적으로 되었습니다.",
+        data=get_object_or_404(Vehicle, id=id).delete()
+    )
