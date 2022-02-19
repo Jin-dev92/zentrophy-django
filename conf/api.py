@@ -3,6 +3,7 @@ from ninja import NinjaAPI
 # util
 from conf import settings
 from conf.contant import Env
+from post.api import faq_router, notice_router, faq_category_router
 from util.util import ORJSONParser
 # models & schema
 
@@ -61,6 +62,21 @@ API_LIST = [
         'prefix': "/warranty/",
         'router': warranty_router,
         'tags': ["Warranty"]
+    },
+    {
+        'prefix': "/faq/",
+        'router': faq_router,
+        'tags': ["faq"]
+    },
+    {
+        'prefix': "/notice/",
+        'router': notice_router,
+        'tags': ["notice"]
+    },
+    {
+        'prefix': "/faq_category/",
+        'router': faq_category_router,
+        'tags': ["faq_category"]
     },
     # BatteryExchange
 ]

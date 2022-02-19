@@ -3,7 +3,6 @@ from util.models import TimeStampModel
 
 
 class Member(TimeStampModel):
-    # id = models.BigAutoField(primary_key=True)
     username = models.CharField(max_length=20)
     email = models.EmailField(unique=True, max_length=100)  # 아이디의 역할을 함.
     member_info_number = models.CharField(max_length=20, blank=True)  # 개인일 경우 생년월일, 사업자인경우 사업자 번호
