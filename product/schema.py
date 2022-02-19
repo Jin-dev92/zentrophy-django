@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
+from pydantic.color import Color
 from ninja import Schema
 # from numpy import np
 
@@ -47,10 +48,9 @@ class ProductDescription(Schema):
 
 
 class VehicleColor(Schema):  # 모터사이클 색상 스키마\
-    # vehicle : str
     color_name: str
     stock_count: int = 0
-    hex_code: str = ""
+    hex_code: Color = None
     on_sale: bool = False
     price: int = 0
 

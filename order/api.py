@@ -4,31 +4,33 @@ from ninja import Router, File
 from ninja.files import UploadedFile
 from django.shortcuts import get_list_or_404, get_object_or_404
 from django.db import transaction
+from django.db.models import Prefetch
 
 from member.models import Member
 from order.constant import OrderState
 from order.models import Order, ExtraSubside, NecessaryDocumentFile
 from order.schema import OrderListSchema, OrderCreateSchema, OrderModifySchema
+from util.params import prepare_for_query
 
 router = Router()
 
 
 @router.get("/", description="전체 주문 조회, id param 넣으면 id로 조회", response={200: List[OrderListSchema]})
 def get_list_order(request, id: Optional[int] = None):
-    params = dict()
-    if id is not None:
-        params['id'] = id
-    queryset = Order.objects.select_related('owner').prefetch_related('extra_subside', 'order_files') \
-        .filter(**params).all()
+    params = prepare_for_query(request)
+    queryset = Order.objects.select_related('owner').prefetch_related(
+        Prefetch('extra_subside', to_attr="extra_subside"), Prefetch('order_files', to_attr="files")).filter(
+        **params).all()
     return queryset
 
 
 @router.post("/", description="주문 생성")
 @transaction.atomic(using='default')
-def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] = File(...)):
+def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] = None):
     payload_dict = payload.dict()
     extra_subsides = payload_dict['extra_subside']  # 추가 보조금 리스트
-    owner = Member.objects.get(id=payload_dict['owner_id'])
+    # owner = Member.objects.get(id=payload_dict['owner_id'])
+    owner = get_object_or_404(Member, id=payload_dict['owner_id'])
     try:
         with transaction.atomic():
             is_created_order = Order.objects.create(
