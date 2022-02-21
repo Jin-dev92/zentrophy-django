@@ -13,7 +13,7 @@ class Member(TimeStampModel):
 
 
 class MemberOwnedVehicles(TimeStampModel):
-    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.DO_NOTHING, null=True)
+    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.SET_NULL, null=True)
     owner = models.ForeignKey('member.Member', on_delete=models.CASCADE)
     license_code = models.CharField(max_length=20)
     battery_left = models.IntegerField(default=-1)  # -1의 경우 사용 불가.

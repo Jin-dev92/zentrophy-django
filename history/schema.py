@@ -1,6 +1,6 @@
 from datetime import datetime
-from django.utils import timezone
 from ninja import Schema
+from ninja import Field
 from history.constant import RefundMethod, RefundStatus, AfterServiceCategory
 from placement.schema import PlacementListSchema
 
@@ -14,7 +14,10 @@ class AfterServiceInsertSchema(Schema):
     member_id: int
     reservation_date: datetime = None
     detail: str = None
-    category: AfterServiceCategory = AfterServiceCategory.ETC
+    category: AfterServiceCategory = Field(
+        default=AfterServiceCategory.ETC,
+        description="0:정기점검, 1:타이거점검, 2:브레이크 패드 점검, 3:체인 점검, 4:소모품, 5:기타"
+    )
 
 
 class AfterServiceListSchema(Schema):
@@ -24,8 +27,16 @@ class AfterServiceListSchema(Schema):
 class RefundInsertSchema(Schema):
     order_id: int
     reject_reason: str = None
-    method: RefundMethod = RefundMethod.RECALL_REQUEST
-    status: RefundStatus = RefundStatus.WAITING
+    method: RefundMethod = Field(
+        title="환불 방법",
+        default=RefundMethod.RECALL_REQUEST,
+        description="0: RECALL_REQUEST, 1: Direct"
+    )
+    status: RefundStatus = Field(
+        title="환불 상태",
+        default=RefundStatus.WAITING,
+        description="0: 환불 대기, 1: 환불 완료, 2:환불 수락, 3: 환불 거절"
+    )
 
 
 class WarrantyInsertSchema(Schema):
