@@ -50,7 +50,7 @@ class ProductDescription(Schema):
 class VehicleColor(Schema):  # 모터사이클 색상 스키마\
     color_name: str
     stock_count: int = 0
-    hex_code: Color = None
+    hex_code: str = None
     on_sale: bool = False
     price: int = 0
 
