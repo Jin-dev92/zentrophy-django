@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import Prefetch
 
-from member.models import Member
+from member.models import User
 from order.constant import OrderState
 from order.models import Order, ExtraSubside, NecessaryDocumentFile
 from order.schema import OrderListSchema, OrderCreateSchema
@@ -33,7 +33,7 @@ def get_list_order(request, id: Optional[int] = None):
 def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] = None):
     payload_dict = payload.dict()
     extra_subsides_id: list = payload_dict['extra_subside_id']  # 추가 보조금 리스트
-    owner = get_object_or_404(Member, id=payload_dict['owner_id'])
+    owner = get_object_or_404(User, id=payload_dict['owner_id'])
     try:
         with transaction.atomic():
             is_created_order = Order.objects.update_or_create(
