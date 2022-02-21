@@ -41,5 +41,5 @@ class RefundInsertSchema(Schema):
 
 class WarrantyInsertSchema(Schema):
     name: str
-    validity: datetime
-    is_warranty: bool
+    validity: datetime = Field(title="유효기간")
+    is_warranty: bool = Field(title="보증 가능 여부")

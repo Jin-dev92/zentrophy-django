@@ -7,7 +7,7 @@ from util.models import TimeStampModel
 
 class Order(TimeStampModel):
     id = models.AutoField(primary_key=True)
-    owner = models.ForeignKey('member.Member',
+    owner = models.ForeignKey('member.User',
                               on_delete=models.CASCADE,
                               null=True)
     payment_info = models.JSONField(null=True)
