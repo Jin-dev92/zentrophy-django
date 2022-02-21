@@ -21,6 +21,4 @@ def prepare_for_query(request: WSGIRequest, exceptions: Optional[List] = None): 
     result = {k: int(v) for k, v in params.items() if able2_parse_type(v, int)}
     not_int_value_dict = {k: v for k, v in params.items() if able2_parse_type(v, int) is False}
     result.update(not_int_value_dict)
-    print("----------------------------- prepare_for_query ------------------------------")
-    print(result)
     return result

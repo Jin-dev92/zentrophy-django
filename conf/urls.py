@@ -21,6 +21,4 @@ from .api import api
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("v1/", api.urls),
-    # path('document/', get_swagger_view(title='Rest API Document')),
-    # path('v1/', include((router.urls, 'member'), namespace='api')),
 ]

@@ -13,7 +13,7 @@ class UserManager(BaseUserManager):
         user = self.model(
             username=username,
             email=self.normalize_email(email),
-            **kwargs
+            **self.parameters_validation_check(**kwargs)
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -32,8 +32,19 @@ class UserManager(BaseUserManager):
         super_user.save(using=self._db)
         return super_user
 
-    def validator(self):
-        return True
+    def parameters_validation_check(self, **kwargs):
+        print(kwargs)
+        is_business = kwargs.get('is_business')
+        for kwarg in kwargs:
+            if kwarg == 'member_info_number':  # 멤버 번호 유효성 체크
+                length = len(''.join(char for char in kwargs[kwarg] if char not in '-'))  # - 제거
+                if is_business:
+                    if length != 10:
+                        raise ValueError("잘못된 사업자 등록 번호 입니다.")
+                else:
+                    if length != 8:
+                        raise ValueError("잘못된 생년 월일 입니다.")
+        return kwargs
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -44,7 +55,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     member_info_number = models.CharField(max_length=20, blank=True)  # 개인일 경우 생년월일, 사업자인경우 사업자 번호
     address = models.CharField(max_length=200, blank=True)
     address_detail = models.CharField(max_length=200, blank=True)
-    zipCode = models.CharField(max_length=20, blank=True)
+    zipcode = models.CharField(max_length=20, blank=True)
     is_business = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)

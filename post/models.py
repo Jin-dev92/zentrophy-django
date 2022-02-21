@@ -1,10 +1,13 @@
 from django.db import models
+
+from conf import settings
 from util.models import TimeStampModel
 
 
 class Post(TimeStampModel):
     title = models.CharField(max_length=200)
     content = models.TextField(blank=True)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
 
     class Meta:
         abstract = True
