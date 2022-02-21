@@ -15,6 +15,6 @@ def is_exist_file_in_model(obj: dict[UploadedFile], model: Model):
 async def delete_files(file_list: List[str]):
     try:
         for file in file_list:
-            await os.remove(os.path.join(settings.MEDIA_ROOT, file))
+            os.remove(os.path.join(settings.MEDIA_ROOT, file))
     except Exception as e:
         raise Exception(e)

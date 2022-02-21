@@ -20,7 +20,8 @@ class PlacementListSchema(Schema):
     placement_type: PlacementType = Field(title="타입 ")
     operation_start: time = Field(title="운영 시간 (시작)")
     operation_end: time = Field(title="운영 시간 (끝)")
-    operation_state: OperationState = Field(title="0 -운영중 1 -점검중 2 - 설치 예정")
+    operation_state: OperationState = Field(title="운영 상태",
+                                            description="0 -운영중 1 -점검중 2 - 설치 예정")
     placement_image: List[PlacementImageSchema] = None
 
 

@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
-from pydantic.color import Color
-from ninja import Schema
+from ninja import Schema, Field
 # from numpy import np
 
 from product.constant import ProductOptionsLabel, ProductLabel
@@ -26,11 +25,17 @@ class ProductImageListSchema(Schema):
 
 class ProductOptionsListSchema(Schema):
     product_id: int
-    option_name: str = None  # 옵션 이름
-    stock_count: int = 0  # 재고 수량
-    option_description: str = None  # 옵션 설명
-    is_apply: bool = False  # 옵션 적용 여부
-    product_options_label: ProductOptionsLabel = ProductOptionsLabel.NORMAL  # 기본형, 입력형, 옵션없음
+    option_name: str = Field(default=None,
+                             title="옵션 이름")  # 옵션 이름
+    stock_count: int = Field(default=0,
+                             title="재고 수량")  # 재고 수량
+    option_description: str = Field(default=None,
+                                    title="옵션 설명")  # 옵션 설명
+    is_apply: bool = Field(default=False,
+                           title="옵션 적용 여부")  # 옵션 적용 여부
+    product_options_label: ProductOptionsLabel = Field(default=ProductOptionsLabel.NORMAL,
+                                                       title="상품 옵션 라벨",
+                                                       description="0: 기본형, 1:입력형, 2:옵션없음")  # 기본형, 입력형, 옵션없음
 
 
 class ProductOptionsInsertSchema(Schema):
@@ -38,32 +43,36 @@ class ProductOptionsInsertSchema(Schema):
     stock_count: int  # 재고 수량
     option_description: str = None  # 옵션 설명
     is_apply: bool = False  # 옵션 적용 여부
-    product_options_label: ProductOptionsLabel = ProductOptionsLabel.NORMAL  # 기본형, 입력형, 옵션없음
+    product_options_label: ProductOptionsLabel = Field(default=ProductOptionsLabel.NORMAL,
+                                                       title="0: 기본형, 1:입력형, 2:옵션없음")  # 기본형, 입력형, 옵션없음
 
 
 class ProductDescription(Schema):
-    product_description: str = ""  # 상품 설명
-    shipping_instructions: str = ""  # 배송 안내
-    refund_instructions: str = ""  # 환불 정책
+    product_description: str = Field(default="", title="상품 설명")  # 상품 설명
+    shipping_instructions: str = Field(default="", title="배송 안내")  # 배송 안내
+    refund_instructions: str = Field(default="", title="환불 정책")  # 환불 정책
 
 
 class VehicleColor(Schema):  # 모터사이클 색상 스키마\
-    color_name: str
-    stock_count: int = 0
-    hex_code: str = None
-    on_sale: bool = False
+    color_name: str = Field(title="색 이름")
+    stock_count: int = Field(default=0, title="재고 수량")
+    hex_code: str = Field(default="FFFFFF", title="색 코드", description="css에서 사용하는 컬러값 사용 가능, 16진수, white, rgba 값")
+    on_sale: bool = Field(default=False, title="판매 여부")
     price: int = 0
 
 
 class ProductInsertSchema(Schema):
     product_name: str
     product_price: int = 0
-    product_label: ProductLabel = ProductLabel.NEW  # ProductLabel.NEW
+    product_label: ProductLabel = Field(default=ProductLabel.NEW,
+                                        title="상품 라벨",
+                                        description="0:HOT, 1:NEW, 2:SALE, 3:BEST"
+                                        )  # ProductLabel.NEW
     product_options: List[ProductOptionsInsertSchema] = None  # 상품에 들어가는 상품 옵션, 여러개가 들어갈 수 있음.
-    is_display: bool = False
-    product_display_line_id: Optional[List[int]] = None
-    is_refundable: bool = False
-    description: ProductDescription = None
+    is_display: bool = Field(default=False, title="진열 여부")
+    product_display_line_id: Optional[List[int]] = Field(default=None, title="상품 진열 라인 pk")
+    is_refundable: bool = Field(default=False, title="환불 가능 여부")
+    description: ProductDescription = Field(default=None, title="상품 설명")
 
 
 class VehicleListSchema(Schema):
@@ -71,10 +80,10 @@ class VehicleListSchema(Schema):
     vehicle_name: str
     zero_to_fifty: int
     max_speed: int
-    max_output: int
-    able_subsidy: bool
-    able_extra_subsidy: bool
-    is_display: bool
+    max_output: int = Field(title="최대 출력")
+    able_subsidy: bool = Field(title="기본 지원금 가능 여부")
+    able_extra_subsidy: bool = Field(title="추가 지원금 가능 여부")
+    is_display: bool = Field(title="진열 여부")
     vehicle_color: List[VehicleColor] = None
     vehicle_image: List[ProductImageListSchema] = None
 

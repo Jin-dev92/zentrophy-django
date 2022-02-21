@@ -23,7 +23,6 @@ def get_faq_list(request, id: int = None, category: int = None):
 @transaction.atomic(using='default')
 @faq_router.post("/", description="FAQ 생성", response=ResponseDefaultHeader.Schema)
 def create_faq(request, payload: FAQInsertSchema):
-    # faq_params = {k: v for k, v in payload.dict().items() if k not in 'category'}
     try:
         with transaction.atomic():
             FAQ.objects.update_or_create(**payload.dict())
@@ -71,7 +70,7 @@ def create_notice(request, payload: NoticeInsertSchema):
     )
 
 
-@faq_router.delete("/", description="공지사항 삭제", response=ResponseDefaultHeader.Schema)
+@notice_router.delete("/", description="공지사항 삭제", response=ResponseDefaultHeader.Schema)
 def delete_notice(request, id: int):
     queryset = get_object_or_404(Notice, id=id).delete()
     return ResponseDefaultHeader(
