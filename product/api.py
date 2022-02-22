@@ -21,7 +21,9 @@ from util.params import prepare_for_query
 product_router = Router()
 vehicle_router = Router()
 display_line_router = Router()
-current_product_sort = ProductListSort.UPDATE_AT
+
+
+# current_product_sort = ProductListSort.UPDATE_AT
 
 
 @product_router.get("/",
@@ -31,28 +33,30 @@ current_product_sort = ProductListSort.UPDATE_AT
                     )
 def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = None):
     params = prepare_for_query(request, ['sort'])
-    global current_product_sort
-    if sort == ProductListSort.UPDATE_AT:
+    if sort == ProductListSort.RECENT:
         field_name = "is_created"
-    elif sort == ProductListSort.SALE:
-        field_name = "productoptions__sale_count"
-    elif sort == ProductListSort.STOCK_COUNT:
-        field_name = "productoptions__stock_count"
-    elif sort == ProductListSort.DISPLAY_LINE:
-        field_name = "product_display_line__id"
+    elif sort == ProductListSort.LATEST:
+        field_name = '-is_created'
+    elif sort == ProductListSort.HIGH_SALE:
+        field_name = 'productoptions__sale_count'
+    elif sort == ProductListSort.LOW_SALE:
+        field_name = '-productoptions__sale_count'
+    elif sort == ProductListSort.HIGH_STOCK_COUNT:
+        field_name = 'productoptions__stock_count'
+    elif sort == ProductListSort.LOW_STOCK_COUNT:
+        field_name = '-productoptions__stock_count'
+    elif sort == ProductListSort.HIGH_DISPLAY_LINE:
+        field_name = 'product_display_line__id'
+    elif sort == ProductListSort.LOW_DISPLAY_LINE:
+        field_name = "-product_display_line__id"
     else:
         field_name = "is_created"
 
-    if sort == current_product_sort:
-        field_name = "-" + field_name
-    else:
-        current_product_sort = sort
-
-    products = Product.objects.prefetch_related(
+    products = Product.objects.filter(**params).prefetch_related(
         Prefetch('productoptions_set', queryset=ProductOptions.objects.all(), to_attr='product_options'),
         Prefetch('productimage_set', queryset=ProductImage.objects.all(), to_attr='product_image'),
         'product_display_line',
-    ).filter(**params).order_by(field_name)
+    ).order_by(field_name)
     return products
 
 

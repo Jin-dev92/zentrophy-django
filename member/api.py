@@ -31,9 +31,10 @@ def create_user(request, payload: MemberInsertSchema):
     )
 
 
-@router.get('/logout', description="로그아웃")
+@router.get('/logout', description="로그 아웃")
 def member_logout(request):
     logout(request)
+    return {200: "로그 아웃이 되었습니다."}
 
 
 @router.post("/login", description="로그인")
