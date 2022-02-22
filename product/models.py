@@ -57,6 +57,7 @@ class VehicleColor(models.Model):
     vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True)
     color_name = models.CharField(max_length=20, blank=True)
     stock_count = models.IntegerField(default=0)
+    sale_count = models.IntegerField(default=0)
     hex_code = ColorField(default='#FFFFFF')
     on_sale = models.BooleanField(default=False)
     price = models.IntegerField(default=0)

@@ -4,10 +4,12 @@ from ninja import UploadedFile, File, Router
 from ninja.responses import Response
 
 from conf.message import REFUSE_MUST_HAVE_REASON
-from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
+from history.constant import AfterServiceStatus, RefundMethod, RefundStatus, BatteryExchangeSort
 from history.models import AfterService, Refund, Warranty, BatteryExchange
-from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema
-from order.models import Order
+from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, \
+    BatteryExchangeInsertSchema
+from member.models import MemberOwnedVehicles
+from order.models import Order, IntegratedFeePlan
 from placement.models import Placement
 from util.default import ResponseDefaultHeader
 from util.number import generate_random_number
@@ -134,10 +136,55 @@ def delete_warranty(request, id: int):
     )
 
 
-@battery_router.get('/', description="", response=ResponseDefaultHeader.Schema)
-def get_battery_exchange_history_list(request):
-    query_set = BatteryExchange.objects
-    return ResponseDefaultHeader(
-        code=Response.status_code
+@battery_router.get('/', description="배터리 교환 내역 조회")
+def get_battery_exchange_history(request, sort: BatteryExchangeSort = None):
+    # [정렬] -  { 최근 지불 일정, 늦은 지불 일정, 높은 요금 순, 낮은 요금 순 , 누적 사용량 높은 순 , 누적 사용량 낮은 순 }
+    params = prepare_for_query(request=request, exceptions=['sort'])
+    field_name = 'order__is_created'
+    if sort == BatteryExchangeSort.RECENT_PAYMENT_DATE:
+        field_name == 'is_created'
+    elif sort == BatteryExchangeSort.LATEST_PAYMENT_DATE:
+        field_name == '-is_created'
+    elif sort == BatteryExchangeSort.HIGH_PAYMENT:  # todo 나이스페이 관련 작업 후 변경
+        field_name == '-order__is_created'
+    elif sort == BatteryExchangeSort.LOW_PAYMENT:
+        field_name == '-order__is_created'
+    elif sort == BatteryExchangeSort.HIGH_USED_BATTERY:
+        field_name == 'used_battery'
+    elif sort == BatteryExchangeSort.LOW_USED_BATTERY:
+        field_name == '-used_battery'
+    else:
+        field_name = 'order__is_created'
 
+    queryset = BatteryExchange.objects.filter(**params).select_related('place', 'order', 'member_vehicle',
+                                                                       'fee_plan').order_by(field_name)
+    return queryset
+
+
+@battery_router.post('/', description="배터리 교환 내역 생성", response=ResponseDefaultHeader.Schema)
+def create_battery_history(request, payload: BatteryExchangeInsertSchema):
+    params = payload.dict()
+    place = get_object_or_404(Placement, id=params['place_id'])
+    order = get_object_or_404(Order, id=params['order_id'])
+    member_owned_vehicles = get_object_or_404(MemberOwnedVehicles, id=params['member_owned_vehicles_id'])
+    fee_plan = get_object_or_404(IntegratedFeePlan, params['fee_plan_id'])
+    queryset = BatteryExchange.objects.update_or_create(
+        place=place,
+        order=order,
+        member_vehicle=member_owned_vehicles,
+        fee_plan=fee_plan,
+        used_battery=params['used_battery'],
+    )
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        data=queryset
+    )
+
+
+@battery_router.delete('/', description="배터리 교환 내역 삭제", response=ResponseDefaultHeader.Schema)
+def delete_battery_history(request, id: int):
+    queryset = get_object_or_404(BatteryExchange, id=id).delete()
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        data=queryset
     )

@@ -8,11 +8,6 @@ from placement.models import Placement
 from util.models import TimeStampModel
 
 
-# class History(TimeStampModel):
-#     class Meta:
-#         abstract = True
-
-
 class Refund(TimeStampModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     reject_reason = models.CharField(max_length=200, blank=True)

@@ -55,6 +55,7 @@ class ProductDescription(Schema):
 
 class VehicleColor(Schema):  # 모터사이클 색상 스키마\
     color_name: str = Field(title="색 이름")
+    sale_count: int = Field(default=0, title="판매 수량")
     stock_count: int = Field(default=0, title="재고 수량")
     hex_code: str = Field(default="FFFFFF", title="색 코드", description="css에서 사용하는 컬러값 사용 가능, 16진수, white, rgba 값")
     on_sale: bool = Field(default=False, title="판매 여부")
