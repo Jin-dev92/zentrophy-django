@@ -1,7 +1,9 @@
 from django.db import models
 
+from conf import settings
 from member.models import MemberOwnedVehicles
-from order.constant import OrderState, ErrorMessage
+from order.constant import OrderState, ErrorMessage, PaymentType
+from product.models import Vehicle, ProductOptions, VehicleColor
 from util.models import TimeStampModel
 
 
@@ -10,8 +12,8 @@ class Order(TimeStampModel):
     owner = models.ForeignKey('member.User',
                               on_delete=models.CASCADE,
                               null=True)
+    payment_type = models.PositiveSmallIntegerField(default=0)
     payment_info = models.JSONField(null=True)
-    is_vehicle = models.BooleanField(default=False)
     is_able_subside = models.BooleanField(default=False)
     extra_subside = models.ManyToManyField('order.ExtraSubside')
     state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
@@ -22,49 +24,49 @@ class Order(TimeStampModel):
     def order_change_state(self, state: OrderState):
         if self.state == state:
             raise Exception(ErrorMessage.CANT_CHANGE_ORDER_STATE)
-        # if self.is_vehicle:
-        #     try:
-        #         if self.state == OrderState.IS_COMPLETE:  # 배송 완료 했다가 다른 상태로 돌렸을 경우 배송 완료 되었을 때 생성되었던 사용자 모터사이클 리스트를 삭제해준다.
-        #             return None
-        #             # qs = MemberOwnedVehicles.objects.filter(order=Order.objects.get(id=self.id)).delete()
-        #             # assert qs
-        #         if state == OrderState.IS_COMPLETE:  # 사용자 보유 모터사이클 리스트에 객체를 생성하여 넣어준다.
-        #             qs = MemberOwnedVehicles.objects.create(
-        #                 # order=self.id,
-        #                 vehicle=self.payment_info,  # @todo 나중에 제대로 넣어야함.
-        #                 owner=self.owner,
-        #                 license_code=self.payment_info['license_code'],  # @todo 나중에 제대로 넣어야함.
-        #             )
-        #             assert qs
-        #     except Exception as e:
-        #         raise Exception(e)
+        if self.payment_type == PaymentType.VEHICLE:
+            try:
+                if self.state == OrderState.IS_COMPLETE:  # 배송 완료 했다가 다른 상태로 돌렸을 경우 배송 완료 되었을 때 생성되었던 사용자 모터사이클 리스트를 삭제해준다.
+                    MemberOwnedVehicles.objects.get(order=self.objects.get(id=self.id)).delete()
+                if state == OrderState.IS_COMPLETE:  # 사용자 보유 모터사이클 리스트에 객체를 생성하여 넣어준다.
+                    goods_name = self.payment_info['GoodsName']
+                    MemberOwnedVehicles.objects.create(
+                        vehicle=Vehicle.objects.get(vehicle_name=goods_name),
+                        order=self.objects.get(id=self.id),
+                        owner=self.owner,
+                    )
+            except Exception as e:
+                raise Exception(e)
 
         self.state = state
         self.save()
 
-    # def sales_products(self):
-    #     # 판매 후 불러 오는 함수 재고량 -1 , 판매량 +1
-    #     pk = self.payment_info['product_id']
-    #     if pk is None:
-    #         pk = 1  # todo 나중에 바꿀 것 테스트 용 코드
-    #     if self.is_vehicle:
-    #         model = Vehicle
-    #     else:
-    #         model = ProductOptions
-    #         stock_count = model.objects.get(id=pk).stock_count
-    #         sale_count = model.objects.get(id=pk).sale_count
-    #         if stock_count == 0:
-    #             raise ValueError(ErrorMessage.CANT_SALE_STOCK_COUNT_IS_ZERO)
-    #         stock_count = stock_count - 1
-    #         sale_count = sale_count + 1
-    #         model.save()
-    #     return None
+    def sales_products(self):  # todo 나중에 협의 후 수정. goods_name의 경우
+        # 판매 후 불러 오는 함수 재고량 -1 , 판매량 +1
+        goods: str = self.payment_info['GoodsName']
+        if settings.OPTION_SPLIT in goods:
+            raise ValueError()
+        goods_name = goods.split('++')[0]
+        extra = goods.split('++')[1]
+
+        if self.payment_type == PaymentType.VEHICLE:
+            obj = VehicleColor.objects.get(vehicle__vehicle_name=goods_name, color_name=extra)
+        elif self.payment_type == PaymentType.PRODUCT:
+            obj = ProductOptions.objects.get(product__product_name=goods_name, option_name=extra)
+            if obj.stock_count == 0:
+                raise ValueError(ErrorMessage.MUST_HAVE_SPLIT_WORD)
+            obj.sale_count += 1
+            obj.stock_count -= 1
+        else:
+            raise ValueError(ErrorMessage.CANT_APPLY_PERIOD_PAYMENT)
+
+        obj.save()
 
 
 class NecessaryDocumentFile(TimeStampModel):
     id = models.AutoField(primary_key=True)
     file = models.FileField(upload_to="order/%Y/%M", )
-    order = models.ForeignKey('order.Order', on_delete=models.CASCADE, related_name="order_files")
+    order = models.ForeignKey('order.Order', on_delete=models.CASCADE)
 
 
 class Subside(models.Model):

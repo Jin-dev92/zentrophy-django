@@ -69,6 +69,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class MemberOwnedVehicles(TimeStampModel):
     vehicle = models.ForeignKey('product.Vehicle', on_delete=models.SET_NULL, null=True)
+    order = models.ForeignKey('order.Order', on_delete=models.SET_NULL, null=True)
     owner = models.ForeignKey('member.User', on_delete=models.CASCADE)
-    license_code = models.CharField(max_length=20)
+    license_code = models.CharField(max_length=50, default=None)
     battery_left = models.IntegerField(default=-1)  # -1의 경우 사용 불가.

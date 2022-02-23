@@ -153,3 +153,4 @@ LOGIN_REDIRECT_URL = '/'  # 반드시 정의할 것!
 AUTH_USER_MODEL = 'member.User'
 
 LICENSE_NUMBER_LENGTH = 16
+OPTION_SPLIT = "++"

@@ -32,7 +32,6 @@ class ProductOptions(models.Model):
     id = models.AutoField(primary_key=True)
     product = models.ForeignKey("product.Product", on_delete=models.CASCADE, null=True)
     option_name = models.CharField(max_length=200, blank=True)
-    stock_count = models.IntegerField(default=0)
     option_description = models.TextField(blank=True)
     is_apply = models.BooleanField(default=False)
     product_options_label = models.PositiveSmallIntegerField(
@@ -40,16 +39,10 @@ class ProductOptions(models.Model):
         help_text="0 : 일반형, 1 : 입력형, 2: 해당 없음"
     )
     sale_count = models.IntegerField(default=0)
+    stock_count = models.IntegerField(default=0)
 
     def __str__(self):
         return self.option_name
-
-    def sale(self):
-        self.stock_count = self.stock_count - 1
-        self.sale_count = self.sale_count + 1
-
-    # class Meta:  # 이 옵션을 선언하면 해당 모델은 따로 테이블을 만들지 않는다.
-    #     abstract = True
 
 
 class VehicleColor(models.Model):
