@@ -1,5 +1,6 @@
 # package
 from ninja import NinjaAPI
+from ninja.security import django_auth
 # util
 from conf import settings
 from conf.contant import Env
@@ -16,7 +17,7 @@ from product.api import display_line_router as display_line_router
 # from history.api import history_router as history_router
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router
 
-api = NinjaAPI(parser=ORJSONParser(), csrf=(settings.Env is Env.PRODUCTION))
+api = NinjaAPI(parser=ORJSONParser(), csrf=(settings.Env is Env.PRODUCTION), auth=django_auth)
 API_LIST = [
     {
         'prefix': "/member/",

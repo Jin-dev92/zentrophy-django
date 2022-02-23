@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-plug1-6zblo)q^z1n2mjdiws96now4r!=l2@&0o$=82dxs3@^2
 DEBUG = ENV is Env.DEVELOPMENT
 
 ALLOWED_URL_LIST = []
-if len(ALLOWED_URL_LIST) == 0:
+if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
     ALLOWED_HOSTS = [url for url in ALLOWED_URL_LIST]
