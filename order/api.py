@@ -9,10 +9,11 @@ from django.db import transaction
 from django.db.models import Prefetch
 
 from member.models import User
-from order.constant import OrderState
+from order.constant import OrderState, PaymentType
 from order.models import Order, ExtraSubside, NecessaryDocumentFile
 from order.schema import OrderListSchema, OrderCreateSchema
 from util.default import ResponseDefaultHeader
+from util.file import delete_files
 from util.params import prepare_for_query
 
 router = Router()
@@ -23,8 +24,8 @@ def get_list_order(request, id: Optional[int] = None):
     params = prepare_for_query(request)
     queryset = Order.objects.select_related('owner').prefetch_related(
         Prefetch('extra_subside', to_attr="extra_subside"),
-        Prefetch('order_files', to_attr="files")) \
-        .filter(**params).all()
+        Prefetch('necessarydocumentfile_set', to_attr="files")). \
+        filter(**params).all()
     return queryset
 
 
@@ -38,15 +39,21 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
         with transaction.atomic():
             is_created_order = Order.objects.update_or_create(
                 owner=owner,
+                payment_type=payload_dict['payment_type'],
                 payment_info=payload_dict['payment_info'],
                 is_able_subside=payload_dict['is_able_subside']
             )  # 주문 생성
-            is_created_order.extra_subside.add(*ExtraSubside.objects.in_bulk(id_list=extra_subsides_id))
             for_bulk_file_list = [NecessaryDocumentFile(file=file,
-                                                        order=is_created_order) for file in files]
-            NecessaryDocumentFile.objects.bulk_create(for_bulk_file_list)
+                                                        order=is_created_order[0]) for file in files]
+            if is_created_order[1]:  # create
+                is_created_order[0].extra_subside.add(*ExtraSubside.objects.in_bulk(id_list=extra_subsides_id))
 
-
+                NecessaryDocumentFile.objects.bulk_create(for_bulk_file_list)
+                is_created_order[0].sales_products()
+            else:  # update
+                is_created_order[0].extra_subside = ExtraSubside.objects.in_bulk(id_list=extra_subsides_id)
+                delete_files([file.file.name for file in for_bulk_file_list])
+                is_created_order[0].save()
     except Exception as e:
         raise Exception(e)
 

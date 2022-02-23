@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 
 from ninja import Schema, Field
-from order.constant import OrderState
+from order.constant import OrderState, PaymentType
 from member.schema import MemberListSchema
 
 
@@ -56,15 +56,24 @@ class OrderListSchema(Schema):
     is_updated: datetime
     files: str = Field(default=None, title="첨부 파일")
 
+    # id = models.AutoField(primary_key=True)
+    # owner = models.ForeignKey('member.User',
+    #                           on_delete=models.CASCADE,
+    #                           null=True)
+    # payment_info = models.JSONField(null=True)
+    # is_vehicle = models.BooleanField(default=False)
+    # is_able_subside = models.BooleanField(default=False)
+    # extra_subside = models.ManyToManyField('order.ExtraSubside')
+    # state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
+
 
 class OrderCreateSchema(Schema):
     owner_id: int
+    payment_type: PaymentType
     payment_info: dict = Field(default=None,
                                title="결제 정보",
                                description="결제 후 return 되는 결제 관련 값을 넣어줘야함. 카드번호.. 등등")
     is_able_subside: bool = False
     extra_subside_id: List[int] = Field(default=None, description="추가 보조금 pk")
 
-# class OrderModifySchema(Schema):
-#     payment_info: OrderPaymentInfoSchema = None
-#     extra_subside_id: List[int] = None
+# class PaymentInfo(Schema):
