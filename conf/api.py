@@ -14,10 +14,9 @@ from placement.api import router as placement_router
 from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from product.api import display_line_router as display_line_router
-# from history.api import history_router as history_router
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router
 
-api = NinjaAPI(parser=ORJSONParser(), csrf=(settings.Env is Env.PRODUCTION), auth=django_auth)
+api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
 API_LIST = [
     {
         'prefix': "/member/",
