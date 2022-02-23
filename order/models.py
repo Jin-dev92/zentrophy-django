@@ -1,7 +1,7 @@
 from django.db import models
 
 from member.models import MemberOwnedVehicles
-from order.constant import OrderState
+from order.constant import OrderState, ErrorMessage
 from util.models import TimeStampModel
 
 
@@ -21,7 +21,7 @@ class Order(TimeStampModel):
 
     def order_change_state(self, state: OrderState):
         if self.state == state:
-            raise Exception("변경하려는 주문 상태와 db 내 주문 상태가 같습니다.")
+            raise Exception(ErrorMessage.CANT_CHANGE_ORDER_STATE)
         # if self.is_vehicle:
         #     try:
         #         if self.state == OrderState.IS_COMPLETE:  # 배송 완료 했다가 다른 상태로 돌렸을 경우 배송 완료 되었을 때 생성되었던 사용자 모터사이클 리스트를 삭제해준다.
@@ -42,10 +42,23 @@ class Order(TimeStampModel):
         self.state = state
         self.save()
 
-    def sales_products(self):
-        # 판매 후 불러 오는 함수 재고량 -1 , 판매량 +1
-        # self.payment_info['product_id']
-        return None
+    # def sales_products(self):
+    #     # 판매 후 불러 오는 함수 재고량 -1 , 판매량 +1
+    #     pk = self.payment_info['product_id']
+    #     if pk is None:
+    #         pk = 1  # todo 나중에 바꿀 것 테스트 용 코드
+    #     if self.is_vehicle:
+    #         model = Vehicle
+    #     else:
+    #         model = ProductOptions
+    #         stock_count = model.objects.get(id=pk).stock_count
+    #         sale_count = model.objects.get(id=pk).sale_count
+    #         if stock_count == 0:
+    #             raise ValueError(ErrorMessage.CANT_SALE_STOCK_COUNT_IS_ZERO)
+    #         stock_count = stock_count - 1
+    #         sale_count = sale_count + 1
+    #         model.save()
+    #     return None
 
 
 class NecessaryDocumentFile(TimeStampModel):
