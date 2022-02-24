@@ -29,7 +29,8 @@ display_line_router = Router()
 @product_router.get("/",
                     description="상품 리스트 가져오기 sort 등록순: 0, 판매순 : 1 , 재고수량순: 2, 진열 라인 순: 3",
                     response=List[ProductListSchema],
-                    tags=["product"]
+                    tags=["product"],
+                    auth=None
                     )
 def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = None):
     params = prepare_for_query(request, ['sort'])
@@ -116,7 +117,9 @@ def delete_product(request, id: int):
 @display_line_router.get("/",
                          description="상품 진열 라인 조회",
                          response={200: List[ProductDisplayLineSchema]},
-                         tags=["product"])
+                         tags=["product"],
+                         auth=None
+                         )
 def get_display_line(request):
     qs = ProductDisplayLine.objects.all()
     return qs
@@ -152,7 +155,7 @@ def delete_display_line_by_id(request, id: int):
     )
 
 
-@vehicle_router.get("/", description="모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"])
+@vehicle_router.get("/", description="모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"], auth=None)
 def get_vehicle_list(request, id: Optional[int] = None):
     params = prepare_for_query(request)
     result = Vehicle.objects.filter(**params).prefetch_related(

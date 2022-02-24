@@ -19,7 +19,10 @@ from util.params import prepare_for_query
 router = Router()
 
 
-@router.get("/", description="전체 주문 조회, id param 넣으면 id로 조회", response={200: List[OrderListSchema]})
+@router.get("/", description="전체 주문 조회, id param 넣으면 id로 조회",
+            response={200: List[OrderListSchema]},
+            auth=None
+            )
 def get_list_order(request, id: Optional[int] = None):
     params = prepare_for_query(request)
     queryset = Order.objects.select_related('owner').prefetch_related(

@@ -18,7 +18,7 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
                     # sort: Optional[int] = None
                     ):
     params = prepare_for_query(request=request, exceptions=['sort'])
-    return User.objects.filter(**params).all().order_by(**params)
+    return User.objects.filter(**params).all().order_by()
 
 
 @router.post("/", description="회원 생성", response=ResponseDefaultHeader.Schema, auth=None)
