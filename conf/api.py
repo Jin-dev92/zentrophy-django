@@ -83,9 +83,7 @@ API_LIST = [
         'router': faq_category_router,
         'tags': ["faq_category"]
     },
-    # BatteryExchange
 ]
-# api_list.
 # 라우팅 설정
 for item in API_LIST:
     api.add_router(prefix=item['prefix'], router=item['router'], tags=item['tags'])
