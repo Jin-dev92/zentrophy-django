@@ -18,10 +18,10 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
                     # sort: Optional[int] = None
                     ):
     params = prepare_for_query(request=request, exceptions=['sort'])
-    return User.objects.filter(**params).all().order_by()
+    return User.objects.filter(**params).all().order_by(**params)
 
 
-@router.post("/", description="회원 생성", response=ResponseDefaultHeader.Schema)
+@router.post("/", description="회원 생성", response=ResponseDefaultHeader.Schema, auth=None)
 def create_user(request, payload: MemberInsertSchema):
     queryset = User.objects.create_user(**payload.dict())
     return ResponseDefaultHeader(
@@ -37,7 +37,7 @@ def member_logout(request):
     return {200: "로그 아웃이 되었습니다."}
 
 
-@router.post("/login", description="로그인")
+@router.post("/login", description="로그인", auth=None)
 def member_login(request, email: str = Form(...), password: str = Form(...)):
     params = prepare_for_query(request)
     user = authenticate(request, **params)
