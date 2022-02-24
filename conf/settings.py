@@ -14,7 +14,8 @@ from pathlib import Path
 
 from conf.contant import Env
 
-ENV = Env.DEVELOPMENT
+# ENV = Env.DEVELOPMENT
+ENV = Env.PRODUCTION
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +29,7 @@ SECRET_KEY = 'django-insecure-plug1-6zblo)q^z1n2mjdiws96now4r!=l2@&0o$=82dxs3@^2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = ENV is Env.DEVELOPMENT
 
-ALLOWED_URL_LIST = []
+ALLOWED_URL_LIST = ['.pythonanywhere.com']
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
