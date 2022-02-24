@@ -14,7 +14,7 @@ notice_router = Router()
 faq_category_router = Router()
 
 
-@faq_router.get('/', description="FAQ 목록", response=List[FAQListSchema])
+@faq_router.get('/', description="FAQ 목록", response=List[FAQListSchema], auth=None)
 def get_faq_list(request, id: int = None, category: int = None):
     params = prepare_for_query(request)
     return FAQ.objects.filter(**params).all()
@@ -46,7 +46,7 @@ def delete_faq(request, id: int):
     )
 
 
-@notice_router.get('/', description="공지사항 리스트", response=List[NoticeListSchema])
+@notice_router.get('/', description="공지사항 리스트", response=List[NoticeListSchema], auth=None)
 def get_notice_list(request, id: int):
     params = prepare_for_query(request)
     queryset = Notice.objects.filter(**params).all()
@@ -80,7 +80,7 @@ def delete_notice(request, id: int):
     )
 
 
-@faq_category_router.get('/', description="FAQ 카테고리 리스트", response=List[FAQCategorySchema])
+@faq_category_router.get('/', description="FAQ 카테고리 리스트", response=List[FAQCategorySchema], auth=None)
 def get_faq_category_list(request):
     return FAQCategory.objects.all()
 
