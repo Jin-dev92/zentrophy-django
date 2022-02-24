@@ -22,7 +22,10 @@ warranty_router = Router()
 battery_router = Router()
 
 
-@after_service_router.get("/", description="a/s 내역 보기", response=ResponseDefaultHeader.Schema)
+@after_service_router.get("/", description="a/s 내역 보기",
+                          response=ResponseDefaultHeader.Schema,
+                          auth=None
+                          )
 def get_after_service_list(request, id: int = None, status: AfterServiceStatus = None, is_created__gte: date = None,
                            is_created__lte: date = None):
     params = prepare_for_query(request=request)
@@ -60,7 +63,10 @@ def change_after_service_status(request, id: int, status: AfterServiceStatus):
     )
 
 
-@refund_router.get("/", description="환불 내역 조회", response=ResponseDefaultHeader.Schema)
+@refund_router.get("/", description="환불 내역 조회",
+                   response=ResponseDefaultHeader.Schema,
+                   auth=None
+                   )
 def get_refund_list(request, method: RefundMethod = None, status: RefundStatus = None):
     params = prepare_for_query(request=request)
     qs = Refund.objects.filter(**params).select_related('order').all()
@@ -98,7 +104,10 @@ def modify_refund(request, id: int, status: RefundStatus, reject_reason: str = N
     )
 
 
-@warranty_router.get('/', description="보증 범위 리스트", response=ResponseDefaultHeader.Schema)
+@warranty_router.get('/', description="보증 범위 리스트",
+                     response=ResponseDefaultHeader.Schema,
+                     auth=None
+                     )
 def get_warranty_list(request):
     params = prepare_for_query(request)
     qs = Warranty.objects.filter(**params).all()
@@ -136,7 +145,7 @@ def delete_warranty(request, id: int):
     )
 
 
-@battery_router.get('/', description="배터리 교환 내역 조회")
+@battery_router.get('/', description="배터리 교환 내역 조회", auth=None)
 def get_battery_exchange_history(request, sort: BatteryExchangeSort = None):
     # [정렬] -  { 최근 지불 일정, 늦은 지불 일정, 높은 요금 순, 낮은 요금 순 , 누적 사용량 높은 순 , 누적 사용량 낮은 순 }
     params = prepare_for_query(request=request, exceptions=['sort'])

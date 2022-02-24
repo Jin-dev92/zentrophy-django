@@ -22,7 +22,8 @@ router = Router()
 @router.get("/",
             description="플레이스 리스트 가져오기",
             tags=["place"],
-            response={200: List[PlacementListSchema]}
+            response={200: List[PlacementListSchema]},
+            auth=None
             )
 def get_placement_list_by_type(request, placement_type: Optional[PlacementType] = None, id: Optional[int] = None):
     params = prepare_for_query(request)
