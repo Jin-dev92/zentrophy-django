@@ -17,6 +17,7 @@ from product.api import display_line_router as display_line_router
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router
 
 api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
+
 API_LIST = [
     {
         'prefix': "/member/",
