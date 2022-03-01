@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from django.contrib.auth.decorators import permission_required
 from ninja import Router, Form
 from ninja.responses import Response
 
@@ -21,13 +22,13 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
     return User.objects.filter(**params).all().order_by()
 
 
+# @allowed_users()
 @router.post("/", description="회원 생성", response=ResponseDefaultHeader.Schema, auth=None)
 def create_user(request, payload: MemberInsertSchema):
     queryset = User.objects.create_user(**payload.dict())
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="유저 생성이 되었습니다.",
-        data=queryset
     )
 
 
@@ -39,10 +40,10 @@ def member_logout(request):
 
 @router.post("/login", description="로그인", auth=None)
 def member_login(request, email: str = Form(...), password: str = Form(...)):
-    params = prepare_for_query(request)
-    user = authenticate(request, **params)
+    user = authenticate(request, email=email, password=password)
     if user is not None:
         login(request, user)
+        print(request)
     else:
         raise ValueError('아이디 혹은 비밀번호가 틀립니다.')
 
