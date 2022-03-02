@@ -51,3 +51,8 @@ class BatteryExchangeInsertSchema(Schema):
     member_owned_vehicles_id: int = Field(title="회원 보유 모터 사이클 pk")
     fee_plan_id: int = Field(title="요금제 pk")
     used_battery: float = Field(default=0, title="누적 사용량")
+
+
+class CartListSchema(Schema): # todo 데이터 형식에 맞게 수정해둬야함
+    id: int
+    product: str
