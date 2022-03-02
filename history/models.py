@@ -5,6 +5,7 @@ from history.constant import RefundStatus, AfterServiceStatus, RefundMethod, Aft
 from member.models import MemberOwnedVehicles
 from order.models import Order
 from placement.models import Placement
+from product.models import Product
 from util.models import TimeStampModel
 
 
@@ -37,3 +38,12 @@ class Warranty(TimeStampModel):
     name = models.CharField(max_length=100, blank=True)
     validity = models.DateTimeField(null=True)
     is_warranty = models.BooleanField(default=True)
+
+
+class Cart(TimeStampModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
+    owner = models.ForeignKey('member.User', on_delete=models.CASCADE, null=True)
+    amount = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.product.product_name + "//" + str(self.amount) + self.owner.email

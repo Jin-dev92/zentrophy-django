@@ -1,13 +1,16 @@
 from datetime import date, datetime
+from typing import List
+
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, File, Router
 from ninja.responses import Response
 
+from conf.custom_exception import LoginRequiredException
 from conf.message import REFUSE_MUST_HAVE_REASON
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus, BatteryExchangeSort
-from history.models import AfterService, Refund, Warranty, BatteryExchange
+from history.models import AfterService, Refund, Warranty, BatteryExchange, Cart
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, \
-    BatteryExchangeInsertSchema
+    BatteryExchangeInsertSchema, CartListSchema
 from member.models import MemberOwnedVehicles
 from order.models import Order, IntegratedFeePlan
 from placement.models import Placement
@@ -15,11 +18,11 @@ from util.default import ResponseDefaultHeader
 from util.number import generate_random_number
 from util.params import prepare_for_query
 
-history_router = Router()
 refund_router = Router()
 after_service_router = Router()
 warranty_router = Router()
 battery_router = Router()
+cart_router = Router()
 
 
 @after_service_router.get("/", description="a/s 내역 보기",
@@ -197,3 +200,12 @@ def delete_battery_history(request, id: int):
         code=Response.status_code,
         data=queryset
     )
+
+
+@cart_router.get('/', description="장바구니 목록 확인", response=List[CartListSchema])
+def get_cart_list(request):
+    user = request.user
+    if user is None:
+        raise LoginRequiredException
+    queryset = Cart.objects.get(owner__email=user.email)
+    return queryset
