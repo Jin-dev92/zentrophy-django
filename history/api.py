@@ -155,17 +155,17 @@ def get_battery_exchange_history(request, sort: BatteryExchangeSort = None):
     params = prepare_for_query(request=request, exceptions=['sort'])
     field_name = 'order__is_created'
     if sort == BatteryExchangeSort.RECENT_PAYMENT_DATE:
-        field_name == 'is_created'
+        field_name = 'is_created'
     elif sort == BatteryExchangeSort.LATEST_PAYMENT_DATE:
-        field_name == '-is_created'
+        field_name = '-is_created'
     elif sort == BatteryExchangeSort.HIGH_PAYMENT:  # todo 나이스페이 관련 작업 후 변경
-        field_name == '-order__is_created'
+        field_name = '-order__is_created'
     elif sort == BatteryExchangeSort.LOW_PAYMENT:
-        field_name == '-order__is_created'
+        field_name = '-order__is_created'
     elif sort == BatteryExchangeSort.HIGH_USED_BATTERY:
-        field_name == 'used_battery'
+        field_name = 'used_battery'
     elif sort == BatteryExchangeSort.LOW_USED_BATTERY:
-        field_name == '-used_battery'
+        field_name = '-used_battery'
     else:
         field_name = 'order__is_created'
 
