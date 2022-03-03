@@ -1,6 +1,8 @@
 from datetime import datetime
-from ninja import Schema
+
 from ninja import Field
+from ninja import Schema
+
 from history.constant import RefundMethod, RefundStatus, AfterServiceCategory
 from placement.schema import PlacementListSchema
 
@@ -53,6 +55,12 @@ class BatteryExchangeInsertSchema(Schema):
     used_battery: float = Field(default=0, title="누적 사용량")
 
 
-class CartListSchema(Schema): # todo 데이터 형식에 맞게 수정해둬야함
+class CartListSchema(Schema):  # todo 데이터 형식에 맞게 수정해둬야함
     id: int
     product: str
+    amount: int
+
+
+class CartCreateSchema(Schema):
+    product_id: int = Field(title="상품 pk")
+    amount: int = Field(title="상품 수량")

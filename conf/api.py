@@ -1,20 +1,21 @@
 # package
 from ninja import NinjaAPI
 from ninja.security import django_auth
+
 # util
 from conf import settings
-from conf.contant import Env
-from post.api import faq_router, notice_router, faq_category_router
-from util.util import ORJSONParser
-# models & schema
-
+from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
+    cart_router
 from member.api import router as member_router
 from order.api import router as order_router
 from placement.api import router as placement_router
+from post.api import faq_router, notice_router, faq_category_router
+from product.api import display_line_router as display_line_router
 from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
-from product.api import display_line_router as display_line_router
-from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router
+from util.util import ORJSONParser
+
+# models & schema
 
 api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
 
@@ -83,6 +84,11 @@ API_LIST = [
         'prefix': "/faq_category/",
         'router': faq_category_router,
         'tags': ["faq_category"]
+    },
+    {
+        'prefix': "/cart/",
+        'router': cart_router,
+        'tags': ["cart"]
     },
 ]
 # 라우팅 설정
