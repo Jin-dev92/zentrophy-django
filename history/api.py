@@ -2,19 +2,20 @@ from datetime import date, datetime
 from typing import List
 
 from django.shortcuts import get_object_or_404
-from ninja import UploadedFile, File, Router
+from ninja import Router
 from ninja.responses import Response
 
-from conf.custom_exception import LoginRequiredException
 from conf.message import REFUSE_MUST_HAVE_REASON
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus, BatteryExchangeSort
 from history.models import AfterService, Refund, Warranty, BatteryExchange, Cart
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, \
-    BatteryExchangeInsertSchema, CartListSchema
+    BatteryExchangeInsertSchema, CartListSchema, CartCreateSchema
 from member.models import MemberOwnedVehicles
 from order.models import Order, IntegratedFeePlan
 from placement.models import Placement
+from product.models import Product
 from util.default import ResponseDefaultHeader
+from util.exception.exception import LoginRequiredException
 from util.number import generate_random_number
 from util.params import prepare_for_query
 
@@ -132,7 +133,7 @@ def create_warranty(request, payload: WarrantyInsertSchema):
 @warranty_router.put('/', description="보증 범위 수정", response=ResponseDefaultHeader.Schema)
 def modify_warranty(request, id: int, validity: datetime = None):
     params = prepare_for_query(request)
-    qs = get_object_or_404(Warranty, id=id).update(**params)
+    qs = get_object_or_404(Warranty, id=id).objects.update(**params)
     return ResponseDefaultHeader(
         code=Response.status_code,
         data=qs
@@ -202,10 +203,34 @@ def delete_battery_history(request, id: int):
     )
 
 
-@cart_router.get('/', description="장바구니 목록 확인", response=List[CartListSchema])
+@cart_router.get('/', description="장바구니 목록 확인", response={200: List[CartListSchema]})
 def get_cart_list(request):
     user = request.user
-    if user is None:
+    if str(user) == 'AnonymousUser':
         raise LoginRequiredException
     queryset = Cart.objects.get(owner__email=user.email)
     return queryset
+
+
+@cart_router.post('/', description="장바구니 목록 생성", response=ResponseDefaultHeader.Schema)
+def create_cart_list(request, payload: CartCreateSchema):
+    user = request.user
+    if str(user) == 'AnonymousUser':
+        raise LoginRequiredException
+    product_id = payload.dict()['product_id']
+    amount = payload.dict()['amount']
+    queryset = Cart.objects.update_or_create(
+        product=get_object_or_404(Product, id=product_id),
+        owner=user,
+        amount=amount
+    )
+
+    # if queryset[1]:  # create
+    #
+    #     return None
+    # else:  # update
+    #     return None
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        message="장바구니 목록이 성공적으로 생성되었습니다."
+    )
