@@ -10,3 +10,12 @@
 #         #     raise USER_NOT_ACCESS_DENIED
 #
 #     return decorator
+# from ninja import Router
+
+
+# def staff_only(router:Router):
+#     def decorator():
+#         router.
+#         return None
+#
+#     return decorator()
