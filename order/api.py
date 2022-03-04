@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from django.contrib.auth.decorators import permission_required
 from ninja import Router
 from ninja.files import UploadedFile
 from ninja.responses import Response
@@ -8,6 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.db.models import Prefetch
 
+from conf import settings
 from member.models import User
 from order.constant import OrderState, PaymentType
 from order.models import Order, ExtraSubside, NecessaryDocumentFile
@@ -66,6 +68,7 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
     )
 
 
+@permission_required(perm=settings.ADMIN_GROUP_NAME, raise_exception=True)
 @router.put("/", description="주문 상태 변경", response=ResponseDefaultHeader.Schema)
 def modify_order(request, id: int, state: OrderState):
     qs = get_object_or_404(Order, id=id).order_change_state(state)
@@ -76,6 +79,7 @@ def modify_order(request, id: int, state: OrderState):
     )
 
 
+@permission_required(perm=settings.ADMIN_GROUP_NAME, raise_exception=True)
 @router.delete("/", description="주문 삭제", response=ResponseDefaultHeader.Schema)
 def delete_order(request, id: int):
     qs = get_object_or_404(Order, id=id).delete()
