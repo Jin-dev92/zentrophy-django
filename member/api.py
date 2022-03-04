@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from django.contrib.auth.decorators import permission_required
+# from django.contrib.auth.decorators import permission_required
 from conf import settings
 from ninja import Router, Form
 from ninja.responses import Response
@@ -9,6 +9,8 @@ from member.schema import MemberInsertSchema, MemberListSchema
 from member.models import User
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import login, logout, authenticate
+
+# from util.custom_decorator import admin_only
 from util.default import ResponseDefaultHeader
 from util.exception.exception import USER_NOT_ACCESS_DENIED
 from util.params import prepare_for_query
@@ -16,7 +18,6 @@ from util.params import prepare_for_query
 router = Router()
 
 
-@permission_required(perm=settings.ADMIN_GROUP_NAME, raise_exception=True)
 @router.get("/", description="회원 목록", response=List[MemberListSchema])
 def get_list_member(request, id: Optional[int] = None, email: Optional[str] = None, username: Optional[str] = None,
                     # sort: Optional[int] = None

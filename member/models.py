@@ -9,22 +9,21 @@ class UserManager(BaseUserManager):
     def create_user(self, email, password, username, **kwargs):
         if not email:
             raise ValueError('이메일이 필요합니다.')
-        if len(Group.objects.filter(name='customer')) == 0:
-            raise ValueError('customer 그룹이 없습니다.')
-
+        # if len(Group.objects.filter(name='customer')) == 0:
+        #     raise ValueError('customer 그룹이 없습니다.')
+        #
         user = self.model(
             username=username,
             email=self.normalize_email(email),
             **self.parameters_validation_check(**kwargs)
         )
         user.set_password(password)
-        user.groups = Group.objects.get(name='customer')
         user.save(using=self._db)
         return user
 
     def create_superuser(self, email, password):
-        if len(Group.objects.filter(name='super_user')) == 0:
-            raise ValueError('super_user 그룹이 없습니다.')
+        # if len(Group.objects.filter(name='super_user')) == 0:
+        #     raise ValueError('super_user 그룹이 없습니다.')
         super_user = self.create_user(
             email=self.normalize_email(email),
             username="admin",
@@ -34,7 +33,7 @@ class UserManager(BaseUserManager):
         super_user.is_admin = True
         super_user.is_superuser = True
         super_user.is_staff = True
-        super_user.groups = Group.objects.get(name='super_user')
+        # super_user.groups = Group.objects.get(name='super_user')
         super_user.save(using=self._db)
 
         return super_user
@@ -67,7 +66,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_admin = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    groups = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True)
+    groups = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, default=None)
     date_joined = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = 'email'

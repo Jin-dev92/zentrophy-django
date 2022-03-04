@@ -157,4 +157,4 @@ LICENSE_NUMBER_LENGTH = 16
 OPTION_SPLIT = "++"
 # permmistion groups
 ADMIN_GROUP_NAME = 'super_user'
-CUSTOMER_GROUP_NAME = 'customer'
+CUSTOMER_GROUP_NAME = None
