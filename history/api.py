@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from typing import List
 
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.responses import Response
@@ -15,7 +16,7 @@ from order.models import Order, IntegratedFeePlan
 from placement.models import Placement
 from product.models import Product
 from util.default import ResponseDefaultHeader
-from util.exception.exception import LoginRequiredException
+# from util.exception.exception import LoginRequiredException
 from util.number import generate_random_number
 from util.params import prepare_for_query
 
@@ -34,7 +35,7 @@ def get_after_service_list(request, id: int = None, status: AfterServiceStatus =
                            is_created__lte: date = None):
     params = prepare_for_query(request=request)
     qs = AfterService.objects.filter(**params).select_related('place', 'vehicle').all()
-    print(qs.values())
+    # print(qs.values())
     return ResponseDefaultHeader(
         code=Response.status_code,
         data=qs.values()
@@ -203,34 +204,41 @@ def delete_battery_history(request, id: int):
     )
 
 
+@login_required
 @cart_router.get('/', description="장바구니 목록 확인", response={200: List[CartListSchema]})
 def get_cart_list(request):
     user = request.user
-    if str(user) == 'AnonymousUser':
-        raise LoginRequiredException
-    queryset = Cart.objects.get(owner__email=user.email)
+    # if str(user) == 'AnonymousUser':
+    #     raise LoginRequiredException
+    queryset = Cart.objects.filter(owner__email=user.email).select_related('product')
     return queryset
 
 
+@login_required
 @cart_router.post('/', description="장바구니 목록 생성", response=ResponseDefaultHeader.Schema)
 def create_cart_list(request, payload: CartCreateSchema):
     user = request.user
-    if str(user) == 'AnonymousUser':
-        raise LoginRequiredException
+    # if str(user) == 'AnonymousUser':
+    #     raise LoginRequiredException
     product_id = payload.dict()['product_id']
     amount = payload.dict()['amount']
-    queryset = Cart.objects.update_or_create(
+    Cart.objects.update_or_create(
         product=get_object_or_404(Product, id=product_id),
         owner=user,
         amount=amount
     )
 
-    # if queryset[1]:  # create
-    #
-    #     return None
-    # else:  # update
-    #     return None
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="장바구니 목록이 성공적으로 생성되었습니다."
+    )
+
+
+@login_required
+@cart_router.delete('/', description="장바구니 삭제")
+def delete_cart(request, id: int):
+    get_object_or_404(Cart, id=id).delete()
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        message="장바구니 목록이 정상적으로 삭제되었습니다."
     )

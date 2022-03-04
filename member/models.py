@@ -40,7 +40,6 @@ class UserManager(BaseUserManager):
         return super_user
 
     def parameters_validation_check(self, **kwargs):
-        print(kwargs)
         is_business = kwargs.get('is_business')
         for kwarg in kwargs:
             if kwarg == 'member_info_number':  # 멤버 번호 유효성 체크
