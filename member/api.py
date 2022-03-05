@@ -72,7 +72,6 @@ def get_payment_method(request):
 
 @payment_method_router.post('/', description="결젤 수단 생성")
 def create_payment_method(request, payload: PaymentMethodInsertSchema):
-    print(type(payload))
     if has_permission(request):
         payment_method = PaymentMethod.objects.update_or_create(
             name=payload.dict()['name'],
