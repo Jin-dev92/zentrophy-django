@@ -1,13 +1,10 @@
-# from conf.api import api
-#
-#
-# class LoginRequiredException(Exception):
-#     pass
-# 
-#
-# @api.exception_handler(exc_class=LoginRequiredException)
-# def login_exception_handler(request):
-#     return api.create_response(request=request,
-#                                data={'detail': '로그인이 필요합니다.'},
-#                                status=401
-#                                )
+from django.http import HttpRequest
+
+from conf.api import api
+from util.exception.exception import LoginRequiredException
+from util.exception.constant import ErrorMessage
+
+
+@api.exception_handler(LoginRequiredException)
+def login_required_exception_handler(request: HttpRequest):
+    return api.create_response(request=request, data={'message': ErrorMessage.LOGIN_REQUIRED}, status=401)

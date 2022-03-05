@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.responses import Response
 
-from conf.message import REFUSE_MUST_HAVE_REASON
+# from conf.message import REFUSE_MUST_HAVE_REASON
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus, BatteryExchangeSort
 from history.models import AfterService, Refund, Warranty, BatteryExchange, Cart
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, \
@@ -100,7 +100,8 @@ def create_refund_history(request, payload: RefundInsertSchema):
 @refund_router.put("/", description="환불 상태 변경, status 가 3일 경우 reject_reason 필수", response=ResponseDefaultHeader.Schema)
 def modify_refund(request, id: int, status: RefundStatus, reject_reason: str = None):
     if status == RefundStatus.REFUSE and reject_reason is None:
-        raise Exception(REFUSE_MUST_HAVE_REASON)
+        raise Exception('임시₩')
+        # raise Exception(REFUSE_MUST_HAVE_REASON)
     params = prepare_for_query(request=request)
     query_set = get_object_or_404(Refund, id=id).objects.update(**params)
     return ResponseDefaultHeader(

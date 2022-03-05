@@ -15,8 +15,10 @@ from order.constant import OrderState, PaymentType
 from order.models import Order, ExtraSubside, NecessaryDocumentFile
 from order.schema import OrderListSchema, OrderCreateSchema
 from util.default import ResponseDefaultHeader
+from util.exception.exception import LoginRequiredException
 from util.file import delete_files
 from util.params import prepare_for_query
+from util.permission import has_permission
 
 router = Router()
 
@@ -34,17 +36,19 @@ def get_list_order(request, id: Optional[int] = None):
     return queryset
 
 
-@router.post("/", description="주문 생성/수정, payment_info : 결제 후 return 되는 값을 넣어야함.", response=ResponseDefaultHeader.Schema)
+@router.post("/", description="주문 생성/수정", response=ResponseDefaultHeader.Schema)
 @transaction.atomic(using='default')
 def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] = None):
+    if not has_permission:
+        raise LoginRequiredException
     payload_dict = payload.dict()
     extra_subsides_id: list = payload_dict['extra_subside_id']  # 추가 보조금 리스트
-    owner = get_object_or_404(User, id=payload_dict['owner_id'])
     try:
         with transaction.atomic():
             is_created_order = Order.objects.update_or_create(
-                owner=owner,
+                owner=request.user,
                 payment_type=payload_dict['payment_type'],
+                payment_method=payload_dict['payment_method'],
                 payment_info=payload_dict['payment_info'],
                 is_able_subside=payload_dict['is_able_subside']
             )  # 주문 생성
@@ -58,7 +62,8 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
             else:  # update
                 is_created_order[0].extra_subside = ExtraSubside.objects.in_bulk(id_list=extra_subsides_id)
                 delete_files([file.file.name for file in for_bulk_file_list])
-                is_created_order[0].save()
+
+            is_created_order[0].save()
     except Exception as e:
         raise Exception(e)
 

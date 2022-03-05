@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 
 from util.default import ResponseDefaultHeader
-from util.exception.exception import USER_NOT_ACCESS_DENIED, LoginRequiredException
+from util.exception.exception import UserNotAccessDeniedException, LoginRequiredException
 from util.params import prepare_for_query
 from util.permission import has_permission
 
@@ -54,10 +54,10 @@ def member_login(request, email: str = Form(...), password: str = Form(...)):
 @router.delete("/", description="회원 삭제")
 def delete_user(request, id: int):
     user = request.user
-    if has_permission(request) is False:  # 일반 유저 일 때
+    if not has_permission(request):  # 일반 유저 일 때
         target = get_object_or_404(User, id=id)
         if user != target:  # 일반 유저가 다른 유저의 계정을 삭제 하기 못하게 하기 위한 코드
-            raise USER_NOT_ACCESS_DENIED
+            raise UserNotAccessDeniedException
 
     return get_object_or_404(User, id=id).delete()
 
