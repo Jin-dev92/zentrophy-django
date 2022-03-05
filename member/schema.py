@@ -1,6 +1,8 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from ninja import Schema, Field
+
+from member.constant import CardCompany
 from product.schema import VehicleListSchema
 
 
@@ -32,3 +34,22 @@ class MemberOwnedVehiclesListSchema(Schema):
     vehicle: VehicleListSchema
     license_code: str = Field(default=None, title="라이센스 코드")
     battery_left: int = Field(default=-1, title="잔여 배터리 량")
+
+
+class CardInsertSchema(Schema):
+    card_number: str = None
+    card_company: CardCompany = Field(title='카드사',
+                                      description='0 : BC, 1: 국민, 2: 삼성, 3: 신한, 4: 우리, 5:하나, 6:롯데, 7: 현대, 8:농협')
+    validate_date: date = None
+    security_code: str = None
+
+
+class PaymentMethodListSchema(Schema):
+    id: int
+    card: CardInsertSchema = None
+    favorite: bool = False
+
+
+class PaymentMethodInsertSchema(Schema):
+    name: str
+    card = CardInsertSchema

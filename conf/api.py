@@ -6,7 +6,7 @@ from ninja.security import django_auth
 from conf import settings
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
-from member.api import router as member_router
+from member.api import router as member_router, payment_method_router
 from order.api import router as order_router
 from placement.api import router as placement_router
 from post.api import faq_router, notice_router, faq_category_router
@@ -24,6 +24,11 @@ API_LIST = [
         'prefix': "/member/",
         'router': member_router,
         'tags': ["member"]
+    },
+    {
+        'prefix': "/payment_method/",
+        'router': payment_method_router,
+        'tags': ["결제수단"]
     },
     {
         'prefix': "/place/",

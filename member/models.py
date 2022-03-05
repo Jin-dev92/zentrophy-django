@@ -72,3 +72,17 @@ class MemberOwnedVehicles(TimeStampModel):
     owner = models.ForeignKey('member.User', on_delete=models.CASCADE)
     license_code = models.CharField(max_length=50, default=None)
     battery_left = models.IntegerField(default=-1)  # -1의 경우 사용 불가.
+
+
+class PaymentMethod(TimeStampModel):
+    name = models.CharField(max_length=100)  # 결제 수단 별명
+    owner = models.ForeignKey('member.User', on_delete=models.CASCADE)
+    card = models.ForeignKey('member.Card', on_delete=models.CASCADE, null=True)
+    favorite = models.BooleanField(default=False)
+
+
+class Card(models.Model):
+    card_number = models.CharField(max_length=16, null=True)
+    card_company = models.PositiveSmallIntegerField(null=True)
+    validate_date = models.DateField(null=True)
+    security_code = models.CharField(max_length=4, null=True)
