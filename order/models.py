@@ -1,9 +1,11 @@
 from django.db import models
 
 from conf import settings
-from member.models import MemberOwnedVehicles
-from order.constant import OrderState, ErrorMessage, PaymentType
+from member.models import MemberOwnedVehicles, PaymentMethod
+from order.constant import OrderState, PaymentType
+from util.exception.constant import ErrorMessage
 from product.models import Vehicle, ProductOptions, VehicleColor
+from util.exception.exception import MustHaveSplitWordException, NotEnoughProductsException
 from util.models import TimeStampModel
 
 
@@ -13,6 +15,7 @@ class Order(TimeStampModel):
                               on_delete=models.CASCADE,
                               null=True)
     payment_type = models.PositiveSmallIntegerField(default=0)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.SET_NULL, null=True)
     payment_info = models.JSONField(null=True)
     is_able_subside = models.BooleanField(default=False)
     extra_subside = models.ManyToManyField('order.ExtraSubside')
@@ -41,24 +44,25 @@ class Order(TimeStampModel):
         self.state = state
         self.save()
 
-    def sales_products(self):  # todo 나중에 협의 후 수정. goods_name의 경우
+    def sales_products(self):
         # 판매 후 불러 오는 함수 재고량 -1 , 판매량 +1
         goods: str = self.payment_info['GoodsName']
-        if settings.OPTION_SPLIT in goods:
-            raise ValueError()
-        goods_name = goods.split('++')[0]
-        extra = goods.split('++')[1]
+        if settings.OPTION_SPLIT not in goods:
+            raise MustHaveSplitWordException
+        goods_name = goods.split(settings.OPTION_SPLIT)[0]
+        extra = goods.split(settings.OPTION_SPLIT)[1]
 
         if self.payment_type == PaymentType.VEHICLE:
             obj = VehicleColor.objects.get(vehicle__vehicle_name=goods_name, color_name=extra)
         elif self.payment_type == PaymentType.PRODUCT:
             obj = ProductOptions.objects.get(product__product_name=goods_name, option_name=extra)
             if obj.stock_count == 0:
-                raise ValueError(ErrorMessage.MUST_HAVE_SPLIT_WORD)
+                raise NotEnoughProductsException
             obj.sale_count += 1
             obj.stock_count -= 1
         else:
-            raise ValueError(ErrorMessage.CANT_APPLY_PERIOD_PAYMENT)
+            pass
+            # raise ValueError(ErrorMessage.CANT_APPLY_PERIOD_PAYMENT)
 
         obj.save()
 

@@ -158,3 +158,4 @@ OPTION_SPLIT = "++"
 # permmistion groups
 ADMIN_GROUP_NAME = 'super_user'
 CUSTOMER_GROUP_NAME = None
+MAX_DISPLAY_LINE_COUNT = 2

@@ -7,7 +7,6 @@ from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, Router, File
 from ninja.responses import Response
 
-from conf.message import DISPLAY_LINE_DONT_EXCEEDED_SIZE
 from product.constant import ProductListSort
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
@@ -69,7 +68,8 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
     product_options
     product_display_line_id_list = payload.dict()['product_display_line_id']
     if len(product_display_line_id_list) > 2:
-        raise Exception(DISPLAY_LINE_DONT_EXCEEDED_SIZE)
+
+        raise Exception('DISPLAY_LINE_DONT_EXCEEDED_SIZE')
     try:
         with transaction.atomic():
             product_queryset = Product.objects.update_or_create(**product)
@@ -94,6 +94,7 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
                 *ProductDisplayLine.objects.in_bulk(id_list=product_display_line_id_list)
             )
             ProductImage.objects.bulk_create(bulk_prepare_file_list)
+            product_queryset[0].save()
     except Exception as e:
         raise Exception(e)
 
@@ -128,21 +129,6 @@ def get_display_line(request):
 @display_line_router.post("/", description="상품 진열 라인 등록", tags=["product"])
 def create_display_line(request, payload: ProductDisplayInsertSchema):
     ProductDisplayLine.objects.update_or_create(**payload.dict())
-    # return ResponseDefaultHeader(
-    #     code=Response.status_code,
-    #     message="상품진열 생성/수정이 되었습니다.",
-    #     data=qs[0]
-    # )
-
-
-# @display_line_router.put("/", tags=["product"], response=ResponseDefaultHeader.Schema)
-# def modify_display_line_by_id(request, payload: ProductDisplayInsertSchema, id: int):
-#     qs = get_object_or_404(ProductDisplayLine, id=id).objects.update(**payload.dict())
-#     return ResponseDefaultHeader(
-#         code=Response.status_code,
-#         message="상품 진열 수정이 성공적으로 되었습니다.",
-#         data=qs
-#     )
 
 
 @display_line_router.delete("/", tags=["product"])
@@ -188,41 +174,13 @@ def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFi
 
                 VehicleColor.objects.bulk_update(objs=color_list_for_bulk, fields=VehicleInsertSchema.vehicle_color)
             VehicleImage.objects.bulk_create(objs=image_list_for_bulk)
+            vehicle_queryset[0].save()
     except Exception as e:
         raise Exception(e)
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="모터사이클이 성공적으로 추가 되었습니다"
     )
-
-
-# @transaction.atomic(using='default')
-# @vehicle_router.put("/", description="모터사이클 수정 @todo 기능오류있음", response=ResponseDefaultHeader.Schema)
-# def modify_vehicle(request, payload: VehicleInsertSchema):
-#     vehicle_field = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
-#     vehicle_color_field = payload.dict().get('vehicle_color')
-#     vehicle = get_object_or_404(Vehicle, id=id)
-#     try:
-#         with transaction.atomic():
-#             Vehicle.objects.filter(id=id).update(**vehicle_field)
-#             try:
-#                 vehicle.vehiclecolor_set.all().delete()
-#             except Exception as e:
-#                 raise Exception(e)
-#             finally:
-#                 VehicleColor.objects.bulk_create(
-#                     [VehicleColor(vehicle=vehicle, **color) for color in vehicle_color_field])
-#             # if files is None:
-#             #     VehicleImage.objects.filter(vehicle=vehicle).delete()
-#             # else:
-#             #     for file in files:
-#             #         VehicleImage.objects.update_or_create(*file)
-#     except Exception as e:
-#         raise Exception(e)
-#     return ResponseDefaultHeader(
-#         code=Response.status_code,
-#         message="모터사이클이 성공적으로 수정되었습니다."
-#     )
 
 
 @vehicle_router.delete("/", description="모터사이클 수정", response=ResponseDefaultHeader.Schema)
