@@ -52,4 +52,4 @@ class PaymentMethodListSchema(Schema):
 
 class PaymentMethodInsertSchema(Schema):
     name: str
-    card = CardInsertSchema
+    card: CardInsertSchema
