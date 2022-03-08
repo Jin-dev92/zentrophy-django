@@ -1,11 +1,11 @@
 from django.db import models
 
 from conf import settings
+from conf.custom_exception import MustHaveSplitWordException, NotEnoughProductsException
 from member.models import MemberOwnedVehicles, PaymentMethod
 from order.constant import OrderState, PaymentType
-from util.exception.constant import ErrorMessage
+# from util.exception.exception import ErrorMessage
 from product.models import Vehicle, ProductOptions, VehicleColor
-from util.exception.exception import MustHaveSplitWordException, NotEnoughProductsException
 from util.models import TimeStampModel
 
 
@@ -26,7 +26,7 @@ class Order(TimeStampModel):
 
     def order_change_state(self, state: OrderState):
         if self.state == state:
-            raise Exception(ErrorMessage.CANT_CHANGE_ORDER_STATE)
+            raise Exception('aaaa')
         if self.payment_type == PaymentType.VEHICLE:
             try:
                 if self.state == OrderState.IS_COMPLETE:  # 배송 완료 했다가 다른 상태로 돌렸을 경우 배송 완료 되었을 때 생성되었던 사용자 모터사이클 리스트를 삭제해준다.
@@ -54,17 +54,17 @@ class Order(TimeStampModel):
 
         if self.payment_type == PaymentType.VEHICLE:
             obj = VehicleColor.objects.get(vehicle__vehicle_name=goods_name, color_name=extra)
+            obj.save()
         elif self.payment_type == PaymentType.PRODUCT:
             obj = ProductOptions.objects.get(product__product_name=goods_name, option_name=extra)
             if obj.stock_count == 0:
                 raise NotEnoughProductsException
             obj.sale_count += 1
             obj.stock_count -= 1
+            obj.save(update_fields=['sale_count', 'stock_count'])
         else:
             pass
             # raise ValueError(ErrorMessage.CANT_APPLY_PERIOD_PAYMENT)
-
-        obj.save()
 
 
 class NecessaryDocumentFile(TimeStampModel):

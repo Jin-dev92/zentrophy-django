@@ -1,21 +1,18 @@
 from typing import List, Optional
 
+from django.db import transaction
+from django.db.models import Prefetch
+from django.shortcuts import get_object_or_404
 # from django.contrib.auth.decorators import permission_required
 from ninja import Router
 from ninja.files import UploadedFile
 from ninja.responses import Response
 
-from django.shortcuts import get_object_or_404
-from django.db import transaction
-from django.db.models import Prefetch
-
-from conf import settings
-from member.models import User
-from order.constant import OrderState, PaymentType
+from conf.custom_exception import LoginRequiredException
+from order.constant import OrderState
 from order.models import Order, ExtraSubside, NecessaryDocumentFile
 from order.schema import OrderListSchema, OrderCreateSchema
 from util.default import ResponseDefaultHeader
-from util.exception.exception import LoginRequiredException
 from util.file import delete_files
 from util.params import prepare_for_query
 from util.permission import has_permission

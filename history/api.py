@@ -16,7 +16,6 @@ from order.models import Order, IntegratedFeePlan
 from placement.models import Placement
 from product.models import Product
 from util.default import ResponseDefaultHeader
-# from util.exception.exception import LoginRequiredException
 from util.number import generate_random_number
 from util.params import prepare_for_query
 

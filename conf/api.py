@@ -1,4 +1,5 @@
 # package
+from django.http import HttpResponse
 from ninja import NinjaAPI
 from ninja.security import django_auth
 
@@ -13,6 +14,7 @@ from post.api import faq_router, notice_router, faq_category_router
 from product.api import display_line_router as display_line_router
 from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
+from util.exception.exception_handler import exception_handler_list
 from util.util import ORJSONParser
 
 # models & schema
@@ -96,6 +98,14 @@ API_LIST = [
         'tags': ["cart"]
     },
 ]
+
 # 라우팅 설정
 for item in API_LIST:
     api.add_router(prefix=item['prefix'], router=item['router'], tags=item['tags'])
+# exception handler 설정
+for exception in exception_handler_list:
+    api.add_exception_handler(exc_class=exception['exc_class'],
+                              handler=lambda request, exc: api.create_response(request=request,
+                                                                               data=exception['data'],
+                                                                               status=HttpResponse.status_code
+                                                                               ))
