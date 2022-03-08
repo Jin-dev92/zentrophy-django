@@ -12,3 +12,7 @@ class MustHaveSplitWordException(Exception):
 
 class NotEnoughProductsException(Exception):
     pass
+
+
+class DisplayLineExceededSizeException(Exception):
+    pass
