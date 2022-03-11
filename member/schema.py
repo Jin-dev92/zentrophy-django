@@ -18,6 +18,7 @@ class MemberInsertSchema(Schema):
 
 
 class MemberListSchema(Schema):
+    id: int
     username: str
     email: str
     member_info_number: str
@@ -38,8 +39,7 @@ class MemberOwnedVehiclesListSchema(Schema):
 
 class CardInsertSchema(Schema):
     card_number: str = None
-    card_company: CardCompany = Field(title='카드사',
-                                      description='0 : BC, 1: 국민, 2: 삼성, 3: 신한, 4: 우리, 5:하나, 6:롯데, 7: 현대, 8:농협')
+    card_company: CardCompany = Field(title='카드사')
     validate_date: date = None
     security_code: str = None
 

@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, Router, File
 from ninja.responses import Response
 
+from conf.custom_exception import DisplayLineExceededSizeException
 from product.constant import ProductListSort
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
@@ -69,7 +70,7 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
     product_display_line_id_list = payload.dict()['product_display_line_id']
     if len(product_display_line_id_list) > 2:
 
-        raise Exception('DISPLAY_LINE_DONT_EXCEEDED_SIZE')
+        raise DisplayLineExceededSizeException
     try:
         with transaction.atomic():
             product_queryset = Product.objects.update_or_create(**product)

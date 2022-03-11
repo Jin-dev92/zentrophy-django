@@ -1,13 +1,21 @@
 from enum import Enum
 
+from django.db import models
 
-class CardCompany(Enum):
-    BC = 0
-    KB = 1
-    SAMSUNG = 2
-    SHINHAN = 3
-    UURI = 4
-    HANA = 5
-    LOTTE = 6
-    HYUNDAE = 7
-    NH = 8
+
+class CardCompany(models.TextChoices):
+    BC = 'bc'
+    KB = 'kb'
+    SAMSUNG = 'samsung'
+    SHINHAN = 'shinhan'
+    UURI = 'uuri'
+    HANA = 'hana'
+    LOTTE = 'lotte'
+    HYUNDAI = 'hyundai'
+    NH = 'nh'
+    ETC = 'etc'
+
+
+class MemberSort(Enum):
+    RECENT = 'recent'
+    LATER = 'later'

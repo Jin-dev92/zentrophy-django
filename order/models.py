@@ -1,7 +1,8 @@
 from django.db import models
 
 from conf import settings
-from conf.custom_exception import MustHaveSplitWordException, NotEnoughProductsException
+from conf.custom_exception import MustHaveSplitWordException, NotEnoughProductsException, ChangeOrderStateException, \
+    DataBaseORMException
 from member.models import MemberOwnedVehicles, PaymentMethod
 from order.constant import OrderState, PaymentType
 # from util.exception.exception import ErrorMessage
@@ -26,7 +27,7 @@ class Order(TimeStampModel):
 
     def order_change_state(self, state: OrderState):
         if self.state == state:
-            raise Exception('aaaa')
+            raise ChangeOrderStateException
         if self.payment_type == PaymentType.VEHICLE:
             try:
                 if self.state == OrderState.IS_COMPLETE:  # 배송 완료 했다가 다른 상태로 돌렸을 경우 배송 완료 되었을 때 생성되었던 사용자 모터사이클 리스트를 삭제해준다.
@@ -39,7 +40,7 @@ class Order(TimeStampModel):
                         owner=self.owner,
                     )
             except Exception as e:
-                raise Exception(e)
+                raise DataBaseORMException
 
         self.state = state
         self.save()

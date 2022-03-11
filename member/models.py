@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser, Group
+
+from conf.custom_exception import WrongBusinessNumberException, WrongBirthNumberException
+from member.constant import CardCompany
 from util.models import TimeStampModel
 
 
@@ -7,8 +10,6 @@ class UserManager(BaseUserManager):
     use_in_migrations = True
 
     def create_user(self, email, password, username, **kwargs):
-        if not email:
-            raise ValueError('이메일이 필요합니다.')
         user = self.model(
             username=username,
             email=self.normalize_email(email),
@@ -38,10 +39,10 @@ class UserManager(BaseUserManager):
                 length = len(''.join(char for char in kwargs[kwarg] if char not in '-'))  # - 제거
                 if is_business:
                     if length != 10:
-                        raise ValueError("잘못된 사업자 등록 번호 입니다.")
+                        raise WrongBusinessNumberException
                 else:
                     if length != 8:
-                        raise ValueError("잘못된 생년 월일 입니다.")
+                        raise WrongBirthNumberException
         return kwargs
 
 
@@ -83,6 +84,6 @@ class PaymentMethod(TimeStampModel):
 
 class Card(models.Model):
     card_number = models.CharField(max_length=16, null=True)
-    card_company = models.PositiveSmallIntegerField(null=True)
+    card_company = models.CharField(max_length=10, choices=CardCompany.choices, default=CardCompany.ETC)
     validate_date = models.DateField(null=True)
     security_code = models.CharField(max_length=4, null=True)
