@@ -10,7 +10,7 @@ class MemberInsertSchema(Schema):
     username: str
     email: str
     password: str
-    member_info_number: str = Field(default=None, title="유저 관련 번호", description="일반 회원이면 생년월일 8자리, 사업자면 사업자 등록번호 10자리")
+    # member_info_number: str = Field(default=None, title="유저 관련 번호", description="일반 회원이면 생년월일 8자리, 사업자면 사업자 등록번호 10자리")
     address: str
     address_detail: str
     zipcode: str
@@ -22,7 +22,7 @@ class MemberListSchema(Schema):
     username: str
     email: str
     phone_number: str = None
-    member_info_number: str
+    # member_info_number: str
     address: str
     address_detail: str
     zipcode: str
