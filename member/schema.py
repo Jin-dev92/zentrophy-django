@@ -14,7 +14,7 @@ class MemberInsertSchema(Schema):
     address: str
     address_detail: str
     zipcode: str
-    is_business: bool = False
+    # is_business: bool = False
 
 
 class MemberListSchema(Schema):
@@ -26,7 +26,7 @@ class MemberListSchema(Schema):
     address: str
     address_detail: str
     zipcode: str
-    is_business: bool
+    # is_business: bool
     date_joined: datetime
     last_login: datetime = None
 
