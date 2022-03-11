@@ -10,7 +10,8 @@ from conf.custom_exception import UserNotAccessDeniedException, LoginRequiredExc
     DataBaseORMException
 from member.constant import MemberSort
 from member.models import User, PaymentMethod, Card
-from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema
+from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
+    MemberReAssignSchema
 from util.default import ResponseDefaultHeader
 from util.params import prepare_for_query
 from util.permission import has_permission
@@ -78,6 +79,17 @@ def delete_user(request, id: int):
         if user != target:  # 일반 유저가 다른 유저의 계정을 삭제 하기 못하게 하기 위한 코드
             raise UserNotAccessDeniedException
     get_object_or_404(User, id=id).delete()
+
+
+@router.get('/forgot', description="아이디 찾기", response=str)
+def forgot_id(request, username: str, phone_number: str):
+    return get_object_or_404(User, username=username, phone_number=phone_number).email
+
+
+@router.post('/forgot', description="비밀번호 재생성")
+def forgot_pwd(request, payload: MemberReAssignSchema):
+    user = get_object_or_404(User, username=payload.dict()['username'], email=payload.dict()['email'])
+    user.set_password(payload.dict()['password'])
 
 
 @payment_method_router.get('/', description="결제 수단 리스트 가져오기", response=Optional[List[PaymentMethodListSchema]])
