@@ -21,6 +21,7 @@ class MemberListSchema(Schema):
     id: int
     username: str
     email: str
+    phone_number: str = None
     member_info_number: str
     address: str
     address_detail: str
@@ -28,6 +29,12 @@ class MemberListSchema(Schema):
     is_business: bool
     date_joined: datetime
     last_login: datetime = None
+
+
+class MemberReAssignSchema(Schema):
+    username: str
+    email: str
+    password: str
 
 
 class MemberOwnedVehiclesListSchema(Schema):
