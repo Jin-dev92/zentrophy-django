@@ -103,9 +103,9 @@ API_LIST = [
 for item in API_LIST:
     api.add_router(prefix=item['prefix'], router=item['router'], tags=item['tags'])
 # exception handler 설정
-for exception in exception_handler_list:
-    api.add_exception_handler(exc_class=exception['exc_class'],
-                              handler=lambda request, exc: api.create_response(request=request,
-                                                                               data=exception['data'],
-                                                                               status=HttpResponse.status_code
-                                                                               ))
+# for exception in exception_handler_list:
+#     api.add_exception_handler(exc_class=exception['exc_class'],
+#                               handler=lambda request, exc: api.create_response(request=request,
+#                                                                                data=exception['data'],
+#                                                                                status=HttpResponse.status_code
+#                                                                                ))

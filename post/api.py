@@ -4,6 +4,8 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from ninja import UploadedFile, File, Router
 from ninja.responses import Response
+
+from conf.custom_exception import DataBaseORMException
 from post.models import FAQ, Notice, FAQCategory
 from post.schema import FAQInsertSchema, FAQListSchema, NoticeListSchema, NoticeInsertSchema, FAQCategorySchema
 from util.default import ResponseDefaultHeader
@@ -28,7 +30,7 @@ def create_faq(request, payload: FAQInsertSchema):
             FAQ.objects.update_or_create(**payload.dict())
 
     except Exception as e:
-        raise Exception(e)
+        raise DataBaseORMException
 
     return ResponseDefaultHeader(
         code=Response.status_code,
@@ -62,7 +64,7 @@ def create_notice(request, payload: NoticeInsertSchema):
             Notice.objects.update_or_create(**payload.dict())
 
     except Exception as e:
-        raise Exception(e)
+        raise DataBaseORMException
 
     return ResponseDefaultHeader(
         code=Response.status_code,

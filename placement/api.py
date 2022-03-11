@@ -25,8 +25,9 @@ router = Router()
             response={200: List[PlacementListSchema]},
             auth=None
             )
-def get_placement_list_by_type(request, placement_type: Optional[PlacementType] = None, id: Optional[int] = None):
+def get_placement_list_by_type(request, placement_type: PlacementType = None, id: Optional[int] = None):
     params = prepare_for_query(request)
+    # print(params)
     queryset = Placement.objects.filter(**params).prefetch_related(
         Prefetch('placementimage_set', to_attr='placement_image'),
     ).all()
@@ -40,9 +41,11 @@ def get_placement_list_by_type(request, placement_type: Optional[PlacementType] 
 def create_placement(request, payload: PlacementInsertSchema, file: UploadedFile = None):
     try:
         with transaction.atomic():
-            if len(Placement.objects.filter(**payload, **file)) == 0:
+            if len(Placement.objects.filter(**payload.dict())) == 0:
                 place = Placement.objects.create(**payload.dict())
-                PlacementImage.objects.create(place=Placement.objects.get(id=place.id), **file)
+                PlacementImage.objects.create(
+                    place=Placement.objects.get(id=place.id),
+                    file=file)
             else:  # modify
                 place = get_object_or_404(Placement, id=id)
                 if len(PlacementImage.objects.filter(place=place) == 0):  # 갖고있는 이미지가 없을 떄

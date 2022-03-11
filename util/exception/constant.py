@@ -4,7 +4,12 @@ from history.constant import RefundStatus
 # common error message
 LOGIN_REQUIRED = '로그인이 필요합니다.'
 USER_NOT_ACCESS_DENIED = '일반 유저는 접근 할 수 없습니다.'
-
+DB_ERROR = 'DB ORM Error'
+FILE_ERROR = 'File I/O Error'
+# member
+WRONG_BUSINESS_NUMBER = '잘못된 사업자 번호 입니다.'
+WRONG_BIRTH_NUMBER = '잘못된 생년월일 입니다.'
+ACCESS_DENIED = '이메일 혹은 비밀번호가 틀립니다.'
 # product
 CANT_SALE_STOCK_COUNT_IS_ZERO = "재고량이 없어 판매할 수 없습니다."
 CANT_CHANGE_ORDER_STATE = "변경 하려는 주문 상태와 db 내 주문 상태가 같습니다."
@@ -13,4 +18,4 @@ MUST_HAVE_SPLIT_WORD = "옵션 구분 문자를 섞어 주세요. 옵션 구분 
 DISPLAY_LINE_DONT_EXCEEDED_SIZE = "상품 진열은 {count}개를 초과할 수 없습니다.".format(count=settings.MAX_DISPLAY_LINE_COUNT)
 
 # history
-REFUSE_MUST_HAVE_REASON = "Status가 {}인경우 반드시 거절 이유(reject_reason)가 포함되어야합니다.".format(RefundStatus.REFUSE)
+REFUSE_MUST_HAVE_REASON = "Status가 {}인경우 반드시 거절 이유(reject_reason)가 포함 되어야 합니다.".format(RefundStatus.REFUSE)
