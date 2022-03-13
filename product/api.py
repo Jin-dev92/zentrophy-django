@@ -66,10 +66,8 @@ def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = 
 def create_product(request, payload: ProductInsertSchema, files: List[UploadedFile] = File(...)):
     product = {k: v for k, v in payload.dict().items() if k not in {'product_options', 'product_display_line_id'}}
     product_options: list = payload.dict()['product_options']
-    product_options
     product_display_line_id_list = payload.dict()['product_display_line_id']
     if len(product_display_line_id_list) > 2:
-
         raise DisplayLineExceededSizeException
     try:
         with transaction.atomic():
@@ -81,13 +79,13 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
                 ProductImage(product=Product.objects.get(id=product_queryset[0].id), origin_image=file) for file in
                 files]
             if product_queryset[1]:
-                print("product 생성")
                 ProductOptions.objects.bulk_create(objs=bulk_prepare_product_options_list)
             else:
-                print("product 수정")
                 delete_files(files)
+                ProductImage.objects.filter(product=product_queryset[0]).delete()
+                # product_queryset[0].objects.update(**product)
                 if len(product_options) == 0:
-                    ProductOptions.objects.filter(product=get_object_or_404(Product, **product).delete())
+                    ProductOptions.objects.filter(product=product_queryset[0]).delete()
                 else:
                     for option in product_options:
                         ProductOptions.objects.update_or_create(**option)
@@ -112,7 +110,6 @@ def delete_product(request, id: int):
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="상품 삭제가 성공적으로 되었습니다.",
-        data=qs
     )
 
 
@@ -138,7 +135,6 @@ def delete_display_line_by_id(request, id: int):
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="상품 진열 삭제가 성공적으로 되었습니다.",
-        data=qs
     )
 
 
@@ -153,26 +149,32 @@ def get_vehicle_list(request, id: Optional[int] = None):
 
 
 @transaction.atomic(using='default')
-@vehicle_router.post("/", description="모터사이클 등록", response=ResponseDefaultHeader.Schema)
+@vehicle_router.post("/", description="모터사이클 등록/수정", response=ResponseDefaultHeader.Schema)
 def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFile] = None):
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
     vehicle_color = payload.dict().get('vehicle_color')
     try:
         with transaction.atomic():
             vehicle_queryset = Vehicle.objects.update_or_create(**vehicle)
+            # if files is None:
+            #     files = {}
             color_list_for_bulk: list = [
                 VehicleColor(vehicle=Vehicle.objects.get(id=vehicle_queryset[0].id), **color) for color in
                 vehicle_color
             ]
-            image_list_for_bulk: list = [
-                VehicleImage(vehicle=Vehicle.objects.get(id=vehicle_queryset[0].id), origin_image=file) for file in
-                files
-            ]
-            if vehicle_queryset[1]:
-                VehicleColor.objects.bulk_create(objs=color_list_for_bulk)
+            if files is None:
+                image_list_for_bulk = []
             else:
+                image_list_for_bulk: list = [
+                    VehicleImage(vehicle=Vehicle.objects.get(id=vehicle_queryset[0].id), origin_image=file) for file in
+                    files
+                ]
+            if vehicle_queryset[1]:  # 생성
+                VehicleColor.objects.bulk_create(objs=color_list_for_bulk)
+            else:  # 업데이트
+                # VehicleColor.objects.filter(vehicle=vehicle_queryset[0]).delete()
                 delete_files(files)  # async func
-
+                VehicleImage.objects.filter(vehicle=vehicle_queryset[0]).delete()
                 VehicleColor.objects.bulk_update(objs=color_list_for_bulk, fields=VehicleInsertSchema.vehicle_color)
             VehicleImage.objects.bulk_create(objs=image_list_for_bulk)
             vehicle_queryset[0].save()
@@ -184,11 +186,10 @@ def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFi
     )
 
 
-@vehicle_router.delete("/", description="모터사이클 수정", response=ResponseDefaultHeader.Schema)
+@vehicle_router.delete("/", description="모터사이클 삭제", response=ResponseDefaultHeader.Schema)
 def delete_vehicle(id: int):
     qs = get_object_or_404(Vehicle, id=id).delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="상품 삭제가 성공적으로 되었습니다.",
-        data=qs
     )

@@ -52,11 +52,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=20)
     email = models.EmailField(unique=True, max_length=100)  # 아이디의 역할을 함.
     phone_number = models.CharField(unique=True, max_length=12, null=True)
-    # member_info_number = models.CharField(max_length=20, blank=True)  # 개인일 경우 생년월일, 사업자인경우 사업자 번호
     address = models.CharField(max_length=200, blank=True)
     address_detail = models.CharField(max_length=200, blank=True)
     zipcode = models.CharField(max_length=20, blank=True)
-    # is_business = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)

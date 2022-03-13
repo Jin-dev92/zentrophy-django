@@ -43,17 +43,19 @@ def create_placement(request, payload: PlacementInsertSchema, file: UploadedFile
         with transaction.atomic():
             if len(Placement.objects.filter(**payload.dict())) == 0:
                 place = Placement.objects.create(**payload.dict())
-                PlacementImage.objects.create(
-                    place=Placement.objects.get(id=place.id),
-                    file=file)
+                if file is not None:
+                    PlacementImage.objects.create(
+                        place=Placement.objects.get(id=place.id),
+                        file=file)
+
             else:  # modify
-                place = get_object_or_404(Placement, id=id)
+                place = Placement.objects.get(**payload.dict())
                 if len(PlacementImage.objects.filter(place=place) == 0):  # 갖고있는 이미지가 없을 떄
-                    PlacementImage.objects.create(place=place, **file)
+                    PlacementImage.objects.create(place=place, file=file)
                 else:
                     delete_files([place.placementimage_set.all()[0].file.name])
                     if file is not None:
-                        PlacementImage.objects.filter(place=place).update(**file)
+                        PlacementImage.objects.filter(place=place).update(file=file)
     except Exception as e:
         raise Exception(e)
     return ResponseDefaultHeader(
@@ -62,27 +64,10 @@ def create_placement(request, payload: PlacementInsertSchema, file: UploadedFile
     )
 
 
-# @transaction.atomic(using='default')
-# @router.put("/", description="플레이스 수정", tags=["place"])
-# def modify_placement(request, payload: PlacementModifySchema, id: int):
-#     # , file: UploadedFile = File(...)):
-#     # queryset = get_object_or_404(Placement, id=id)
-#     try:
-#         Placement.objects.filter(id=id).update(**payload.dict())
-#         # queryset.placementimage_set.update(**file)
-#     except Exception as e:
-#         raise Exception(e)
-#     return ResponseDefaultHeader(
-#         code=Response.status_code,
-#         message="플레이스 수정이 성공적으로 되었습니다."
-#     )
-
-
 @router.delete("/", description="플레이스 삭제", tags=["place"])
 def delete_placement(request, id: int):
     queryset = get_object_or_404(Placement, id=id).delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="플레이스 삭제가 성공적으로 되었습니다.",
-        data=queryset.id
     )
