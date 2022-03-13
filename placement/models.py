@@ -22,4 +22,4 @@ class Placement(models.Model):
 class PlacementImage(TimeStampModel):
     id = models.AutoField(primary_key=True)
     place = models.ForeignKey(Placement, on_delete=models.CASCADE)
-    file = ImageField(upload_to="place/%Y/%M")
+    file = ImageField(upload_to="place/%Y/%M", null=True)
