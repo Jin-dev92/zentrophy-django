@@ -6,8 +6,15 @@ from conf.custom_exception import MustHaveSplitWordException, NotEnoughProductsE
 from member.models import MemberOwnedVehicles, PaymentMethod
 from order.constant import OrderState, PaymentType
 # from util.exception.exception import ErrorMessage
-from product.models import Vehicle, ProductOptions, VehicleColor
+from product.models import Vehicle, ProductOptions, VehicleColor, Product
 from util.models import TimeStampModel
+
+
+class OrderDetail(models.Model):
+    order = models.ForeignKey('order.Order', on_delete=models.CASCADE)
+    product_options = models.ForeignKey(ProductOptions, on_delete=models.SET_NULL, null=True, default=None)
+    vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.SET_NULL, null=True, default=None)
+    amount = models.IntegerField(default=0)
 
 
 class Order(TimeStampModel):
@@ -47,25 +54,19 @@ class Order(TimeStampModel):
 
     def sales_products(self):
         # 판매 후 불러 오는 함수 재고량 -1 , 판매량 +1
-        goods: str = self.payment_info['GoodsName']
-        if settings.OPTION_SPLIT not in goods:
-            raise MustHaveSplitWordException
-        goods_name = goods.split(settings.OPTION_SPLIT)[0]
-        extra = goods.split(settings.OPTION_SPLIT)[1]
-
-        if self.payment_type == PaymentType.VEHICLE:
-            obj = VehicleColor.objects.get(vehicle__vehicle_name=goods_name, color_name=extra)
-            obj.save()
-        elif self.payment_type == PaymentType.PRODUCT:
-            obj = ProductOptions.objects.get(product__product_name=goods_name, option_name=extra)
-            if obj.stock_count == 0:
-                raise NotEnoughProductsException
-            obj.sale_count += 1
-            obj.stock_count -= 1
-            obj.save(update_fields=['sale_count', 'stock_count'])
-        else:
-            pass
-            # raise ValueError(ErrorMessage.CANT_APPLY_PERIOD_PAYMENT)
+        for detail in self.orderdetail_set.all():
+            if self.payment_type == PaymentType.VEHICLE:
+                detail.vehicle_color.sale_count += detail.amount
+                detail.product_options.stock_count -= detail.amount
+            elif self.payment_type == PaymentType.PRODUCT:
+                if detail.product_options.stock_count < detail.amount:
+                    raise NotEnoughProductsException
+                detail.product_options.sale_count += detail.amount
+                detail.product_options.stock_count -= detail.amount
+                detail.product_options.save(update_fields=['sale_count', 'stock_count'])
+            else:
+                pass
+        pass
 
 
 class NecessaryDocumentFile(TimeStampModel):
