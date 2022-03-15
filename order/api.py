@@ -9,9 +9,11 @@ from ninja.files import UploadedFile
 from ninja.responses import Response
 
 from conf.custom_exception import LoginRequiredException
+from member.models import PaymentMethod
 from order.constant import OrderState
-from order.models import Order, ExtraSubside, NecessaryDocumentFile
+from order.models import Order, ExtraSubside, NecessaryDocumentFile, OrderDetail
 from order.schema import OrderListSchema, OrderCreateSchema
+from product.models import Product, Vehicle
 from util.default import ResponseDefaultHeader
 from util.file import delete_files
 from util.params import prepare_for_query
@@ -36,30 +38,37 @@ def get_list_order(request, id: Optional[int] = None):
 @router.post("/", description="주문 생성/수정", response=ResponseDefaultHeader.Schema)
 @transaction.atomic(using='default')
 def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] = None):
-    if not has_permission:
+    if not has_permission or str(request.user) == 'AnonymousUser':
         raise LoginRequiredException
     payload_dict = payload.dict()
-    extra_subsides_id: list = payload_dict['extra_subside_id']  # 추가 보조금 리스트
+    extra_subsides_id: list = payload_dict['extra_subside_id']  # 추가 보조금 리스트 pk
+    order_detail: dict = payload_dict['order_detail']
     try:
         with transaction.atomic():
             is_created_order = Order.objects.update_or_create(
                 owner=request.user,
                 payment_type=payload_dict['payment_type'],
-                payment_method=payload_dict['payment_method'],
+                payment_method=PaymentMethod.objects.get(id=payload_dict['payment_method']),
                 payment_info=payload_dict['payment_info'],
                 is_able_subside=payload_dict['is_able_subside']
             )  # 주문 생성
+        for detail in order_detail:
+            OrderDetail.objects.create(
+                order=is_created_order[0],
+                product_options=Product.objects.get(id=detail['product_options']),
+                vehicle_color=Vehicle.objects.get(id=detail['vehicle_color']),
+                amount=detail['amount'],
+            )
+
             for_bulk_file_list = [NecessaryDocumentFile(file=file,
                                                         order=is_created_order[0]) for file in files]
             if is_created_order[1]:  # create
                 is_created_order[0].extra_subside.add(*ExtraSubside.objects.in_bulk(id_list=extra_subsides_id))
-
                 NecessaryDocumentFile.objects.bulk_create(for_bulk_file_list)
                 is_created_order[0].sales_products()
             else:  # update
-                is_created_order[0].extra_subside = ExtraSubside.objects.in_bulk(id_list=extra_subsides_id)
+                is_created_order[0].extra_subside.add(**ExtraSubside.objects.in_bulk(id_list=extra_subsides_id))
                 delete_files([file.file.name for file in for_bulk_file_list])
-
             is_created_order[0].save()
     except Exception as e:
         raise Exception(e)

@@ -20,12 +20,19 @@ class OrderListSchema(Schema):
     files: str = Field(default=None, title="첨부 파일")
 
 
+class OrderDetailSchema(Schema):
+    product_options: int = None
+    vehicle_color: int = None
+    amount: int = 0
+
+
 class OrderCreateSchema(Schema):
     payment_type: PaymentType
     payment_info: dict = Field(default=None,
                                title="결제 정보",
                                description="결제 후 return 되는 결제 관련 값을 넣어줘야함")
-    payment_method: PaymentMethodListSchema = Field(title="결제 수단")
+    order_detail: List[OrderDetailSchema] = None
+    payment_method: int = Field(title="결제 수단 pk")
     is_able_subside: bool = False
     extra_subside_id: List[int] = Field(default=None, description="추가 보조금 pk")
 
