@@ -57,7 +57,8 @@ class Order(TimeStampModel):
         for detail in self.orderdetail_set.all():
             if self.payment_type == PaymentType.VEHICLE:
                 detail.vehicle_color.sale_count += detail.amount
-                detail.product_options.stock_count -= detail.amount
+                detail.vehicle_color.stock_count -= detail.amount
+                detail.vehicle_color.save(update_fields=['sale_count', 'stock_count'])
             elif self.payment_type == PaymentType.PRODUCT:
                 if detail.product_options.stock_count < detail.amount:
                     raise NotEnoughProductsException
