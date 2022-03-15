@@ -56,6 +56,8 @@ class Order(TimeStampModel):
         # 판매 후 불러 오는 함수 재고량 -1 , 판매량 +1
         for detail in self.orderdetail_set.all():
             if self.payment_type == PaymentType.VEHICLE:
+                if detail.vehicle_color.stock_count < detail.amount:
+                    raise NotEnoughProductsException
                 detail.vehicle_color.sale_count += detail.amount
                 detail.vehicle_color.stock_count -= detail.amount
                 detail.vehicle_color.save(update_fields=['sale_count', 'stock_count'])
