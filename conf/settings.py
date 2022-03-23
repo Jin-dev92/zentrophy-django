@@ -30,6 +30,9 @@ SECRET_KEY = 'django-insecure-plug1-6zblo)q^z1n2mjdiws96now4r!=l2@&0o$=82dxs3@^2
 DEBUG = ENV is Env.DEVELOPMENT
 
 ALLOWED_URL_LIST = ['.pythonanywhere.com']
+CORS_ORIGIN_WHITELIST = ['*']
+CORS_ALLOW_CREDENTIALS = True
+
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
@@ -57,6 +60,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
+    'corsheaders',
     'colorfield',
     'sorl.thumbnail',
     # applications
@@ -76,6 +80,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'conf.urls'

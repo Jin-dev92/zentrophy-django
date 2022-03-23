@@ -56,7 +56,7 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
             OrderDetail.objects.create(
                 order=is_created_order[0],
                 product_options=Product.objects.get(id=detail['product_options']),
-                vehicle_color=Vehicle.objects.get(id=detail['vehicle_color']),
+                vehicle_color=Vehicle.objects.get(id=detail['w']),
                 amount=detail['amount'],
             )
 
