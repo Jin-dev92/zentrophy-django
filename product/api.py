@@ -194,13 +194,13 @@ def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFi
     except Exception as e:
         raise Exception(e)
     if vehicle_queryset[1]:
-        returnVal = "추가"
+        return_val = "추가"
     else:
-        returnVal = "수정"
+        return_val = "수정"
 
     return ResponseDefaultHeader(
         code=Response.status_code,
-        message="모터사이클이 성공적으로 {} 되었습니다".format(returnVal)
+        message="모터사이클이 성공적으로 {} 되었습니다".format(return_val)
     )
 
 
