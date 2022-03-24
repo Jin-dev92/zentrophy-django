@@ -35,10 +35,11 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
 if DEBUG:
-    ALLOWED_HOSTS = ['*']
+    ALLOWED_HOSTS = '*'
+    CORS_ORIGIN_ALLOW_ALL = True
 else:
     ALLOWED_HOSTS = [url for url in ALLOWED_URL_LIST]
-# ALLOWED_HOSTS = [url if len(ALLOWED_URL_LIST) > 0 else ['*'] for url in ALLOWED_URL_LIST]
+    CORS_ORIGIN_WHITELIST = ['http://localhost:8080']
 
 # 2.5MB - 2621440
 # 5MB - 5242880
