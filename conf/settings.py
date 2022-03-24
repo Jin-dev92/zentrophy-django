@@ -30,7 +30,8 @@ SECRET_KEY = 'django-insecure-plug1-6zblo)q^z1n2mjdiws96now4r!=l2@&0o$=82dxs3@^2
 DEBUG = ENV is Env.DEVELOPMENT
 
 ALLOWED_URL_LIST = ['.pythonanywhere.com']
-CORS_ORIGIN_WHITELIST = ['*']
+# CORS_ORIGIN_WHITELIST = ['http://localhost:8080']
+CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 
 if DEBUG:
