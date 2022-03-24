@@ -12,7 +12,9 @@ def is_exist_file_in_model(obj: dict[UploadedFile], model: Model):
     return True
 
 
-async def delete_files(file_list: List[str]):
+def delete_files(file_list: List[str]):
+    if file_list is None:
+        return True
     try:
         for file in file_list:
             os.remove(os.path.join(settings.MEDIA_ROOT, file))

@@ -175,7 +175,7 @@ def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFi
                 # VehicleColor.objects.filter(vehicle=vehicle_queryset[0]).delete()
                 delete_files(files)  # async func
                 VehicleImage.objects.filter(vehicle=vehicle_queryset[0]).delete()
-                VehicleColor.objects.bulk_update(objs=color_list_for_bulk, fields=VehicleInsertSchema.vehicle_color)
+                VehicleColor.objects.update_or_create(*vehicle_color)
             VehicleImage.objects.bulk_create(objs=image_list_for_bulk)
             vehicle_queryset[0].save()
     except Exception as e:
