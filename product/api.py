@@ -3,7 +3,6 @@ from typing import List, Optional
 from django.db import transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
-
 from ninja import UploadedFile, Router, File
 from ninja.responses import Response
 
@@ -12,8 +11,7 @@ from product.constant import ProductListSort
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
-    VehicleListSchema, VehicleInsertSchema, ProductOptionsInsertSchema
-
+    VehicleListSchema, VehicleInsertSchema
 from util.default import ResponseDefaultHeader
 from util.file import delete_files
 from util.params import prepare_for_query
@@ -195,9 +193,14 @@ def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFi
             vehicle_queryset[0].save()
     except Exception as e:
         raise Exception(e)
+    if vehicle_queryset[1]:
+        returnVal = "추가"
+    else:
+        returnVal = "수정"
+
     return ResponseDefaultHeader(
         code=Response.status_code,
-        message="모터사이클이 성공적으로 추가 되었습니다"
+        message="모터사이클이 성공적으로 {} 되었습니다".format(returnVal)
     )
 
 
