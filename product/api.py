@@ -152,7 +152,7 @@ def get_vehicle_list(request, id: Optional[int] = None):
 @vehicle_router.post("/", description="모터사이클 등록/수정", response=ResponseDefaultHeader.Schema)
 def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFile] = None):
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
-    vehicle_color = payload.dict().get('vehicle_color')
+    vehicle_color: list[dict] = payload.dict().get('vehicle_color')
     try:
         with transaction.atomic():
             vehicle_queryset = Vehicle.objects.update_or_create(**vehicle)
@@ -172,10 +172,24 @@ def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFi
             if vehicle_queryset[1]:  # 생성
                 VehicleColor.objects.bulk_create(objs=color_list_for_bulk)
             else:  # 업데이트
-                # VehicleColor.objects.filter(vehicle=vehicle_queryset[0]).delete()
-                delete_files(files)  # async func
+                VehicleColor.objects.filter(vehicle=vehicle_queryset[0]).delete()
                 VehicleImage.objects.filter(vehicle=vehicle_queryset[0]).delete()
-                VehicleColor.objects.update_or_create(*vehicle_color)
+                delete_files(files)  # async func
+                for color in vehicle_color:
+                    VehicleColor.objects.update_or_create(
+                        vehicle=vehicle_queryset[0],
+                        **color
+                    )
+            # for color in vehicle_color:
+            #     vehicle_queryset[0].vehiclecolor_set.up
+            # for color in color_list_for_bulk
+            # VehicleColor.objects.filter(vehicle=vehicle_queryset[0])
+            # for color in vehicle_queryset[0 ].vehiclecolor_set.all():
+            #     color.objects.update_or_create()
+            # vehicle_queryset[0].vehiclecolor_set.bulk_update(objs=color_list_for_bulk,
+            #                                                  fields=['color_name', 'stock_count', 'hex_code',
+            #                                                          'on_sale', 'price']
+            #                                                  )
             VehicleImage.objects.bulk_create(objs=image_list_for_bulk)
             vehicle_queryset[0].save()
     except Exception as e:
