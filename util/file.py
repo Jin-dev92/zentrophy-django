@@ -1,5 +1,6 @@
 import os
-from typing import List
+from typing import List, Optional
+
 from django.db.models import Model
 from ninja import UploadedFile
 
@@ -12,7 +13,7 @@ def is_exist_file_in_model(obj: dict[UploadedFile], model: Model):
     return True
 
 
-def delete_files(file_list: List[str]):
+def delete_files(file_list: Optional[List[UploadedFile]]):
     if file_list is None:
         return True
     try:
