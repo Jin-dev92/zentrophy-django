@@ -175,11 +175,12 @@ def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFi
                 VehicleColor.objects.filter(vehicle=vehicle_queryset[0]).delete()
                 VehicleImage.objects.filter(vehicle=vehicle_queryset[0]).delete()
                 delete_files(files)  # async func
-                for color in vehicle_color:
-                    VehicleColor.objects.update_or_create(
-                        vehicle=vehicle_queryset[0],
-                        **color
-                    )
+                if len(vehicle_color) > 0:
+                    for color in vehicle_color:
+                        VehicleColor.objects.update_or_create(
+                            vehicle=vehicle_queryset[0],
+                            **color
+                        )
             # for color in vehicle_color:
             #     vehicle_queryset[0].vehiclecolor_set.up
             # for color in color_list_for_bulk
