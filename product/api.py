@@ -122,9 +122,25 @@ def get_display_line(request):
     return qs
 
 
-@display_line_router.post("/", description="상품 진열 라인 등록", tags=["product"])
+@display_line_router.post("/", description="상품 진열 라인 등록", tags=["product"], response=ResponseDefaultHeader.Schema)
 def create_display_line(request, payload: ProductDisplayInsertSchema):
-    ProductDisplayLine.objects.update_or_create(**payload.dict())
+    ProductDisplayLine.objects.create(**payload.dict())
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        message="상품 진열 생성이 성공적으로 되었습니다.",
+    )
+
+
+@display_line_router.put('/', description="상품 진열 라인 수정", tags=['product'], response=ResponseDefaultHeader.Schema)
+def modify_display_line(request, payload: ProductDisplayInsertSchema, id: int):
+    obj = get_object_or_404(ProductDisplayLine, id=id)
+    for k, v in payload.dict().items():
+        setattr(obj, k, v)
+    obj.save()
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        message="상품 진열 수정이 성공적으로 되었습니다.",
+    )
 
 
 @display_line_router.delete("/", tags=["product"], response=ResponseDefaultHeader.Schema)
