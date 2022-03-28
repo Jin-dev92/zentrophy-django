@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'colorfield',
     'sorl.thumbnail',
+    'debug_toolbar',
     # applications
     'post',
     'product',
@@ -83,6 +84,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware'
 ]
 
 ROOT_URLCONF = 'conf.urls'
@@ -131,6 +133,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+INTERNAL_IPS = [ # django debug toolbar allow ip list
+    '127.0.0.1',
 ]
 
 # Internationalization
