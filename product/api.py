@@ -127,9 +127,9 @@ def create_display_line(request, payload: ProductDisplayInsertSchema):
     ProductDisplayLine.objects.update_or_create(**payload.dict())
 
 
-@display_line_router.delete("/", tags=["product"])
+@display_line_router.delete("/", tags=["product"], response=ResponseDefaultHeader.Schema)
 def delete_display_line_by_id(request, id: int):
-    qs = get_object_or_404(ProductDisplayLine, id=id).delete()
+    get_object_or_404(ProductDisplayLine, id=id).delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="상품 진열 삭제가 성공적으로 되었습니다.",
@@ -148,49 +148,29 @@ def get_vehicle_list(request, id: Optional[int] = None):
 
 @transaction.atomic(using='default')
 @vehicle_router.post("/", description="모터사이클 등록/수정", response=ResponseDefaultHeader.Schema)
-def create_vehicle(request, payload: VehicleInsertSchema, files: List[UploadedFile] = None):
+def create_vehicle(request, payload: VehicleInsertSchema):
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
     vehicle_color: list[dict] = payload.dict().get('vehicle_color')
     try:
         with transaction.atomic():
             vehicle_queryset = Vehicle.objects.update_or_create(**vehicle)
-            # if files is None:
-            #     files = {}
-            color_list_for_bulk: list = [
-                VehicleColor(vehicle=Vehicle.objects.get(id=vehicle_queryset[0].id), **color) for color in
-                vehicle_color
-            ]
-            if files is None:
-                image_list_for_bulk = []
-            else:
-                image_list_for_bulk: list = [
-                    VehicleImage(vehicle=Vehicle.objects.get(id=vehicle_queryset[0].id), origin_image=file) for file in
-                    files
-                ]
-            if vehicle_queryset[1]:  # 생성
-                VehicleColor.objects.bulk_create(objs=color_list_for_bulk)
-            else:  # 업데이트
-                VehicleColor.objects.filter(vehicle=vehicle_queryset[0]).delete()
-                VehicleImage.objects.filter(vehicle=vehicle_queryset[0]).delete()
-                delete_files(files)  # async func
-                if len(vehicle_color) > 0:
-                    for color in vehicle_color:
-                        VehicleColor.objects.update_or_create(
-                            vehicle=vehicle_queryset[0],
-                            **color
-                        )
-            # for color in vehicle_color:
-            #     vehicle_queryset[0].vehiclecolor_set.up
-            # for color in color_list_for_bulk
-            # VehicleColor.objects.filter(vehicle=vehicle_queryset[0])
-            # for color in vehicle_queryset[0 ].vehiclecolor_set.all():
-            #     color.objects.update_or_create()
-            # vehicle_queryset[0].vehiclecolor_set.bulk_update(objs=color_list_for_bulk,
-            #                                                  fields=['color_name', 'stock_count', 'hex_code',
-            #                                                          'on_sale', 'price']
-            #                                                  )
-            VehicleImage.objects.bulk_create(objs=image_list_for_bulk)
-            vehicle_queryset[0].save()
+            for color in vehicle_color:
+                params = {k: v for k, v in color.items() if k not in {'files'}}
+                obj = VehicleColor.objects.update_or_create(**params)
+                if obj[1]:  # 생성
+                    if len(color['files']) > 0:
+                        VehicleImage.objects.bulk_create(obj=[
+                            VehicleImage(vehicle_color=obj[0], origin_image=file) for file in color['files']
+                        ], batch_size=25)
+                    else:
+                        images = VehicleImage.objects.filter(vehicle_color=obj[0])
+                        images.delete()
+                        image_list = [image.origin_image for image in images]
+                        delete_files(image_list)
+                else:  # 수정
+                    VehicleImage.objects.filter(vehicle_color=obj[0]).delete()
+                    delete_files(color['files'])
+
     except Exception as e:
         raise Exception(e)
     if vehicle_queryset[1]:
