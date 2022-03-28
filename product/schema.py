@@ -1,9 +1,12 @@
 from datetime import datetime
 from typing import List, Optional
-from ninja import Schema, Field
-# from numpy import np
+
+from ninja import Schema, Field, UploadedFile
 
 from product.constant import ProductOptionsLabel, ProductLabel
+
+
+# from numpy import np
 
 
 class VehicleImageSchema(Schema):
@@ -60,6 +63,7 @@ class VehicleColor(Schema):  # 모터사이클 색상 스키마\
     hex_code: str = Field(default="FFFFFF", title="색 코드", description="css에서 사용하는 컬러값 사용 가능, 16진수, white, rgba 값")
     on_sale: bool = Field(default=False, title="판매 여부")
     price: int = 0
+    files: List[UploadedFile] = []
 
 
 class ProductInsertSchema(Schema):
