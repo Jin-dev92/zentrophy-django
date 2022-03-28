@@ -156,7 +156,13 @@ def delete_display_line_by_id(request, id: int):
 def get_vehicle_list(request, id: Optional[int] = None):
     params = prepare_for_query(request)
     result = Vehicle.objects.filter(**params).prefetch_related(
-        Prefetch('vehiclecolor_set', to_attr='vehicle_color'),
+        Prefetch(lookup='vehiclecolor_set',
+                 queryset=VehicleColor.objects.all().prefetch_related(
+                     Prefetch(lookup='vehicle__vehicleimage_set',
+                              to_attr='vehicle_image'
+                              )
+                 ),
+                 to_attr='vehicle_color')
     )
     return result
 
@@ -171,7 +177,7 @@ def create_vehicle(request, payload: VehicleInsertSchema):
             vehicle_queryset = Vehicle.objects.update_or_create(**vehicle)
             for color in vehicle_color:
                 params = {k: v for k, v in color.items() if k not in {'files'}}
-                obj = VehicleColor.objects.update_or_create(**params)
+                obj = VehicleColor.objects.update_or_create(vehicle=vehicle_queryset[0], **params)
                 image_list: list = [
                     VehicleImage(vehicle_color=obj[0], origin_image=file) for file in color['files']
                 ]
