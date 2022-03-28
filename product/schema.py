@@ -51,12 +51,6 @@ class ProductOptionsInsertSchema(Schema):
                                                        title="0: 기본형, 1:입력형, 2:옵션없음")  # 기본형, 입력형, 옵션없음
 
 
-class ProductDescription(Schema):
-    product_description: str = Field(default="", title="상품 설명")  # 상품 설명
-    shipping_instructions: str = Field(default="", title="배송 안내")  # 배송 안내
-    refund_instructions: str = Field(default="", title="환불 정책")  # 환불 정책
-
-
 class VehicleColor(Schema):  # 모터사이클 색상 스키마\
     color_name: str = Field(title="색 이름")
     sale_count: int = Field(default=0, title="판매 수량")
@@ -78,7 +72,10 @@ class ProductInsertSchema(Schema):
     is_display: bool = Field(default=False, title="진열 여부")
     product_display_line_id: Optional[List[int]] = Field(default=None, title="상품 진열 라인 pk")
     is_refundable: bool = Field(default=False, title="환불 가능 여부")
-    description: ProductDescription = Field(default=None, title="상품 설명")
+    # description: ProductDescription = Field(default=None, title="상품 설명")
+    product_description: str = Field(default="", title="상품 설명")  # 상품 설명
+    shipping_instructions: str = Field(default="", title="배송 안내")  # 배송 안내
+    refund_instructions: str = Field(default="", title="환불 정책")  # 환불 정책
 
 
 class VehicleListSchema(Schema):
@@ -112,7 +109,8 @@ class ProductListSchema(Schema):
     product_label: str = None
     is_display: bool = None
     is_refundable: bool = None
-    description: ProductDescription = None
+    shipping_instructions: str = Field(default="", title="배송 안내")  # 배송 안내
+    refund_instructions: str = Field(default="", title="환불 정책")  # 환불 정책
     product_display_line: List[ProductDisplayLineSchema] = None
     product_options: List[ProductOptionsListSchema] = None
     product_image: List[ProductImageListSchema] = None

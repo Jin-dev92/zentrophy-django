@@ -1,7 +1,8 @@
-from django.db import models
 from colorfield.fields import ColorField
-from product.constant import ProductLabel, ProductOptionsLabel
+from django.db import models
 from sorl.thumbnail import ImageField
+
+from product.constant import ProductLabel, ProductOptionsLabel
 from util.models import TimeStampModel
 
 
@@ -67,7 +68,9 @@ class Product(TimeStampModel):
     product_display_line = models.ManyToManyField('product.ProductDisplayLine')
     is_display = models.BooleanField(default=False)
     is_refundable = models.BooleanField(default=False)
-    description = models.JSONField(default=dict)
+    product_description = models.TextField(blank=True, default="")
+    shipping_instructions = models.TextField(blank=True, default="")
+    refund_instructions = models.TextField(blank=True, default="")
 
     def __str__(self):
         return self.product_name
