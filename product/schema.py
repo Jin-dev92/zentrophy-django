@@ -23,7 +23,8 @@ class ProductDisplayInsertSchema(Schema):
 
 
 class ProductImageListSchema(Schema):
-    origin_image: str = None
+    id: int
+    origin_image: str
 
 
 class ProductOptionsListSchema(Schema):
@@ -90,7 +91,7 @@ class VehicleListSchema(Schema):
     able_extra_subsidy: bool = Field(title="추가 지원금 가능 여부")
     is_display: bool = Field(title="진열 여부")
     vehicle_color: List[VehicleColor] = None
-    vehicle_image: List[ProductImageListSchema] = None
+    # vehicle_image: List[ProductImageListSchema] = None
 
 
 class VehicleInsertSchema(Schema):

@@ -52,8 +52,8 @@ def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = 
         field_name = "is_created"
 
     products = Product.objects.filter(**params).prefetch_related(
-        Prefetch('productoptions_set', queryset=ProductOptions.objects.all(), to_attr='product_options'),
-        Prefetch('productimage_set', queryset=ProductImage.objects.all(), to_attr='product_image'),
+        Prefetch('productoptions_set', to_attr='product_options'),
+        Prefetch('productimage_set', to_attr='product_image'),
         'product_display_line',
     ).order_by(field_name)
     return products
@@ -157,7 +157,8 @@ def get_vehicle_list(request, id: Optional[int] = None):
     params = prepare_for_query(request)
     result = Vehicle.objects.filter(**params).prefetch_related(
         Prefetch('vehiclecolor_set', to_attr='vehicle_color'),
-        Prefetch('vehicleimage_set', to_attr='vehicle_image'),
+    ).prefetch_related(
+        Prefetch('vehicleimage_set', to_attr='files'),
     )
     return result
 
