@@ -22,7 +22,7 @@ class ProductImage(TimeStampModel):
 
 class VehicleImage(TimeStampModel):
     id = models.AutoField(primary_key=True)
-    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True)
+    vehicle_color = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True)
     origin_image = ImageField(upload_to="vehicle/%Y/%M", null=True)
 
     def __str__(self):

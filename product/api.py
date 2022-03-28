@@ -157,8 +157,6 @@ def get_vehicle_list(request, id: Optional[int] = None):
     params = prepare_for_query(request)
     result = Vehicle.objects.filter(**params).prefetch_related(
         Prefetch('vehiclecolor_set', to_attr='vehicle_color'),
-    ).prefetch_related(
-        Prefetch('vehicleimage_set', to_attr='files'),
     )
     return result
 
@@ -174,19 +172,19 @@ def create_vehicle(request, payload: VehicleInsertSchema):
             for color in vehicle_color:
                 params = {k: v for k, v in color.items() if k not in {'files'}}
                 obj = VehicleColor.objects.update_or_create(**params)
+                image_list: list = [
+                    VehicleImage(vehicle_color=obj[0], origin_image=file) for file in color['files']
+                ]
                 if obj[1]:  # 생성
                     if len(color['files']) > 0:
-                        VehicleImage.objects.bulk_create(obj=[
-                            VehicleImage(vehicle_color=obj[0], origin_image=file) for file in color['files']
-                        ], batch_size=25)
-                    else:
-                        images = VehicleImage.objects.filter(vehicle_color=obj[0])
-                        images.delete()
-                        image_list = [image.origin_image for image in images]
-                        delete_files(image_list)
+                        VehicleImage.objects.bulk_create(obj=image_list, batch_size=25)
                 else:  # 수정
-                    VehicleImage.objects.filter(vehicle_color=obj[0]).delete()
-                    delete_files(color['files'])
+                    exist_image = VehicleImage.objects.filter(vehicle_color=obj[0].id)
+                    if len(exist_image) > 0:
+                        exist_image.delete()
+                        delete_files([image.origin_image for image in exist_image])
+                    if len(color['files']) > 0:
+                        VehicleImage.objects.bulk_create(obj=image_list, batch_size=25)
 
     except Exception as e:
         raise Exception(e)
