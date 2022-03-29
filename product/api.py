@@ -168,29 +168,45 @@ def get_vehicle_list(request, id: Optional[int] = None):
 
 
 @transaction.atomic(using='default')
-@vehicle_router.post("/", description="모터사이클 등록/수정", response=ResponseDefaultHeader.Schema)
-def create_vehicle(request, payload: VehicleInsertSchema):
+@vehicle_router.post("/", description="모터사이클 등록/수정")
+def create_vehicle(request, payload: VehicleInsertSchema,
+                   files1: List[UploadedFile] = None,
+                   files2: List[UploadedFile] = None,
+                   files3: List[UploadedFile] = None,
+                   files4: List[UploadedFile] = None,
+                   files5: List[UploadedFile] = None,
+                   ):
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
     vehicle_color: list[dict] = payload.dict().get('vehicle_color')
     try:
         with transaction.atomic():
             vehicle_queryset = Vehicle.objects.update_or_create(**vehicle)
-            for color in vehicle_color:
-                params = {k: v for k, v in color.items() if k not in {'files'}}
-                obj = VehicleColor.objects.update_or_create(vehicle=vehicle_queryset[0], **params)
-                image_list: list = [
-                    VehicleImage(vehicle_color=obj[0], origin_image=file) for file in color['files']
-                ]
-                if obj[1]:  # 생성
-                    if len(color['files']) > 0:
-                        VehicleImage.objects.bulk_create(obj=image_list, batch_size=25)
-                else:  # 수정
-                    exist_image = VehicleImage.objects.filter(vehicle_color=obj[0].id)
-                    if len(exist_image) > 0:
+            for idx, color in enumerate(vehicle_color):
+                obj = VehicleColor.objects.update_or_create(vehicle=vehicle_queryset[0], **color)
+                if idx == 0:
+                    file_list = files1
+                elif idx == 1:
+                    file_list = files2
+                elif idx == 2:
+                    file_list = files3
+                elif idx == 3:
+                    file_list = files4
+                elif idx == 4:
+                    file_list = files5
+                else:
+                    raise ValueError('vehicle_color 갯수가 잘못됨.')
+                if len(file_list) > 0:
+                    image_list: list = [
+                        VehicleImage(vehicle_color=obj[0], origin_image=file) for file in file_list
+                    ]
+                    VehicleImage.objects.bulk_create(obj=image_list, batch_size=5)
+                else:
+                    if not obj[1]:  # 수정일 경우 삭제해준다.
+                        exist_image = VehicleImage.objects.filter(vehicle_color=obj[0])
                         exist_image.delete()
                         delete_files([image.origin_image for image in exist_image])
-                    if len(color['files']) > 0:
-                        VehicleImage.objects.bulk_create(obj=image_list, batch_size=25)
+                    else:  # 생성인 경우 패스해줌
+                        pass
 
     except Exception as e:
         raise Exception(e)
