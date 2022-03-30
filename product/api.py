@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, Router, File
 from ninja.responses import Response
 
-from conf.custom_exception import DisplayLineExceededSizeException
+from conf.custom_exception import DisplayLineExceededSizeException, WrongAmountVehicleColorException
 from product.constant import ProductListSort
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
@@ -168,7 +168,7 @@ def get_vehicle_list(request, id: Optional[int] = None):
 
 
 @transaction.atomic(using='default')
-@vehicle_router.post("/", description="모터사이클 등록/수정")
+@vehicle_router.post("/", description="모터사이클 등록/수정", response=ResponseDefaultHeader.Schema)
 def create_vehicle(request, payload: VehicleInsertSchema,
                    files1: List[UploadedFile] = None,
                    files2: List[UploadedFile] = None,
@@ -194,15 +194,15 @@ def create_vehicle(request, payload: VehicleInsertSchema,
                 elif idx == 4:
                     file_list = files5
                 else:
-                    raise ValueError('vehicle_color 갯수가 잘못됨.')
-                if len(file_list) > 0:
+                    raise WrongAmountVehicleColorException
+                if file_list is not None and len(file_list) > 0:
                     image_list: list = [
                         VehicleImage(vehicle_color=obj[0], origin_image=file) for file in file_list
                     ]
-                    VehicleImage.objects.bulk_create(obj=image_list, batch_size=5)
+                    VehicleImage.objects.bulk_create(objs=image_list, batch_size=5)
                 else:
                     if not obj[1]:  # 수정일 경우 삭제해준다.
-                        exist_image = VehicleImage.objects.filter(vehicle_color=obj[0])
+                        exist_image = VehicleImage.objects.filter(vehicle_color=obj[0].id)
                         exist_image.delete()
                         delete_files([image.origin_image for image in exist_image])
                     else:  # 생성인 경우 패스해줌
