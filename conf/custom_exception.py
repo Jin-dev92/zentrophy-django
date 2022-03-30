@@ -1,5 +1,4 @@
 class LoginRequiredException(Exception):
-    print("LoginRequiredException")
     pass
 
 
@@ -32,7 +31,6 @@ class DataBaseORMException(Exception):
 
 
 class FileIOException(Exception):
-    print('FileIOException')
     pass
 
 
@@ -45,4 +43,8 @@ class WrongBirthNumberException(Exception):
 
 
 class WrongBusinessNumberException(Exception):
+    pass
+
+
+class WrongAmountVehicleColorException(Exception):
     pass

@@ -25,8 +25,14 @@ class VehicleImage(TimeStampModel):
     vehicle_color = models.ForeignKey('product.VehicleColor', on_delete=models.CASCADE, null=True)
     origin_image = ImageField(upload_to="vehicle/%Y/%M", null=True)
 
-    def __str__(self):
-        return self.id
+    # def __str__(self):
+    #     return self.origin_image
+
+    def image_tag(self):
+        from django.utils.html import escape
+        return u'<img src="%s" />' % escape(self.origin_image)
+    image_tag.short_description = 'Image'
+    image_tag.allow_tags = True
 
 
 class ProductOptions(models.Model):
