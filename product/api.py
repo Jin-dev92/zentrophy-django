@@ -25,7 +25,7 @@ display_line_router = Router()
 
 
 @product_router.get("/",
-                    description="상품 리스트 가져오기 sort 등록순: 0, 판매순 : 1 , 재고수량순: 2, 진열 라인 순: 3",
+                    description="상품 리스트 가져오기     RECENT = 0 ,LATEST = 1, HIGH_SALE = 2, LOW_SALE = 3, HIGH_STOCK_COUNT = 4, LOW_STOCK_COUNT = 5, HIGH_DISPLAY_LINE = 6, LOW_DISPLAY_LINE = 7",
                     response=List[ProductListSchema],
                     tags=["product"],
                     auth=None
