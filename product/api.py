@@ -20,42 +20,43 @@ product_router = Router()
 vehicle_router = Router()
 display_line_router = Router()
 
-
-# current_product_sort = ProductListSort.UPDATE_AT
+current_product_sort = ProductListSort.CREATED_AT
 
 
 @product_router.get("/",
-                    description="상품 리스트 가져오기     RECENT = 0 ,LATEST = 1, HIGH_SALE = 2, LOW_SALE = 3, HIGH_STOCK_COUNT = 4, LOW_STOCK_COUNT = 5, HIGH_DISPLAY_LINE = 6, LOW_DISPLAY_LINE = 7",
+                    description="상품 리스트 가져오기    UPDATED_AT = 0, SALE = 1, STOCK_COUNT = 2, DISPLAY_LINE = 3",
                     response=List[ProductListSchema],
                     tags=["product"],
                     auth=None
                     )
-def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = None):
+def get_product_list(request, id: int = None, sort: ProductListSort = ProductListSort.CREATED_AT):
     params = prepare_for_query(request, ['sort'])
-    if sort == ProductListSort.RECENT:
+    if sort == ProductListSort.CREATED_AT:
         field_name = "is_created"
-    elif sort == ProductListSort.LATEST:
-        field_name = '-is_created'
-    elif sort == ProductListSort.HIGH_SALE:
+    elif sort == ProductListSort.SALE_COUNT:
         field_name = 'productoptions__sale_count'
-    elif sort == ProductListSort.LOW_SALE:
-        field_name = '-productoptions__sale_count'
-    elif sort == ProductListSort.HIGH_STOCK_COUNT:
+    elif sort == ProductListSort.DISPLAY_LINE:
         field_name = 'productoptions__stock_count'
-    elif sort == ProductListSort.LOW_STOCK_COUNT:
-        field_name = '-productoptions__stock_count'
-    elif sort == ProductListSort.HIGH_DISPLAY_LINE:
+    elif sort == ProductListSort.DISPLAY_LINE:
         field_name = 'product_display_line__id'
-    elif sort == ProductListSort.LOW_DISPLAY_LINE:
-        field_name = "-product_display_line__id"
+
+    global current_product_sort
+    # noinspection PyUnboundLocalVariable
+    if current_product_sort == field_name:
+        if field_name[0] != '-':
+            field_name = '-' + field_name
+        else:
+            field_name = field_name[1:]
     else:
-        field_name = "is_created"
+        pass
+    current_product_sort = field_name
+    # print(current_product_sort)
 
     products = Product.objects.get_queryset(**params).prefetch_related(
         Prefetch('productoptions_set', to_attr='product_options'),
         Prefetch('productimage_set', to_attr='product_image'),
         'product_display_line',
-    ).order_by(field_name)
+    ).order_by(current_product_sort)
     return products
 
 
