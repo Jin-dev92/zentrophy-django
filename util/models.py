@@ -1,6 +1,5 @@
-import datetime
-
 from django.db import models
+from django.utils import timezone
 
 
 class TimeStampModel(models.Model):
@@ -27,7 +26,7 @@ class SoftDeleteModel(models.Model):
     objects = SoftDeleteManager()  # 커스텀 매니저
 
     def soft_delete(self, using=None, keep_parents=False):
-        self.deleted_at = datetime.datetime.now()
+        self.deleted_at = timezone.now()
         self.save(update_fields=['deleted_at'])
 
     def restore(self):  # 삭제된 레코드를 복구한다.
