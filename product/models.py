@@ -3,10 +3,10 @@ from django.db import models
 from sorl.thumbnail import ImageField
 
 from product.constant import ProductLabel, ProductOptionsLabel
-from util.models import TimeStampModel
+from util.models import TimeStampModel, SoftDeleteModel
 
 
-class ProductDisplayLine(models.Model):  # 상품 진열 라인
+class ProductDisplayLine(SoftDeleteModel):  # 상품 진열 라인
     id = models.AutoField(primary_key=True)
     display_line_name = models.CharField(max_length=20, null=False, unique=True)
 
@@ -14,16 +14,17 @@ class ProductDisplayLine(models.Model):  # 상품 진열 라인
         return self.display_line_name
 
 
-class ProductImage(TimeStampModel):
+class ProductImage(TimeStampModel, SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     product = models.ForeignKey('product.Product', on_delete=models.CASCADE, null=True)
     origin_image = ImageField(upload_to="product/%Y/%M", null=True)
 
 
-class VehicleImage(TimeStampModel):
+class VehicleImage(TimeStampModel, SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     vehicle_color = models.ForeignKey('product.VehicleColor', on_delete=models.CASCADE, null=True)
     origin_image = ImageField(upload_to="vehicle/%Y/%M", null=True)
+
 
     # def __str__(self):
     #     return self.origin_image
@@ -35,7 +36,7 @@ class VehicleImage(TimeStampModel):
     image_tag.allow_tags = True
 
 
-class ProductOptions(models.Model):
+class ProductOptions(SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     product = models.ForeignKey("product.Product", on_delete=models.CASCADE, null=True)
     option_name = models.CharField(max_length=200, blank=True)
@@ -52,7 +53,7 @@ class ProductOptions(models.Model):
         return self.option_name
 
 
-class VehicleColor(models.Model):
+class VehicleColor(SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     vehicle = models.ForeignKey('product.Vehicle', on_delete=models.CASCADE, null=True)
     color_name = models.CharField(max_length=20, blank=True)
@@ -66,7 +67,7 @@ class VehicleColor(models.Model):
         return self.color_name
 
 
-class Product(TimeStampModel):
+class Product(TimeStampModel, SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
@@ -82,7 +83,7 @@ class Product(TimeStampModel):
         return self.product_name
 
 
-class Vehicle(models.Model):
+class Vehicle(SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     vehicle_name = models.CharField(max_length=200)
     zero_to_fifty = models.IntegerField(default=0)

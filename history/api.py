@@ -33,7 +33,7 @@ cart_router = Router()
 def get_after_service_list(request, id: int = None, status: AfterServiceStatus = None, is_created__gte: date = None,
                            is_created__lte: date = None):
     params = prepare_for_query(request=request)
-    qs = AfterService.objects.filter(**params).select_related('place', 'vehicle').all()
+    qs = AfterService.objects.get_queryset(**params).select_related('place', 'vehicle').all()
     # print(qs.values())
     return ResponseDefaultHeader(
         code=Response.status_code,
@@ -63,7 +63,7 @@ def create_after_service_history(request, payload: AfterServiceInsertSchema):
 def change_after_service_status(request, id: int, status: AfterServiceStatus):
     return ResponseDefaultHeader(
         code=Response.status_code,
-        data=AfterService.objects.filter(id=id).update(status=status)
+        data=AfterService.objects.get_queryset(id=id).update(status=status)
     )
 
 
@@ -73,7 +73,7 @@ def change_after_service_status(request, id: int, status: AfterServiceStatus):
                    )
 def get_refund_list(request, method: RefundMethod = None, status: RefundStatus = None):
     params = prepare_for_query(request=request)
-    qs = Refund.objects.filter(**params).select_related('order').all()
+    qs = Refund.objects.get_queryset(**params).select_related('order').all()
 
     return ResponseDefaultHeader(
         code=Response.status_code,
@@ -114,7 +114,7 @@ def modify_refund(request, id: int, status: RefundStatus, reject_reason: str = N
                      )
 def get_warranty_list(request):
     params = prepare_for_query(request)
-    qs = Warranty.objects.filter(**params).all()
+    qs = Warranty.objects.get_queryset(**params).all()
     return ResponseDefaultHeader(
         code=Response.status_code,
         data=qs
@@ -142,7 +142,7 @@ def modify_warranty(request, id: int, validity: datetime = None):
 
 @warranty_router.delete('/', description="보증 범위 객체 삭제", response=ResponseDefaultHeader.Schema)
 def delete_warranty(request, id: int):
-    qs = get_object_or_404(Warranty, id=id).delete()
+    qs = get_object_or_404(Warranty, id=id).soft_delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         data=qs
@@ -169,7 +169,7 @@ def get_battery_exchange_history(request, sort: BatteryExchangeSort = None):
     else:
         field_name = 'order__is_created'
 
-    queryset = BatteryExchange.objects.filter(**params).select_related('place', 'order', 'member_vehicle',
+    queryset = BatteryExchange.objects.get_queryset(**params).select_related('place', 'order', 'member_vehicle',
                                                                        'fee_plan').order_by(field_name)
     return queryset
 
@@ -196,7 +196,7 @@ def create_battery_history(request, payload: BatteryExchangeInsertSchema):
 
 @battery_router.delete('/', description="배터리 교환 내역 삭제", response=ResponseDefaultHeader.Schema)
 def delete_battery_history(request, id: int):
-    queryset = get_object_or_404(BatteryExchange, id=id).delete()
+    queryset = get_object_or_404(BatteryExchange, id=id).soft_delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         data=queryset
@@ -209,7 +209,7 @@ def get_cart_list(request):
     user = request.user
     # if str(user) == 'AnonymousUser':
     #     raise LoginRequiredException
-    queryset = Cart.objects.filter(owner__email=user.email).select_related('product')
+    queryset = Cart.objects.get_queryset(owner__email=user.email).select_related('product')
     return queryset
 
 
