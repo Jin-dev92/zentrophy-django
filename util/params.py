@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+import params as params
 from django.core.handlers.wsgi import WSGIRequest
 
 
@@ -15,9 +16,10 @@ def prepare_for_query(request: WSGIRequest, exceptions: Optional[List] = None): 
     if len(request.GET) == 0:
         return dict()
     params = request.GET.copy().dict()
-    if exceptions is not None:
+    if len(exceptions) > 0:
         for exception in exceptions:
-            del params[exception]
+            if exception in params.keys():
+                del params[exception]
     result = {k: int(v) for k, v in params.items() if able2_parse_type(v, int)}
     not_int_value_dict = {k: v for k, v in params.items() if not able2_parse_type(v, int)}
     result.update(not_int_value_dict)
