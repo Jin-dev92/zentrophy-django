@@ -1,5 +1,4 @@
 # package
-from django.http import HttpResponse
 from ninja import NinjaAPI
 from ninja.security import django_auth
 
