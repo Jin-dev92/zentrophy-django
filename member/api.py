@@ -39,6 +39,7 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
 
 @router.post("/", description="회원 생성", response=ResponseDefaultHeader.Schema, auth=None)
 def create_user(request, payload: MemberInsertSchema):
+    User.objects.get
     queryset = User.objects.create_user(**payload.dict())
     return ResponseDefaultHeader(
         code=Response.status_code,

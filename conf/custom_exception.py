@@ -48,3 +48,7 @@ class WrongBusinessNumberException(Exception):
 
 class WrongAmountVehicleColorException(Exception):
     pass
+
+
+class MemberAlreadyExistsException(Exception):
+    pass
