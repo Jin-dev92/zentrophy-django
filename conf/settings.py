@@ -135,7 +135,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-INTERNAL_IPS = [ # django debug toolbar allow ip list
+INTERNAL_IPS = [  # django debug toolbar allow ip list
     '127.0.0.1',
 ]
 

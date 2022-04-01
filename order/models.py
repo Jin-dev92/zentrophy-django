@@ -1,23 +1,21 @@
 from django.db import models
 
-from conf import settings
-from conf.custom_exception import MustHaveSplitWordException, NotEnoughProductsException, ChangeOrderStateException, \
+from conf.custom_exception import NotEnoughProductsException, ChangeOrderStateException, \
     DataBaseORMException
 from member.models import MemberOwnedVehicles, PaymentMethod
 from order.constant import OrderState, PaymentType
-# from util.exception.exception import ErrorMessage
-from product.models import Vehicle, ProductOptions, VehicleColor, Product
-from util.models import TimeStampModel
+from product.models import Vehicle, ProductOptions, VehicleColor
+from util.models import TimeStampModel, SoftDeleteModel
 
 
-class OrderDetail(models.Model):
+class OrderDetail(SoftDeleteModel):
     order = models.ForeignKey('order.Order', on_delete=models.CASCADE)
     product_options = models.ForeignKey(ProductOptions, on_delete=models.SET_NULL, null=True, default=None)
     vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.SET_NULL, null=True, default=None)
     amount = models.IntegerField(default=0)
 
 
-class Order(TimeStampModel):
+class Order(TimeStampModel, SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     owner = models.ForeignKey('member.User',
                               on_delete=models.CASCADE,
@@ -71,21 +69,18 @@ class Order(TimeStampModel):
         pass
 
 
-class NecessaryDocumentFile(TimeStampModel):
+class NecessaryDocumentFile(TimeStampModel, SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     file = models.FileField(upload_to="order/%Y/%M", )
     order = models.ForeignKey('order.Order', on_delete=models.CASCADE)
 
 
-class Subside(models.Model):
+class Subside(SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     amount = models.IntegerField(default=0)
 
-    class Meta:
-        abstract = True
 
-
-class ExtraSubside(models.Model):
+class ExtraSubside(SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     amount = models.IntegerField(default=0)
@@ -93,6 +88,6 @@ class ExtraSubside(models.Model):
     description_2 = models.TextField(blank=True, help_text="보조금 신청 시 주의 사항")  # 보조금 신청 시 주의 사항
 
 
-class IntegratedFeePlan(models.Model):
+class IntegratedFeePlan(SoftDeleteModel):
     zentrophy_fee = models.IntegerField(default=0)
     battery_fee = models.IntegerField(default=0)

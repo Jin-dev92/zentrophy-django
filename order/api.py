@@ -28,10 +28,9 @@ router = Router()
             )
 def get_list_order(request, id: Optional[int] = None):
     params = prepare_for_query(request)
-    queryset = Order.objects.select_related('owner').prefetch_related(
+    queryset = Order.objects.get_queryset(**params).select_related('owner').prefetch_related(
         Prefetch('extra_subside', to_attr="extra_subside"),
-        Prefetch('necessarydocumentfile_set', to_attr="files")). \
-        filter(**params).all()
+        Prefetch('necessarydocumentfile_set', to_attr="files"))
     return queryset
 
 
@@ -93,7 +92,7 @@ def modify_order(request, id: int, state: OrderState):
 # @permission_required(perm=settings.ADMIN_GROUP_NAME, raise_exception=True)
 @router.delete("/", description="주문 삭제", response=ResponseDefaultHeader.Schema)
 def delete_order(request, id: int):
-    qs = get_object_or_404(Order, id=id).delete()
+    qs = get_object_or_404(Order, id=id).soft_delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="해당 주문이 삭제되었습니다.",

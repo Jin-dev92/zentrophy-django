@@ -1,9 +1,8 @@
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, AbstractUser, Group
 
-from conf.custom_exception import WrongBusinessNumberException, WrongBirthNumberException
 from member.constant import CardCompany
-from util.models import TimeStampModel
+from util.models import TimeStampModel, SoftDeleteModel
 
 
 class UserManager(BaseUserManager):
@@ -66,7 +65,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['password']
 
 
-class MemberOwnedVehicles(TimeStampModel):
+class MemberOwnedVehicles(TimeStampModel, SoftDeleteModel):
     vehicle = models.ForeignKey('product.Vehicle', on_delete=models.SET_NULL, null=True)
     order = models.ForeignKey('order.Order', on_delete=models.SET_NULL, null=True)
     owner = models.ForeignKey('member.User', on_delete=models.CASCADE)
@@ -74,14 +73,14 @@ class MemberOwnedVehicles(TimeStampModel):
     battery_left = models.IntegerField(default=-1)  # -1의 경우 사용 불가.
 
 
-class PaymentMethod(TimeStampModel):
+class PaymentMethod(TimeStampModel, SoftDeleteModel):
     name = models.CharField(max_length=100)  # 결제 수단 별명
     owner = models.ForeignKey('member.User', on_delete=models.CASCADE)
     card = models.ForeignKey('member.Card', on_delete=models.CASCADE, null=True)
     favorite = models.BooleanField(default=False)
 
 
-class Card(models.Model):
+class Card(SoftDeleteModel):
     card_number = models.CharField(max_length=16, null=True)
     card_company = models.CharField(max_length=10, choices=CardCompany.choices, default=CardCompany.ETC)
     validate_date = models.DateField(null=True)

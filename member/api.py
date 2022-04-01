@@ -95,7 +95,7 @@ def forgot_pwd(request, payload: MemberReAssignSchema):
 @payment_method_router.get('/', description="결제 수단 리스트 가져오기", response=Optional[List[PaymentMethodListSchema]])
 def get_payment_method(request):
     if has_permission(request):
-        return PaymentMethod.objects.filter(owner=request.user).select_related('card').all().order_by('favorite')
+        return PaymentMethod.objects.get_queryset(owner=request.user).select_related('card').all().order_by('favorite')
     else:
         return []
 
@@ -121,4 +121,4 @@ def create_payment_method(request, payload: PaymentMethodInsertSchema):
 
 @payment_method_router.delete('/')
 def delete_payment_method(request, id: int):
-    get_object_or_404(PaymentMethod, id=id).delete()
+    get_object_or_404(PaymentMethod, id=id).soft_delete()

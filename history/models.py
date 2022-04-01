@@ -6,17 +6,17 @@ from member.models import MemberOwnedVehicles
 from order.models import Order
 from placement.models import Placement
 from product.models import Product
-from util.models import TimeStampModel
+from util.models import TimeStampModel, SoftDeleteModel
 
 
-class Refund(TimeStampModel):
+class Refund(TimeStampModel, SoftDeleteModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     reject_reason = models.CharField(max_length=200, blank=True)
     method = models.PositiveSmallIntegerField(default=RefundMethod.RECALL_REQUEST)
     status = models.PositiveSmallIntegerField(default=RefundStatus.WAITING)
 
 
-class AfterService(TimeStampModel):
+class AfterService(TimeStampModel, SoftDeleteModel):
     place = models.ForeignKey('placement.Placement', on_delete=models.CASCADE)
     vehicle = models.ForeignKey('member.MemberOwnedVehicles', on_delete=models.CASCADE, null=True)
     registration_number = models.CharField(max_length=LICENSE_NUMBER_LENGTH, unique=True)
@@ -26,7 +26,7 @@ class AfterService(TimeStampModel):
     category = models.PositiveSmallIntegerField(default=AfterServiceCategory.ETC)
 
 
-class BatteryExchange(TimeStampModel):
+class BatteryExchange(TimeStampModel, SoftDeleteModel):
     place = models.ForeignKey(Placement, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     member_vehicle = models.ForeignKey(MemberOwnedVehicles, on_delete=models.CASCADE, null=True)
@@ -34,7 +34,7 @@ class BatteryExchange(TimeStampModel):
     used_battery = models.FloatField(default=0.0)
 
 
-class Warranty(TimeStampModel):
+class Warranty(TimeStampModel, SoftDeleteModel):
     name = models.CharField(max_length=100, blank=True)
     validity = models.DateTimeField(null=True)
     is_warranty = models.BooleanField(default=True)

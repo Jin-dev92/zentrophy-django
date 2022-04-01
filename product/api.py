@@ -51,7 +51,7 @@ def get_product_list(request, sort: Optional[ProductListSort] = None, id: int = 
     else:
         field_name = "is_created"
 
-    products = Product.objects.filter(**params).prefetch_related(
+    products = Product.objects.get_queryset(**params).prefetch_related(
         Prefetch('productoptions_set', to_attr='product_options'),
         Prefetch('productimage_set', to_attr='product_image'),
         'product_display_line',
@@ -80,10 +80,10 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
                 ProductOptions.objects.bulk_create(objs=bulk_prepare_product_options_list)
             else:
                 delete_files(files)
-                ProductImage.objects.filter(product=product_queryset[0]).delete()
+                ProductImage.objects.get_queryset(product=product_queryset[0]).soft_delete()
                 # product_queryset[0].objects.update(**product)
                 if len(product_options) == 0:
-                    ProductOptions.objects.filter(product=product_queryset[0]).delete()
+                    ProductOptions.objects.get_queryset(product=product_queryset[0]).soft_delete()
                 else:
                     for option in product_options:
                         ProductOptions.objects.update_or_create(**option)
@@ -104,7 +104,7 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
 
 @product_router.delete("/", description="상품 삭제", tags=["product"], response=ResponseDefaultHeader.Schema)
 def delete_product(request, id: int):
-    qs = get_object_or_404(Product, id=id).delete()
+    qs = get_object_or_404(Product, id=id).soft_delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="상품 삭제가 성공적으로 되었습니다.",
@@ -145,7 +145,7 @@ def modify_display_line(request, payload: ProductDisplayInsertSchema, id: int):
 
 @display_line_router.delete("/", tags=["product"], response=ResponseDefaultHeader.Schema)
 def delete_display_line_by_id(request, id: int):
-    get_object_or_404(ProductDisplayLine, id=id).delete()
+    get_object_or_404(ProductDisplayLine, id=id).soft_delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="상품 진열 삭제가 성공적으로 되었습니다.",
@@ -155,7 +155,7 @@ def delete_display_line_by_id(request, id: int):
 @vehicle_router.get("/", description="모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"], auth=None)
 def get_vehicle_list(request, id: Optional[int] = None):
     params = prepare_for_query(request)
-    result = Vehicle.objects.filter(**params).prefetch_related(
+    result = Vehicle.objects.get_queryset(**params).prefetch_related(
         Prefetch(lookup='vehiclecolor_set',
                  queryset=VehicleColor.objects.all().prefetch_related(
                      Prefetch(lookup='vehicle__vehicleimage_set',
@@ -202,8 +202,8 @@ def create_vehicle(request, payload: VehicleInsertSchema,
                     VehicleImage.objects.bulk_create(objs=image_list, batch_size=5)
                 else:
                     if not obj[1]:  # 수정일 경우 삭제해준다.
-                        exist_image = VehicleImage.objects.filter(vehicle_color=obj[0].id)
-                        exist_image.delete()
+                        exist_image = VehicleImage.objects.get_queryset(vehicle_color=obj[0].id)
+                        exist_image.soft_delete()
                         delete_files([image.origin_image for image in exist_image])
                     else:  # 생성인 경우 패스해줌
                         pass
@@ -223,7 +223,7 @@ def create_vehicle(request, payload: VehicleInsertSchema,
 
 @vehicle_router.delete("/", description="모터사이클 삭제", response=ResponseDefaultHeader.Schema)
 def delete_vehicle(id: int):
-    qs = get_object_or_404(Vehicle, id=id).delete()
+    qs = get_object_or_404(Vehicle, id=id).soft_delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="상품 삭제가 성공적으로 되었습니다.",
