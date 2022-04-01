@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-import params as params
 from django.core.handlers.wsgi import WSGIRequest
 
 
