@@ -38,7 +38,7 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
 
 
 @router.post("/", description="회원 생성", response=ResponseDefaultHeader.Schema, auth=None)
-def create_user(request, payload: MemberInsertSchema):
+def create_user(request, payload: MemberInsertSchema = Form(...)):
     User.objects.get
     queryset = User.objects.create_user(**payload.dict())
     return ResponseDefaultHeader(
@@ -48,7 +48,7 @@ def create_user(request, payload: MemberInsertSchema):
 
 
 @router.put("/", description="회원 수정", response=ResponseDefaultHeader.Schema, auth=None)
-def modify_user(request, payload: MemberInsertSchema):
+def modify_user(request, payload: MemberInsertSchema = Form(...)):
     if has_permission(request):
         User.objects.update(**payload.dict())
     else:
@@ -83,12 +83,12 @@ def delete_user(request, id: int):
 
 
 @router.get('/forgot', description="아이디 찾기", response=str)
-def forgot_id(request, username: str, phone_number: str):
+def forgot_id(request, username: str = Form(...), phone_number: str = Form(...)):
     return get_object_or_404(User, username=username, phone_number=phone_number).email
 
 
 @router.post('/forgot', description="비밀번호 재생성")
-def forgot_pwd(request, payload: MemberReAssignSchema):
+def forgot_pwd(request, payload: MemberReAssignSchema = Form(...)):
     user = get_object_or_404(User, username=payload.dict()['username'], email=payload.dict()['email'])
     user.set_password(payload.dict()['password'])
 
@@ -103,7 +103,7 @@ def get_payment_method(request):
 
 @transaction.atomic(using='default')
 @payment_method_router.post('/', description="결젤 수단 생성")
-def create_payment_method(request, payload: PaymentMethodInsertSchema):
+def create_payment_method(request, payload: PaymentMethodInsertSchema = Form(...)):
     if not has_permission(request):
         raise LoginRequiredException
 
