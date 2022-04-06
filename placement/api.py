@@ -11,7 +11,7 @@ from placement.constant import PlacementType
 from placement.models import Placement, PlacementImage
 from placement.schema import PlacementListSchema, PlacementInsertSchema
 from util.default import ResponseDefaultHeader
-from util.file import delete_files
+# from util.file import delete_files
 from util.params import prepare_for_query
 
 router = Router()

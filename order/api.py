@@ -15,7 +15,7 @@ from order.models import Order, ExtraSubside, NecessaryDocumentFile, OrderDetail
 from order.schema import OrderListSchema, OrderCreateSchema
 from product.models import Product, Vehicle
 from util.default import ResponseDefaultHeader
-from util.file import delete_files
+# from util.file import delete_files
 from util.params import prepare_for_query
 from util.permission import has_permission
 
@@ -67,7 +67,7 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
                 is_created_order[0].sales_products()
             else:  # update
                 is_created_order[0].extra_subside.add(**ExtraSubside.objects.in_bulk(id_list=extra_subsides_id))
-                delete_files([file.file.name for file in for_bulk_file_list])
+                # delete_files([file.file.name for file in for_bulk_file_list])
             is_created_order[0].save()
     except Exception as e:
         raise Exception(e)
