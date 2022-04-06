@@ -15,7 +15,7 @@ from product.schema import ProductListSchema, ProductInsertSchema, ProductDispla
     VehicleListSchema, VehicleInsertSchema
 from util.default import ResponseDefaultHeader \
     # , CommonBase64FileSchema
-from util.file import delete_files, base64_decode
+from util.file import base64_decode
 from util.params import prepare_for_query
 
 product_router = Router()
@@ -84,7 +84,7 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
             if product_queryset[1]:
                 ProductOptions.objects.bulk_create(objs=bulk_prepare_product_options_list)
             else:
-                delete_files(files)
+                # delete_files(files)
                 ProductImage.objects.get_queryset(product=product_queryset[0]).soft_delete()
                 # product_queryset[0].objects.update(**product)
                 if len(product_options) == 0:
@@ -194,6 +194,7 @@ def create_vehicle(request, payload: VehicleInsertSchema, files_list: List[List[
             else:  # 수정
                 # VehicleColor 전부 업데이트 해줌., VehicleColor 에 종속되어있는 VehicleImage들 전부 삭제 후 다시 업로드.
                 VehicleColor.objects.update_or_create(vehicle=vehicle_queryset[0], **vehicle_color)
+                # delete_files()
 
     except Exception as e:
         raise Exception(e)
