@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List
 from ninja import Schema
 
 
@@ -17,3 +17,7 @@ class ResponseDefaultHeader:
         code: int
         message: str = None
         data: List[dict] = None
+
+
+# class CommonBase64FileSchema(Schema):
+#     base64_encoded: str

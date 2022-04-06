@@ -52,23 +52,22 @@ class ProductOptionsInsertSchema(Schema):
                                                        title="0: 기본형, 1:입력형, 2:옵션없음")  # 기본형, 입력형, 옵션없음
 
 
-class VehicleColorInsertSchema(Schema):  # 모터사이클 색상 스키마\
+class VehicleColorSchema(Schema):
     color_name: str = Field(title="색 이름")
     sale_count: int = Field(default=0, title="판매 수량")
     stock_count: int = Field(default=0, title="재고 수량")
     hex_code: str = Field(default="FFFFFF", title="색 코드", description="css에서 사용하는 컬러값 사용 가능, 16진수, white, rgba 값")
     on_sale: bool = Field(default=False, title="판매 여부")
     price: int = 0
+
+
+class VehicleColorInsertSchema(Schema):  # 모터사이클 색상 스키마\
+    vehicle_color: VehicleColorSchema = None
     # vehicle_image: List[UploadedFile] = None
 
 
 class VehicleColorListSchema(Schema):
-    color_name: str = Field(title="색 이름")
-    sale_count: int = Field(default=0, title="판매 수량")
-    stock_count: int = Field(default=0, title="재고 수량")
-    hex_code: str = Field(default="FFFFFF", title="색 코드", description="css에서 사용하는 컬러값 사용 가능, 16진수, white, rgba 값")
-    on_sale: bool = Field(default=False, title="판매 여부")
-    price: int = 0
+    vehicle_color: VehicleColorSchema = None
     vehicle_image: List[VehicleImageSchema] = None
 
 
