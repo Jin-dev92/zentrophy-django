@@ -1,13 +1,12 @@
-import base64
 from typing import List, Optional
 
 from django.db import transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
-from ninja import UploadedFile, Router, File, Form
+from ninja import UploadedFile, Router, File
 from ninja.responses import Response
 
-from conf.custom_exception import DisplayLineExceededSizeException, WrongAmountVehicleColorException
+from conf.custom_exception import DisplayLineExceededSizeException
 from product.constant import ProductListSort
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
@@ -173,28 +172,28 @@ def get_vehicle_list(request, id: Optional[int] = None):
 
 
 @transaction.atomic(using='default')
-@vehicle_router.post("/", description="모터사이클 등록/수정", response=ResponseDefaultHeader.Schema)
-def create_vehicle(request, payload: VehicleInsertSchema, files_list: List[List[str]] = Form(...)):
+@vehicle_router.post("/", description="모터사이클 등록/수정")
+def create_vehicle(request, payload: VehicleInsertSchema):
     global vehicle_color_size
     global vehicle_image_size
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
-    vehicle_color: list[dict] = payload.dict().get('vehicle_color')
+    vehicle_color_params = payload.dict().get('vehicle_color')
+    vehicle_color = [{k: v for k, v in color.items() if k not in {'files'}} for color in
+                     vehicle_color_params]
+    files_list = [color['files'] for color in vehicle_color_params]
     try:
         with transaction.atomic():
             vehicle_queryset = Vehicle.objects.update_or_create(**vehicle)
-            if vehicle_queryset[1]:  # 생성
-                objs_color = [VehicleColor(vehicle=vehicle_queryset[0], **color) for color in vehicle_color]
-                color_is_created = VehicleColor.objects.bulk_create(obj=objs_color, batch_size=vehicle_color_size)
-                obj_image = [
-                    [VehicleImage(vehicle_color=color_is_created[idx], origin_image=base64_decode(file)) for idx, file
-                     in enumerate(files)] for files in files_list]
-                VehicleImage.objects.bulk_create(objs=obj_image,
-                                                 batch_size=vehicle_color_size * vehicle_image_size)  # 최대 25개 생성
+            color_is_updated_or_created = [VehicleColor.objects.update_or_create(vehicle=vehicle_queryset[0], **color)
+                                           # 선언 할 때마다 db에 hit 하는가?
+                                           for color in vehicle_color]
+            obj_image = [
+                [VehicleImage(vehicle_color=color[0], origin_image=base64_decode(file)) for file in files_list[idx]]
+                for idx, color in enumerate(color_is_updated_or_created)
+            ]
+            VehicleImage.objects.bulk_create(objs=obj_image,
+                                             batch_size=vehicle_color_size * vehicle_image_size)  # 최대 25개 생성
 
-            else:  # 수정
-                # VehicleColor 전부 업데이트 해줌., VehicleColor 에 종속되어있는 VehicleImage들 전부 삭제 후 다시 업로드.
-                VehicleColor.objects.update_or_create(vehicle=vehicle_queryset[0], **vehicle_color)
-                # delete_files()
 
     except Exception as e:
         raise Exception(e)
