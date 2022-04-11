@@ -201,7 +201,6 @@ def create_vehicle(request, payload: VehicleInsertSchema):
         return_val = "추가"
     else:
         return_val = "수정"
-
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="모터사이클이 성공적으로 {} 되었습니다".format(return_val)

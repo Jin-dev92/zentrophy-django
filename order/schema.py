@@ -2,8 +2,9 @@ from datetime import datetime
 from typing import List
 
 from ninja import Schema, Field
-from order.constant import OrderState, PaymentType
+
 from member.schema import MemberListSchema, PaymentMethodListSchema
+from order.constant import OrderState, PaymentType
 
 
 class OrderListSchema(Schema):
@@ -36,4 +37,18 @@ class OrderCreateSchema(Schema):
     is_able_subside: bool = False
     extra_subside_id: List[int] = Field(default=None, description="추가 보조금 pk")
 
-# class PaymentInfo(Schema):
+
+class SubsideListSchema(Schema):
+    name: str
+    amount: int
+    is_based: bool = False
+    description_1: str = ""
+    description_2: str = ""
+
+
+class SubsideInsertSchema(Schema):
+    name: str
+    amount: int
+    is_based: bool
+    description_1: str = ""
+    description_2: str = ""

@@ -11,8 +11,8 @@ from ninja.responses import Response
 from conf.custom_exception import LoginRequiredException
 from member.models import PaymentMethod
 from order.constant import OrderState
-from order.models import Order, ExtraSubside, NecessaryDocumentFile, OrderDetail
-from order.schema import OrderListSchema, OrderCreateSchema
+from order.models import Order, Subside, NecessaryDocumentFile, OrderDetail
+from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
 from product.models import Product, Vehicle
 from util.default import ResponseDefaultHeader
 # from util.file import delete_files
@@ -20,6 +20,7 @@ from util.params import prepare_for_query
 from util.permission import has_permission
 
 router = Router()
+subside_router = Router()
 
 
 @router.get("/", description="전체 주문 조회, id param 넣으면 id로 조회",
@@ -62,11 +63,11 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
             for_bulk_file_list = [NecessaryDocumentFile(file=file,
                                                         order=is_created_order[0]) for file in files]
             if is_created_order[1]:  # create
-                is_created_order[0].extra_subside.add(*ExtraSubside.objects.in_bulk(id_list=extra_subsides_id))
+                is_created_order[0].extra_subside.add(*Subside.objects.in_bulk(id_list=extra_subsides_id))
                 NecessaryDocumentFile.objects.bulk_create(for_bulk_file_list)
                 is_created_order[0].sales_products()
             else:  # update
-                is_created_order[0].extra_subside.add(**ExtraSubside.objects.in_bulk(id_list=extra_subsides_id))
+                is_created_order[0].extra_subside.add(**Subside.objects.in_bulk(id_list=extra_subsides_id))
                 # delete_files([file.file.name for file in for_bulk_file_list])
             is_created_order[0].save()
     except Exception as e:
@@ -78,7 +79,6 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
     )
 
 
-# @permission_required(perm=settings.ADMIN_GROUP_NAME, raise_exception=True)
 @router.put("/", description="주문 상태 변경", response=ResponseDefaultHeader.Schema)
 def modify_order(request, id: int, state: OrderState):
     qs = get_object_or_404(Order, id=id).order_change_state(state)
@@ -89,12 +89,35 @@ def modify_order(request, id: int, state: OrderState):
     )
 
 
-# @permission_required(perm=settings.ADMIN_GROUP_NAME, raise_exception=True)
 @router.delete("/", description="주문 삭제", response=ResponseDefaultHeader.Schema)
 def delete_order(request, id: int):
     qs = get_object_or_404(Order, id=id).soft_delete()
     return ResponseDefaultHeader(
         code=Response.status_code,
         message="해당 주문이 삭제되었습니다.",
-        data=qs
+
+    )
+
+
+@subside_router.get('/', response=List[SubsideListSchema], description="is_based 값 True일 경우 기본 지원금, false일 경우 추가 지원금")
+def get_list_subside(request, is_based: bool = False):
+    qs = Subside.objects.get_queryset(is_based=is_based)
+    return qs
+
+
+@subside_router.post('/', response=ResponseDefaultHeader.Schema)
+def create_subside(request, payload: SubsideInsertSchema):
+    qs = Subside.objects.create(**payload.dict())
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        message="보조금이 생성되었습니다.",
+    )
+
+
+@subside_router.delete('/')
+def delete_subside(id: int):
+    qs = Subside.objects.soft_delete(id=id)
+    return ResponseDefaultHeader(
+        code=Response.status_code,
+        message="보조금이 삭제되었습니다.",
     )
