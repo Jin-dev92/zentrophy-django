@@ -3,17 +3,17 @@ from datetime import datetime
 from ninja import Field
 from ninja import Schema
 
-from history.constant import RefundMethod, RefundStatus, AfterServiceCategory
+from history.constant import RefundMethod, RefundStatus, AfterServiceCategory, AfterServiceStatus
+from member.schema import MemberListSchema
+from order.schema import OrderListSchema
 from placement.schema import PlacementListSchema
-
-
-class HistoryListSchema(Schema):
-    id: int = None
+from product.schema import VehicleListSchema
 
 
 class AfterServiceInsertSchema(Schema):
     place_id: int
-    member_id: int
+    owned_vehicle_id: int
+    registration_number: str = None
     reservation_date: datetime = None
     detail: str = None
     category: AfterServiceCategory = Field(
@@ -23,7 +23,22 @@ class AfterServiceInsertSchema(Schema):
 
 
 class AfterServiceListSchema(Schema):
+    user: MemberListSchema = None
     place: PlacementListSchema = None
+    owned_vehicle: VehicleListSchema = None
+    registration_number: str = None
+    status: AfterServiceStatus = AfterServiceStatus.APPLY_WAITING
+    reservation_date: datetime
+    detail: str = None
+    category: AfterServiceCategory = AfterServiceCategory.ETC
+
+
+class RefundListSchema(Schema):
+    id: int
+    order: OrderListSchema = None
+    reject_reason: str = None
+    method: RefundMethod = RefundMethod.RECALL_REQUEST
+    status: RefundStatus = RefundStatus.WAITING
 
 
 class RefundInsertSchema(Schema):
@@ -39,6 +54,13 @@ class RefundInsertSchema(Schema):
         default=RefundStatus.WAITING,
         description="0: 환불 대기, 1: 환불 완료, 2:환불 수락, 3: 환불 거절"
     )
+
+
+class WarrantyListSchema(Schema):
+    id: int
+    name: str
+    validity: datetime = Field(title="유효기간")
+    is_warranty: bool = Field(title="보증 가능 여부")
 
 
 class WarrantyInsertSchema(Schema):
