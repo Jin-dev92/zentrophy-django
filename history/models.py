@@ -17,7 +17,7 @@ class Refund(TimeStampModel, SoftDeleteModel):
 
 
 class AfterService(TimeStampModel, SoftDeleteModel):
-    user = models.ForeignKey('member.User', on_delete=models.CASCADE)
+    user = models.ForeignKey('member.User', on_delete=models.CASCADE, null=True)
     place = models.ForeignKey('placement.Placement', on_delete=models.CASCADE)
     owned_vehicle = models.ForeignKey('member.MemberOwnedVehicles', on_delete=models.CASCADE, null=True)
     registration_number = models.CharField(max_length=LICENSE_NUMBER_LENGTH, unique=True)
