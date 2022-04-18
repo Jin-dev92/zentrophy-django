@@ -1,18 +1,18 @@
 from typing import List, Optional
 
 from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router, Form
-from ninja.responses import Response
 
-from conf.custom_exception import UserNotAccessDeniedException, LoginRequiredException, AccessDeniedException, \
+from conf.custom_exception import UserNotAccessDeniedException, AccessDeniedException, \
     DataBaseORMException
 from member.constant import MemberSort
 from member.models import User, PaymentMethod, Card
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
     MemberReAssignSchema
-from util.default import ResponseDefaultHeader
 from util.params import prepare_for_query
 from util.permission import has_permission
 
@@ -20,6 +20,7 @@ router = Router()
 payment_method_router = Router()
 
 
+@login_required
 @router.get("/", description="회원 목록", response=List[MemberListSchema])
 def get_list_member(request, id: Optional[int] = None, email: Optional[str] = None, username: Optional[str] = None,
                     sort: MemberSort = None):
@@ -27,36 +28,36 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
     field_name = 'date_joined'
     if sort == MemberSort.RECENT:
         field_name = '-date_joined'
-
-    if has_permission(request):
-        return User.objects.filter(**params).all().order_by(field_name)
-    else:  # 내 정보에서 호출해주기 위한 코드
-        if len(User.objects.filter(id=request.user.id)) == 0:
-            raise LoginRequiredException
-        else:
-            return User.objects.filter(id=request.user.id)
+    if not has_permission(request):  # 어드민이 아니면
+        params = {id: request.user.id}  # 위한 코드
+    return User.objects.filter(**params).prefetch_related(
+        Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
+        Prefetch('paymentmethod_set', to_attr="payment_method")
+    ).order_by(field_name)
 
 
-@router.post("/", description="회원 생성", response=ResponseDefaultHeader.Schema, auth=None)
-def create_user(request, payload: MemberInsertSchema = Form(...)):
-    User.objects.get
-    queryset = User.objects.create_user(**payload.dict())
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="유저 생성이 되었습니다.",
+@router.get('/{id}', description="id로 회원 찾기", response=List[MemberListSchema])
+def get_member_by_id(request, id: int):
+    queryset = User.objects.filter(id=id).prefetch_related(
+        Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
+        Prefetch('paymentmethod_set', to_attr="payment_method")
     )
+    return queryset
 
 
-@router.put("/", description="회원 수정", response=ResponseDefaultHeader.Schema, auth=None)
-def modify_user(request, payload: MemberInsertSchema = Form(...)):
-    if has_permission(request):
-        User.objects.update(**payload.dict())
+@router.post("/", description="회원 생성", auth=None)
+def create_user(request, payload: MemberInsertSchema = Form(...)):
+    queryset = User.objects.create_user(**payload.dict())
+    return queryset
+
+
+@router.put("/", description="회원 수정", auth=None)
+def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
+    if request.user == get_object_or_404(User, id=id):
+        queryset = User.objects.filter(id=id).update(**payload.dict())
     else:
         raise UserNotAccessDeniedException
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="유저 수정이 되었습니다.",
-    )
+    return queryset
 
 
 @router.get('/logout', description="로그 아웃")
@@ -74,12 +75,10 @@ def member_login(request, email: str = Form(...), password: str = Form(...)):
 
 @router.delete("/", description="회원 삭제")
 def delete_user(request, id: int):
-    user = request.user
-    if not has_permission(request):  # 일반 유저 일 때
-        target = get_object_or_404(User, id=id)
-        if user != target:  # 일반 유저가 다른 유저의 계정을 삭제 하기 못하게 하기 위한 코드
-            raise UserNotAccessDeniedException
-    get_object_or_404(User, id=id).delete()
+    member = get_object_or_404(User, id=id)
+    if request.user == member or has_permission(request):
+        queryset = member.delete()
+        return queryset
 
 
 @router.get('/forgot', description="아이디 찾기", response=str)
@@ -93,19 +92,19 @@ def forgot_pwd(request, payload: MemberReAssignSchema = Form(...)):
     user.set_password(payload.dict()['password'])
 
 
-@payment_method_router.get('/', description="결제 수단 리스트 가져오기", response=Optional[List[PaymentMethodListSchema]])
+@login_required
+@payment_method_router.get('/', description="결제 수단 리스트 가져오기", response=List[PaymentMethodListSchema])
 def get_payment_method(request):
-    if has_permission(request):
-        return PaymentMethod.objects.get_queryset(owner=request.user).select_related('card').all().order_by('favorite')
-    else:
-        return []
+    queryset = PaymentMethod.objects.get_queryset(owner=request.user).select_related('card').order_by('favorite')
+    return queryset
 
 
+@login_required
 @transaction.atomic(using='default')
-@payment_method_router.post('/', description="결젤 수단 생성")
+@payment_method_router.post('/', description="결제 수단 생성")
 def create_payment_method(request, payload: PaymentMethodInsertSchema = Form(...)):
-    if not has_permission(request):
-        raise LoginRequiredException
+    # if not has_permission(request):
+    #     raise LoginRequiredException
 
     try:
         with transaction.atomic():
@@ -122,4 +121,4 @@ def create_payment_method(request, payload: PaymentMethodInsertSchema = Form(...
 
 @payment_method_router.delete('/')
 def delete_payment_method(request, id: int):
-    get_object_or_404(PaymentMethod, id=id).soft_delete()
+    get_object_or_404(PaymentMethod, owner=request.user, id=id).soft_delete()
