@@ -24,7 +24,7 @@ class Order(TimeStampModel, SoftDeleteModel):
     payment_method = models.ForeignKey(PaymentMethod, on_delete=models.SET_NULL, null=True)
     payment_info = models.JSONField(null=True)
     is_able_subside = models.BooleanField(default=False)
-    extra_subside = models.ManyToManyField('order.Subside')
+    # extra_subside = models.ManyToManyField('order.Subside')
     state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
 
     def __str__(self):
@@ -76,12 +76,15 @@ class NecessaryDocumentFile(TimeStampModel, SoftDeleteModel):
 
 
 class Subside(SoftDeleteModel):
-    id = models.AutoField(primary_key=True)
+    amount = models.IntegerField(default=0)
+
+
+class ExtraSubside(SoftDeleteModel, TimeStampModel):
     name = models.CharField(max_length=100)
     amount = models.IntegerField(default=0)
-    is_based = models.BooleanField(default=False)
     description_1 = models.TextField(blank=True, help_text="보조금 신청 시 필요 서류 및 안내")  # 보조금 신청 시 필요 서류 및 안내
     description_2 = models.TextField(blank=True, help_text="보조금 신청 시 주의 사항")  # 보조금 신청 시 주의 사항
+    subside = models.ForeignKey('order.Subside', on_delete=models.CASCADE)
 
 
 class IntegratedFeePlan(SoftDeleteModel):

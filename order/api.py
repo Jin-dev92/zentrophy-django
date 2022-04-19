@@ -6,15 +6,13 @@ from django.shortcuts import get_object_or_404
 # from django.contrib.auth.decorators import permission_required
 from ninja import Router
 from ninja.files import UploadedFile
-from ninja.responses import Response
 
 from conf.custom_exception import LoginRequiredException
 from member.models import PaymentMethod
 from order.constant import OrderState
-from order.models import Order, Subside, NecessaryDocumentFile, OrderDetail
+from order.models import Order, Subside, NecessaryDocumentFile, OrderDetail, ExtraSubside
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
 from product.models import Product, Vehicle
-from util.default import ResponseDefaultHeader
 # from util.file import delete_files
 from util.params import prepare_for_query
 from util.permission import has_permission
@@ -30,12 +28,12 @@ subside_router = Router()
 def get_list_order(request, id: Optional[int] = None):
     params = prepare_for_query(request)
     queryset = Order.objects.get_queryset(**params).select_related('owner').prefetch_related(
-        Prefetch('extra_subside', to_attr="extra_subside"),
+        # Prefetch('extra_subside', to_attr="extra_subside"),
         Prefetch('necessarydocumentfile_set', to_attr="files"))
     return queryset
 
 
-@router.post("/", description="주문 생성/수정", response=ResponseDefaultHeader.Schema)
+@router.post("/", description="주문 생성/수정")
 @transaction.atomic(using='default')
 def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] = None):
     if not has_permission or str(request.user) == 'AnonymousUser':
@@ -73,51 +71,47 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
     except Exception as e:
         raise Exception(e)
 
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="해당 주문이 생성 되었습니다.",
-    )
+    return True
 
 
-@router.put("/", description="주문 상태 변경", response=ResponseDefaultHeader.Schema)
+@router.put("/", description="주문 상태 변경")
 def modify_order(request, id: int, state: OrderState):
-    qs = get_object_or_404(Order, id=id).order_change_state(state)
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="해당 주문 상태가 변경 되었습니다.",
-        data=qs
-    )
+    queryset = get_object_or_404(Order, id=id).order_change_state(state)
+    return queryset
 
 
-@router.delete("/", description="주문 삭제", response=ResponseDefaultHeader.Schema)
+@router.delete("/", description="주문 삭제")
 def delete_order(request, id: int):
-    qs = get_object_or_404(Order, id=id).soft_delete()
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="해당 주문이 삭제되었습니다.",
+    queryset = get_object_or_404(Order, id=id).soft_delete()
+    return queryset
 
+
+@subside_router.get('/', response=List[SubsideListSchema])
+def get_list_subside(request):
+    queryset = Subside.objects.get_queryset().prefetch_related(
+        Prefetch('extra',to_attr="extra")
     )
+    Subside.objects.get_queryset().prefetch_related('')
+    pass
 
 
-@subside_router.get('/', response=List[SubsideListSchema], description="is_based 값 True일 경우 기본 지원금, false일 경우 추가 지원금")
-def get_list_subside(request, is_based: bool = False):
-    qs = Subside.objects.get_queryset(is_based=is_based)
-    return qs
-
-
-@subside_router.post('/', response=ResponseDefaultHeader.Schema)
+@transaction.atomic(using='default')
+@subside_router.post('/')
 def create_subside(request, payload: SubsideInsertSchema):
-    qs = Subside.objects.create(**payload.dict())
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="보조금이 생성되었습니다.",
-    )
+    try:
+        with transaction.atomic():
+            subside = Subside.objects.update_or_create(amount=payload.dict().get('amount'))
+            extra_list = [ExtraSubside(**item, subside=subside[0]) for item in payload.dict().get('extra')]
+            ExtraSubside.objects.bulk_create(objs=extra_list)
+
+    except Exception as e:
+        raise e
+
+    return True
 
 
 @subside_router.delete('/')
 def delete_subside(id: int):
-    qs = Subside.objects.soft_delete(id=id)
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="보조금이 삭제되었습니다.",
-    )
+    queryset = Subside.objects.soft_delete(id=id)
+
+    return queryset

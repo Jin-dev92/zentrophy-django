@@ -12,7 +12,7 @@ class OrderListSchema(Schema):
     owner: MemberListSchema = None
     payment_method: PaymentMethodListSchema = Field(title="결제 수단")
     is_able_subside: bool = Field(title="기본 보조금 가능 여부")
-    extra_subside: List[int] = Field(title="추가 보조금 pk list")
+    # extra_subside: List[int] = Field(title="추가 보조금 pk list")
     state: OrderState = Field(default=OrderState.ACCEPT_ORDER,
                               title="주문 상태",
                               description="0: 주문 수락, 1: 서류 검토중, 2: 결제 대기중, 3: 배달 준비중, 4: 배달 완료, 5: 주문 취소")
@@ -38,17 +38,27 @@ class OrderCreateSchema(Schema):
     extra_subside_id: List[int] = Field(default=None, description="추가 보조금 pk")
 
 
-class SubsideListSchema(Schema):
+class ExtraSubsideListSchema(Schema):
+    id: int
     name: str
-    amount: int
-    is_based: bool = False
+    amount: int = 0
     description_1: str = ""
     description_2: str = ""
+
+
+class ExtraSubsideInsertSchema(Schema):
+    name: str
+    amount: int = 0
+    description_1: str = ""
+    description_2: str = ""
+
+
+class SubsideListSchema(Schema):
+    id: int
+    amount: int = 0
+    extra: List[ExtraSubsideListSchema] = None
 
 
 class SubsideInsertSchema(Schema):
-    name: str
-    amount: int
-    is_based: bool
-    description_1: str = ""
-    description_2: str = ""
+    amount: int = 0
+    extra: List[ExtraSubsideInsertSchema] = None
