@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group
 from django.db import models
 
-from conf.custom_exception import MemberAlreadyExistsException
+from conf.custom_exception import AlreadyExistsException
 from member.constant import CardCompany
 from util.models import TimeStampModel, SoftDeleteModel
 
@@ -11,7 +11,7 @@ class UserManager(BaseUserManager):
 
     def create_user(self, email, password, username, **kwargs):
         if len(User.objects.filter(email=email)) > 0:
-            raise MemberAlreadyExistsException
+            raise AlreadyExistsException
         user = self.model(
             username=username,
             email=self.normalize_email(email),

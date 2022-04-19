@@ -50,5 +50,6 @@ class WrongAmountVehicleColorException(Exception):
     pass
 
 
-class MemberAlreadyExistsException(Exception):
+class AlreadyExistsException(Exception):
     pass
+

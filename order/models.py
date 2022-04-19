@@ -24,6 +24,7 @@ class Order(TimeStampModel, SoftDeleteModel):
     payment_method = models.ForeignKey(PaymentMethod, on_delete=models.SET_NULL, null=True)
     payment_info = models.JSONField(null=True)
     is_able_subside = models.BooleanField(default=False)
+    # subside =
     # extra_subside = models.ManyToManyField('order.Subside')
     state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
 

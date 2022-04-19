@@ -84,10 +84,14 @@ def create_product(request, payload: ProductInsertSchema, files: List[UploadedFi
                 ProductOptions.objects.bulk_create(objs=bulk_prepare_product_options_list)
             else:
                 # delete_files(files)
-                ProductImage.objects.get_queryset(product=product_queryset[0]).soft_delete()
+                # ProductImage.objects.get_queryset(product=product_queryset[0]).soft_delete()
+                for image in ProductImage.objects.get_queryset(product=product_queryset[0]):
+                    image.soft_delete()
                 # product_queryset[0].objects.update(**product)
                 if len(product_options) == 0:
-                    ProductOptions.objects.get_queryset(product=product_queryset[0]).soft_delete()
+                    # ProductOptions.objects.get_queryset(product=product_queryset[0]).soft_delete()
+                    for option in ProductOptions.objects.get_queryset(product=product_queryset[0]):
+                        option.soft_delete()
                 else:
                     for option in product_options:
                         ProductOptions.objects.update_or_create(**option)

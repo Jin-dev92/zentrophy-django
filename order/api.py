@@ -7,11 +7,12 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
 
-from conf.custom_exception import LoginRequiredException
+from conf.custom_exception import LoginRequiredException, AlreadyExistsException
 from member.models import PaymentMethod
 from order.constant import OrderState
 from order.models import Order, Subside, NecessaryDocumentFile, OrderDetail, ExtraSubside
-from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
+from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
+    ExtraSubsideInsertSchema
 from product.models import Product, Vehicle
 # from util.file import delete_files
 from util.params import prepare_for_query
@@ -89,19 +90,22 @@ def delete_order(request, id: int):
 @subside_router.get('/', response=List[SubsideListSchema])
 def get_list_subside(request):
     queryset = Subside.objects.get_queryset().prefetch_related(
-        Prefetch('extra',to_attr="extra")
+        Prefetch('extrasubside_set', to_attr="extra")
     )
-    Subside.objects.get_queryset().prefetch_related('')
-    pass
+    return queryset
 
 
 @transaction.atomic(using='default')
 @subside_router.post('/')
 def create_subside(request, payload: SubsideInsertSchema):
+    subside_amount = len(Subside.objects.all())
     try:
         with transaction.atomic():
-            subside = Subside.objects.update_or_create(amount=payload.dict().get('amount'))
-            extra_list = [ExtraSubside(**item, subside=subside[0]) for item in payload.dict().get('extra')]
+            if subside_amount == 0:
+                subside = Subside.objects.create(amount=payload.dict().get('amount'))
+            else:
+                raise AlreadyExistsException
+            extra_list = [ExtraSubside(**item, subside=subside) for item in payload.dict().get('extra')]
             ExtraSubside.objects.bulk_create(objs=extra_list)
 
     except Exception as e:
@@ -110,8 +114,29 @@ def create_subside(request, payload: SubsideInsertSchema):
     return True
 
 
-@subside_router.delete('/')
-def delete_subside(id: int):
-    queryset = Subside.objects.soft_delete(id=id)
+@subside_router.put('/')
+def modify_subside_amount(request, amount: int):
+    obj = Subside.objects.all().first()
+    obj.amount = amount
+    obj.save(update_fields=['amount'])
 
-    return queryset
+
+@subside_router.put('/extra')
+def modify_extra_subside(request, payload: List[ExtraSubsideInsertSchema] = None):
+    for extra_subside in ExtraSubside.objects.get_queryset():
+        extra_subside.soft_delete()
+    if payload is not None:
+        print("test")
+        subside = Subside.objects.all().first()
+        extra_list = [ExtraSubside(**item.dict(), subside=subside) for item in payload]
+        queryset = ExtraSubside.objects.bulk_create(objs=extra_list)
+    else:
+        print(payload)
+        return None
+    return True
+
+
+# @subside_router.delete('/')
+# def delete_subside(id: int):
+#     queryset = get_object_or_404(Subside, id=id).soft_delete()
+#     return queryset
