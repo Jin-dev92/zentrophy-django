@@ -192,23 +192,18 @@ def create_vehicle(request, payload: VehicleInsertSchema):
                                            # 선언 할 때마다 db에 hit 하는가?
                                            for color in vehicle_color]
             obj_image = [
-                [VehicleImage(vehicle_color=color[0], origin_image=base64_decode(file)) for file in files_list[idx]]
+                [VehicleImage(vehicle_color=color[0], origin_image=base64_decode(file)) for file in
+                 files_list[idx]]
                 for idx, color in enumerate(color_is_updated_or_created)
             ]
-            VehicleImage.objects.bulk_create(objs=obj_image,
-                                             batch_size=vehicle_color_size * vehicle_image_size)  # 최대 25개 생성
-
+            if len(obj_image) > 0:
+                for temp in obj_image:
+                    VehicleImage.objects.bulk_create(objs=temp,
+                                                     batch_size=vehicle_color_size * vehicle_image_size)  # 최대 25개 생성
 
     except Exception as e:
         raise Exception(e)
-    if vehicle_queryset[1]:
-        return_val = "추가"
-    else:
-        return_val = "수정"
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="모터사이클이 성공적으로 {} 되었습니다".format(return_val)
-    )
+    return True
 
 
 @vehicle_router.delete("/", description="모터사이클 삭제", response=ResponseDefaultHeader.Schema)
