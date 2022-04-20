@@ -1,5 +1,4 @@
 from typing import List, Optional
-
 from django.db import transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
@@ -9,7 +8,10 @@ from ninja.files import UploadedFile
 from placement.constant import PlacementType
 from placement.models import Placement, PlacementImage
 from placement.schema import PlacementListSchema, PlacementInsertSchema
+from util.file import delete_file
 from util.params import prepare_for_query
+
+from sorl.thumbnail import delete
 
 router = Router()
 
@@ -37,7 +39,7 @@ def get_placement_by_id(request, id: int):
 
 
 @transaction.atomic(using='default')
-@router.post("/", description="플레이스 생성 및 수정, # operation_start,operation_end hh:mm 형식으로 보내주세요 다른 형식도 되긴할듯")
+@router.post("/", description="플레이스 생성, # operation_start,operation_end hh:mm 형식으로 보내주세요 다른 형식도 되긴할듯")
 def create_placement(request, payload: PlacementInsertSchema, file: UploadedFile = None):
     try:
         with transaction.atomic():
@@ -51,23 +53,27 @@ def create_placement(request, payload: PlacementInsertSchema, file: UploadedFile
 
 
 @transaction.atomic(using='default')
-@router.put('/', description="플레이스 정보 수정")
-def modify_placement_by_id(request, id: int, payload: PlacementInsertSchema, file: UploadedFile = None):
+@router.post('/{id}', description="플레이스 정보 수정")
+def modify_placement_by_id(request, payload: PlacementInsertSchema, id: int, file: UploadedFile = None):
     place = get_object_or_404(Placement, id=id, deleted_at__isnull=True)
+    # for image in place.placementimage_set.all():
+    #     print(image.file)
+    # return
     try:
-        PlacementImage.objects.get_queryset(place=place).delete()
-        # for image in place.placementimage_set.all():
-        #     image.soft_delete()
-        queryset = place.objects.update(**payload.dict())
-        if file:
-            PlacementImage.objects.create(place=queryset, file=file)
+        with transaction.atomic():
+            PlacementImage.objects.filter(place=place).delete()
+            for image in place.placementimage_set.all():
+                delete_file(image.file)
+            Placement.objects.get_queryset(id=id).update(**payload.dict())
+            if file:
+                PlacementImage.objects.create(place=place, file=file)
     except Exception as e:
         raise e
 
-    return True
+    # return True
 
 
-@router.delete("/", description="플레이스 삭제", tags=["place"])
+@router.delete("/", description="플레이스 삭제")
 def delete_placement(request, id: int):
     queryset = get_object_or_404(Placement, id=id).soft_delete()
     return queryset

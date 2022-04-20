@@ -19,5 +19,5 @@ def base64_decode(file):
 
 
 def delete_file(file):
-    if os.path.isfile(file.path):  # 해당 경로에 파일이 있다면
-        os.remove(file.path)
+    if os.path.isfile(file):  # 해당 경로에 파일이 있다면
+        os.remove(file)
