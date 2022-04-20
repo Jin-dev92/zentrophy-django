@@ -5,13 +5,10 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
-from ninja.responses import Response
 
 from placement.constant import PlacementType
 from placement.models import Placement, PlacementImage
 from placement.schema import PlacementListSchema, PlacementInsertSchema
-from util.default import ResponseDefaultHeader
-# from util.file import delete_files
 from util.params import prepare_for_query
 
 router = Router()
@@ -25,47 +22,52 @@ router = Router()
             )
 def get_placement_list_by_type(request, placement_type: PlacementType = None, id: Optional[int] = None):
     params = prepare_for_query(request)
-    # print(params)
     queryset = Placement.objects.get_queryset(**params).prefetch_related(
         Prefetch('placementimage_set', to_attr='placement_image'),
     ).all()
     return queryset
 
 
+@router.get('/{id}', response={200: List[PlacementListSchema]})
+def get_placement_by_id(request, id: int):
+    queryset = Placement.objects.get_queryset(id=id).prefetch_related(
+        Prefetch('placementimage_set', to_attr='placement_image'),
+    ).all()
+    return queryset
+
+
 @transaction.atomic(using='default')
-@router.post("/",
-             description="플레이스 생성 및 수정, # operation_start,operation_end hh:mm 형식으로 보내주세요 다른 형식도 되긴할듯",
-             tags=["place"], response=ResponseDefaultHeader.Schema)
+@router.post("/", description="플레이스 생성 및 수정, # operation_start,operation_end hh:mm 형식으로 보내주세요 다른 형식도 되긴할듯")
 def create_placement(request, payload: PlacementInsertSchema, file: UploadedFile = None):
     try:
         with transaction.atomic():
             if len(Placement.objects.get_queryset(**payload.dict())) == 0:
                 place = Placement.objects.create(**payload.dict())
-                if file is not None:
-                    PlacementImage.objects.create(
-                        place=Placement.objects.get(id=place.id),
-                        file=file)
-
-            else:  # modify
-                place = Placement.objects.get(**payload.dict())
-                if len(PlacementImage.objects.get_queryset(place=place) == 0):  # 갖고있는 이미지가 없을 떄
+                if file:
                     PlacementImage.objects.create(place=place, file=file)
-                else:
-                    delete_files([place.placementimage_set.all()[0].file.name])
-                    if file is not None:
-                        PlacementImage.objects.get_queryset(place=place).update(file=file)
     except Exception as e:
         raise Exception(e)
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="플레이스 생성/수정이 성공적으로 되었습니다."
-    )
+    return True
 
 
-@router.delete("/", description="플레이스 삭제", tags=["place"], response=ResponseDefaultHeader.Schema)
+@transaction.atomic(using='default')
+@router.put('/', description="플레이스 정보 수정")
+def modify_placement_by_id(request, id: int, payload: PlacementInsertSchema, file: UploadedFile = None):
+    place = get_object_or_404(Placement, id=id, deleted_at__isnull=True)
+    try:
+        PlacementImage.objects.get_queryset(place=place).delete()
+        # for image in place.placementimage_set.all():
+        #     image.soft_delete()
+        queryset = place.objects.update(**payload.dict())
+        if file:
+            PlacementImage.objects.create(place=queryset, file=file)
+    except Exception as e:
+        raise e
+
+    return True
+
+
+@router.delete("/", description="플레이스 삭제", tags=["place"])
 def delete_placement(request, id: int):
     queryset = get_object_or_404(Placement, id=id).soft_delete()
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="플레이스 삭제가 성공적으로 되었습니다.",
-    )
+    return queryset

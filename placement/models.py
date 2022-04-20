@@ -19,7 +19,7 @@ class Placement(SoftDeleteModel):
         return self.placement_name
 
 
-class PlacementImage(TimeStampModel, SoftDeleteModel):
+class PlacementImage(TimeStampModel):
     id = models.AutoField(primary_key=True)
     place = models.ForeignKey(Placement, on_delete=models.CASCADE)
     file = ImageField(upload_to="place/%Y/%M", null=True)
