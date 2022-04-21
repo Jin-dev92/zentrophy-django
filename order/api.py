@@ -11,8 +11,7 @@ from conf.custom_exception import LoginRequiredException, AlreadyExistsException
 from member.models import PaymentMethod
 from order.constant import OrderState
 from order.models import Order, Subside, NecessaryDocumentFile, OrderDetail, ExtraSubside
-from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
-    ExtraSubsideInsertSchema
+from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
 from product.models import Product, Vehicle
 # from util.file import delete_files
 from util.params import prepare_for_query
@@ -114,27 +113,24 @@ def create_subside(request, payload: SubsideInsertSchema):
     return True
 
 
+# @subside_router.put('/')
+# def modify_subside_amount(request, amount: int):
+#     obj = Subside.objects.all().first()
+#     obj.amount = amount
+#     obj.save(update_fields=['amount'])
+
+
 @subside_router.put('/')
-def modify_subside_amount(request, amount: int):
-    obj = Subside.objects.all().first()
-    obj.amount = amount
-    obj.save(update_fields=['amount'])
-
-
-@subside_router.put('/extra')
-def modify_extra_subside(request, payload: List[ExtraSubsideInsertSchema] = None):
+def modify_extra_subside(request, payload: SubsideInsertSchema = None):
     for extra_subside in ExtraSubside.objects.get_queryset():
         extra_subside.soft_delete()
-    if payload is not None:
-        print("test")
+    if payload:
         subside = Subside.objects.all().first()
-        extra_list = [ExtraSubside(**item.dict(), subside=subside) for item in payload]
+        subside.amount = payload.amount
+        subside.save(update_fields=['amount'])
+        extra_list = [ExtraSubside(**item, subside=subside) for item in payload.dict().get('extra')]
         queryset = ExtraSubside.objects.bulk_create(objs=extra_list)
-    else:
-        print(payload)
-        return None
     return True
-
 
 # @subside_router.delete('/')
 # def delete_subside(id: int):
