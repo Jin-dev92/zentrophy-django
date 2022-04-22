@@ -22,7 +22,7 @@ router = Router()
             response={200: List[PlacementListSchema]},
             auth=None
             )
-def get_placement_list_by_type(request, placement_type: PlacementType = None, id: Optional[int] = None):
+def get_placement_list_by_type(request, placement_type: PlacementType = PlacementType.SERVICE, id: Optional[int] = None):
     params = prepare_for_query(request)
     queryset = Placement.objects.get_queryset(**params).prefetch_related(
         Prefetch('placementimage_set', to_attr='placement_image'),

@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
@@ -21,23 +22,12 @@ router = Router()
 subside_router = Router()
 
 
-@router.get("/", description="전체 주문 조회, id param 넣으면 id로 조회",
-            response={200: List[OrderListSchema]},
-            auth=None
-            )
-def get_list_order(request, id: Optional[int] = None):
-    params = prepare_for_query(request)
-    queryset = Order.objects.get_queryset(**params).select_related('owner').prefetch_related(
-        # Prefetch('extra_subside', to_attr="extra_subside"),
-        Prefetch('necessarydocumentfile_set', to_attr="files"))
-    return queryset
-
-
-@router.post("/", description="주문 생성/수정")
+@login_required
 @transaction.atomic(using='default')
+@router.post("/", description="주문 생성")
 def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] = None):
-    if not has_permission or str(request.user) == 'AnonymousUser':
-        raise LoginRequiredException
+    # if not has_permission or str(request.user) == 'AnonymousUser':
+    #     raise LoginRequiredException
     payload_dict = payload.dict()
     extra_subsides_id: list = payload_dict['extra_subside_id']  # 추가 보조금 리스트 pk
     order_detail: dict = payload_dict['order_detail']
@@ -72,6 +62,25 @@ def create_order(request, payload: OrderCreateSchema, files: List[UploadedFile] 
         raise Exception(e)
 
     return True
+
+
+@router.get("/", description="전체 주문 조회, id param 넣으면 id로 조회",
+            response={200: List[OrderListSchema]},
+            auth=None
+            )
+def get_list_order(request, id: Optional[int] = None):
+    params = prepare_for_query(request)
+    queryset = Order.objects.get_queryset(**params).select_related('owner').prefetch_related(
+        # Prefetch('extra_subside', to_attr="extra_subside"),
+        Prefetch('necessarydocumentfile_set', to_attr="files"))
+    return queryset
+
+
+@router.get('/{id}', description="주문 get by id", response={200: List[OrderListSchema]})
+def get_order_by_id(request, id: int):
+    queryset = Order.objects.get_queryset(id=id).select_related('owner').prefetch_related(
+        Prefetch('necessarydocumentfile_set', to_attr="files"))
+    return queryset
 
 
 @router.put("/", description="주문 상태 변경")

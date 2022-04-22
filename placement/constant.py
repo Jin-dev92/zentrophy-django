@@ -1,10 +1,9 @@
+from enum import  IntEnum
+
 from django.db import models
 
 
-class PlacementType(models.IntegerChoices):
-    # SERVICE = 'service'
-    # DIRECT = 'direct'
-    # EXCHANGE = 'exchange'
+class PlacementType(IntEnum):
     SERVICE = 0
     DIRECT = 1
     EXCHANGE = 2

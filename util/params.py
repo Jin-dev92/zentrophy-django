@@ -15,7 +15,7 @@ def prepare_for_query(request: WSGIRequest, exceptions: Optional[List] = None): 
     if len(request.GET) == 0:
         return dict()
     params = request.GET.copy().dict()
-    if len(exceptions) > 0:
+    if exceptions and len(exceptions) > 0:
         for exception in exceptions:
             if exception in params.keys():
                 del params[exception]
