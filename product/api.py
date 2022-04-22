@@ -4,7 +4,6 @@ from django.db import transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, Router, File
-from ninja.responses import Response
 
 from conf.custom_exception import DisplayLineExceededSizeException
 from product.constant import ProductListSort
@@ -12,8 +11,6 @@ from product.models import Product, ProductDisplayLine, ProductOptions, ProductI
     VehicleImage
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
     VehicleListSchema, VehicleInsertSchema
-from util.default import ResponseDefaultHeader \
-    # , CommonBase64FileSchema
 from util.file import base64_decode
 from util.params import prepare_for_query
 
@@ -22,8 +19,10 @@ vehicle_router = Router()
 display_line_router = Router()
 
 current_product_sort = ProductListSort.CREATED_AT
-vehicle_color_size = 5
-vehicle_image_size = 5
+product_option_exceed = 5
+product_image_exceed = 5
+vehicle_color_exceed = 5
+vehicle_image_exceed = 5
 
 
 @product_router.get("/",
@@ -64,41 +63,34 @@ def get_product_list(request, id: int = None, sort: ProductListSort = ProductLis
 
 
 @transaction.atomic(using='default')
-@product_router.post("/", description="상품 등록/수정", tags=["product"])
-def create_product(request, payload: ProductInsertSchema, files: List[UploadedFile] = File(...)):
+@product_router.post("/", description="상품 등록/수정 (수정 기능의 경우 id param 필수)", tags=["product"])
+def create_product(request, payload: ProductInsertSchema, id: int = None, files: List[UploadedFile] = File(...)):
     product = {k: v for k, v in payload.dict().items() if k not in {'product_options', 'product_display_line_id'}}
     product_options: list = payload.dict()['product_options']
     product_display_line_id_list = payload.dict()['product_display_line_id']
+    global product_option_exceed
+    global product_image_exceed
     if len(product_display_line_id_list) > 2:
         raise DisplayLineExceededSizeException
     try:
         with transaction.atomic():
-            product_queryset = Product.objects.update_or_create(**product)
+            product_queryset = Product.objects.update_or_create(id=id, defaults=product)
             bulk_prepare_product_options_list = [
                 ProductOptions(product=Product.objects.get(id=product_queryset[0].id),
                                **product_option) for product_option in product_options]
             bulk_prepare_file_list = [
                 ProductImage(product=Product.objects.get(id=product_queryset[0].id), origin_image=file) for file in
                 files]
-            if product_queryset[1]:
-                ProductOptions.objects.bulk_create(objs=bulk_prepare_product_options_list)
-            else:
-                # delete_files(files)
-                # ProductImage.objects.get_queryset(product=product_queryset[0]).soft_delete()
+            if not product_queryset[1]:
                 for image in ProductImage.objects.get_queryset(product=product_queryset[0]):
                     image.soft_delete()
-                # product_queryset[0].objects.update(**product)
-                if len(product_options) == 0:
-                    # ProductOptions.objects.get_queryset(product=product_queryset[0]).soft_delete()
-                    for option in ProductOptions.objects.get_queryset(product=product_queryset[0]):
-                        option.soft_delete()
-                else:
-                    for option in product_options:
-                        ProductOptions.objects.update_or_create(**option)
+                for option in ProductOptions.objects.get_queryset(product=product_queryset[0]):
+                    option.soft_delete()
+            ProductOptions.objects.bulk_create(objs=bulk_prepare_product_options_list, batch_size=product_option_exceed)
             product_queryset[0].product_display_line.add(
                 *ProductDisplayLine.objects.in_bulk(id_list=product_display_line_id_list)
             )
-            ProductImage.objects.bulk_create(bulk_prepare_file_list)
+            ProductImage.objects.bulk_create(bulk_prepare_file_list, batch_size=product_image_exceed)
             product_queryset[0].save()
     except Exception as e:
         raise Exception(e)
@@ -140,15 +132,26 @@ def delete_display_line_by_id(request, id: int):
     get_object_or_404(ProductDisplayLine, id=id).soft_delete()
 
 
-@vehicle_router.get("/", description="모터사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"], auth=None)
-def get_vehicle_list(request, id: Optional[int] = None):
+@vehicle_router.get("/", description="모터 사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"], auth=None)
+def get_vehicle_list(request):
     params = prepare_for_query(request)
     result = Vehicle.objects.get_queryset(**params).prefetch_related(
         Prefetch(lookup='vehiclecolor_set',
-                 queryset=VehicleColor.objects.all().prefetch_related(
-                     Prefetch(lookup='vehicle__vehicleimage_set',
-                              to_attr='vehicle_image'
-                              )
+                 queryset=VehicleColor.objects.get_queryset().prefetch_related(
+                     Prefetch(lookup='vehicleimage_set', to_attr='vehicle_image')
+                 ),
+                 to_attr='vehicle_color')
+    )
+    return result
+
+
+@vehicle_router.get("/${id}", description="모터 사이클 get by id", response={200: List[VehicleListSchema]}, tags=["vehicle"],
+                    auth=None)
+def get_vehicle_by_id(request, id: int):
+    result = Vehicle.objects.get_queryset(id=id).prefetch_related(
+        Prefetch(lookup='vehiclecolor_set',
+                 queryset=VehicleColor.objects.get_queryset().prefetch_related(
+                     Prefetch(lookup='vehicleimage_set', to_attr='vehicle_image')
                  ),
                  to_attr='vehicle_color')
     )
@@ -156,10 +159,10 @@ def get_vehicle_list(request, id: Optional[int] = None):
 
 
 @transaction.atomic(using='default')
-@vehicle_router.post("/", description="모터사이클 등록")
+@vehicle_router.post("/", description="모터 사이클 등록")
 def create_vehicle(request, payload: VehicleInsertSchema):
-    global vehicle_color_size
-    global vehicle_image_size
+    global vehicle_color_exceed
+    global vehicle_image_exceed
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
     vehicle_color_params = payload.dict().get('vehicle_color')
     vehicle_color = [{k: v for k, v in color.items() if k not in {'files'}} for color in
@@ -170,12 +173,12 @@ def create_vehicle(request, payload: VehicleInsertSchema):
             vehicle_queryset = Vehicle.objects.create(**vehicle)
             color_bulk_create_list = VehicleColor.objects.bulk_create(
                 objs=[VehicleColor(vehicle=vehicle_queryset, **color) for color in vehicle_color],
-                batch_size=vehicle_color_size)
+                batch_size=vehicle_color_exceed)
             if len(files_list) > 0:
                 VehicleImage.objects.bulk_create(
                     objs=[VehicleImage(vehicle_color=color, origin_image=base64_decode(file)) for color in
                           color_bulk_create_list for file in files_list],
-                    batch_size=vehicle_color_size * vehicle_image_size
+                    batch_size=vehicle_color_exceed * vehicle_image_exceed
                 )
 
             # for idx, color in enumerate(vehicle_color):
@@ -203,8 +206,8 @@ def create_vehicle(request, payload: VehicleInsertSchema):
 @transaction.atomic(using='default')
 @vehicle_router.post("/{id}", description="모터사이클 수정")
 def modify_vehicle(request, id: int, payload: VehicleInsertSchema):
-    global vehicle_color_size
-    global vehicle_image_size
+    global vehicle_color_exceed
+    global vehicle_image_exceed
     target = Vehicle.objects.get_queryset(id=id)
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
     vehicle_color_params = payload.dict().get('vehicle_color')
@@ -220,11 +223,11 @@ def modify_vehicle(request, id: int, payload: VehicleInsertSchema):
                 image.soft_delete()
 
             color_bulk_create_list = VehicleColor.objects.bulk_create(
-                objs=[VehicleColor(vehicle_id=id, **color) for color in vehicle_color], batch_size=vehicle_color_size)
+                objs=[VehicleColor(vehicle_id=id, **color) for color in vehicle_color], batch_size=vehicle_color_exceed)
             VehicleImage.objects.bulk_create(
                 objs=[VehicleImage(vehicle_color=color, origin_image=base64_decode(file)) for color in
                       color_bulk_create_list for file in files_list],
-                batch_size=vehicle_color_size * vehicle_image_size
+                batch_size=vehicle_color_exceed * vehicle_image_exceed
             )
 
     except Exception as a:

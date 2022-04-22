@@ -72,7 +72,12 @@ class VehicleColorInsertSchema(Schema):  # 모터사이클 색상 스키마\
 
 
 class VehicleColorListSchema(Schema):
-    vehicle_color: VehicleColorSchema = None
+    color_name: str = Field(title="색 이름")
+    sale_count: int = Field(default=0, title="판매 수량")
+    stock_count: int = Field(default=0, title="재고 수량")
+    hex_code: str = Field(default="FFFFFF", title="색 코드", description="css에서 사용하는 컬러값 사용 가능, 16진수, white, rgba 값")
+    on_sale: bool = Field(default=False, title="판매 여부")
+    price: int = 0
     vehicle_image: List[VehicleImageSchema] = None
 
 
@@ -101,7 +106,7 @@ class VehicleListSchema(Schema):
     able_subsidy: bool = Field(title="기본 지원금 가능 여부")
     able_extra_subsidy: bool = Field(title="추가 지원금 가능 여부")
     is_display: bool = Field(title="진열 여부")
-    vehicle_color: List[VehicleColorListSchema] = None
+    vehicle_color: List[VehicleColorListSchema] = []
     # vehicle_image: List[ProductImageListSchema] = None
 
 
