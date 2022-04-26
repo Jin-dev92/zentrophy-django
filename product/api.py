@@ -145,7 +145,7 @@ def get_vehicle_list(request):
     return result
 
 
-@vehicle_router.get("/${id}", description="모터 사이클 get by id", response={200: List[VehicleListSchema]}, tags=["vehicle"],
+@vehicle_router.get("/{id}", description="모터 사이클 get by id", response={200: List[VehicleListSchema]}, tags=["vehicle"],
                     auth=None)
 def get_vehicle_by_id(request, id: int):
     result = Vehicle.objects.get_queryset(id=id).prefetch_related(
