@@ -7,7 +7,7 @@ from conf import settings
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
 from member.api import router as member_router, payment_method_router
-from order.api import router as order_router, subside_router
+from order.api import router as order_router, subside_router, file_router
 from placement.api import router as placement_router
 from post.api import faq_router, notice_router, faq_category_router
 from product.api import display_line_router as display_line_router
@@ -49,6 +49,11 @@ API_LIST = [
         'prefix': "/subside/",
         'router': subside_router,
         'tags': ["subside"]
+    },
+    {
+        'prefix': "/upload/",
+        'router': file_router,
+        'tags': ["upload"]
     },
     {
         'prefix': "/vehicle/",
