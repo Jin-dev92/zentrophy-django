@@ -23,47 +23,47 @@ API_LIST = [
     {
         'prefix': "/member/",
         'router': member_router,
-        'tags': ["member"]
+        'tags': ["유저"]
     },
     {
         'prefix': "/payment_method/",
         'router': payment_method_router,
-        'tags': ["결제수단"]
+        'tags': ["결제 수단"]
     },
     {
         'prefix': "/place/",
         'router': placement_router,
-        'tags': ["place"]
+        'tags': ["플레이스"]
     },
     {
         'prefix': "/product/",
         'router': product_router,
-        'tags': ["product"]
+        'tags': ["상품"]
     },
     {
         'prefix': "/order/",
         'router': order_router,
-        'tags': ["order"]
+        'tags': ["주문"]
     },
     {
         'prefix': "/subside/",
         'router': subside_router,
-        'tags': ["subside"]
+        'tags': ["보조금"]
     },
     {
         'prefix': "/upload/",
         'router': file_router,
-        'tags': ["upload"]
+        'tags': ["보조금 관련 파일 업로드"]
     },
     {
         'prefix': "/vehicle/",
         'router': vehicle_router,
-        'tags': ["vehicle"]
+        'tags': ["모터 사이클"]
     },
     {
         'prefix': "/display_line/",
         'router': display_line_router,
-        'tags': ["product"]
+        'tags': ["상품"]
     },
     {
         'prefix': "/as/",
@@ -73,27 +73,27 @@ API_LIST = [
     {
         'prefix': "/refund/",
         'router': refund_router,
-        'tags': ["Refund"]
+        'tags': ["환불"]
     },
     {
         'prefix': "/warranty/",
         'router': warranty_router,
-        'tags': ["Warranty"]
+        'tags': ["보증 내역"]
     },
     {
         'prefix': "/battery/",
         'router': battery_router,
-        'tags': ["battery"]
+        'tags': ["배터리 교환 내역"]
     },
     {
         'prefix': "/faq/",
         'router': faq_router,
-        'tags': ["faq"]
+        'tags': ["FAQ"]
     },
     {
         'prefix': "/notice/",
         'router': notice_router,
-        'tags': ["notice"]
+        'tags': ["공지사항"]
     },
     {
         'prefix': "/faq_category/",
