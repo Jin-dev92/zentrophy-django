@@ -3,39 +3,38 @@ from typing import List
 
 from ninja import Schema, Field
 
-from member.schema import MemberListSchema, PaymentMethodListSchema
-from order.constant import OrderState, PaymentType
+from member.schema import MemberListSchema
+from order.constant import OrderState
 
 
 class OrderListSchema(Schema):
     id: int
     owner: MemberListSchema = None
-    payment_method: PaymentMethodListSchema = Field(title="결제 수단")
-    is_able_subside: bool = Field(title="기본 보조금 가능 여부")
-    # extra_subside: List[int] = Field(title="추가 보조금 pk list")
+    buy_list: list = Field(default=[], title="구매 목록")
+    subside: int = Field(default=0, title="기본 보조금")
+    extra_subside: list = Field(default=[], title="추가 보조금")
+    is_visited: bool = Field(default=False, title="방문 구매 여부")
+    total: int = 0
     state: OrderState = Field(default=OrderState.ACCEPT_ORDER,
                               title="주문 상태",
                               description="0: 주문 수락, 1: 서류 검토중, 2: 결제 대기중, 3: 배달 준비중, 4: 배달 완료, 5: 주문 취소")
+    files: str = Field(default=None, title="첨부 파일")
     is_created: datetime
     is_updated: datetime
-    files: str = Field(default=None, title="첨부 파일")
 
 
 class OrderDetailSchema(Schema):
-    product_options: int = None
-    vehicle_color: int = None
+    product_options_pk: int = None
+    vehicle_color_pk: int = None
     amount: int = 0
 
 
 class OrderCreateSchema(Schema):
-    payment_type: PaymentType
-    payment_info: dict = Field(default=None,
-                               title="결제 정보",
-                               description="결제 후 return 되는 결제 관련 값을 넣어줘야함")
-    order_detail: List[OrderDetailSchema] = None
-    payment_method: int = Field(title="결제 수단 pk")
-    is_able_subside: bool = False
-    extra_subside_id: List[int] = Field(default=None, description="추가 보조금 pk")
+    buy_list: List[OrderDetailSchema] = None
+    subside: bool = Field(default=False, description="기본 보조금 여부")
+    extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")
+    total: int = 0
+    is_visited: bool = Field(default=False, description="방문 구매 여부")
 
 
 class ExtraSubsideListSchema(Schema):

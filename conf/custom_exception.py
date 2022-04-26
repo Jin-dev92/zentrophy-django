@@ -53,3 +53,10 @@ class WrongAmountVehicleColorException(Exception):
 class AlreadyExistsException(Exception):
     pass
 
+
+class IncorrectTotalAmountException(Exception):
+    pass
+
+
+class WrongParameterException(Exception):
+    pass
