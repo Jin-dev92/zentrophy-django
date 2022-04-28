@@ -93,27 +93,20 @@ API_LIST = [
     {
         'prefix': "/notice/",
         'router': notice_router,
-        'tags': ["공지사항"]
+        'tags': ["공지 사항"]
     },
     {
         'prefix': "/faq_category/",
         'router': faq_category_router,
-        'tags': ["faq_category"]
+        'tags': ["FAQ 카테고리"]
     },
     {
         'prefix': "/cart/",
         'router': cart_router,
-        'tags': ["cart"]
+        'tags': ["장바구니"]
     },
 ]
 
 # 라우팅 설정
 for item in API_LIST:
     api.add_router(prefix=item['prefix'], router=item['router'], tags=item['tags'])
-# exception handler 설정
-# for exception in exception_handler_list:
-#     api.add_exception_handler(exc_class=exception['exc_class'],
-#                               handler=lambda request, exc: api.create_response(request=request,
-#                                                                                data=exception['data'],
-#                                                                                status=HttpResponse.status_code
-#                                                                                ))

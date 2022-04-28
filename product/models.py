@@ -7,7 +7,6 @@ from util.models import TimeStampModel, SoftDeleteModel
 
 
 class ProductDisplayLine(SoftDeleteModel):  # 상품 진열 라인
-    id = models.AutoField(primary_key=True)
     display_line_name = models.CharField(max_length=20, null=False, unique=True)
 
     def __str__(self):

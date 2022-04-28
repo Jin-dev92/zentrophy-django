@@ -52,7 +52,6 @@ def get_product_list(request, id: int = None, sort: ProductListSort = ProductLis
     else:
         pass
     current_product_sort = field_name
-    # print(current_product_sort)
 
     products = Product.objects.get_queryset(**params).prefetch_related(
         Prefetch('productoptions_set', to_attr='product_options'),
@@ -115,8 +114,7 @@ def get_display_line(request):
 
 @display_line_router.post("/", description="상품 진열 라인 등록", tags=["product"])
 def create_display_line(request, payload: ProductDisplayInsertSchema):
-    queryset = ProductDisplayLine.objects.create(**payload.dict())
-    return queryset
+    ProductDisplayLine.objects.create(**payload.dict())
 
 
 @display_line_router.put('/', description="상품 진열 라인 수정", tags=['product'])
@@ -129,10 +127,11 @@ def modify_display_line(request, payload: ProductDisplayInsertSchema, id: int):
 
 @display_line_router.delete("/", tags=["product"])
 def delete_display_line_by_id(request, id: int):
-    get_object_or_404(ProductDisplayLine, id=id).soft_delete()
+    return get_object_or_404(ProductDisplayLine, id=id).soft_delete()
 
 
-@vehicle_router.get("/", description="모터 사이클 리스트", response={200: List[VehicleListSchema]}, tags=["vehicle"], auth=None)
+
+@vehicle_router.get("/", description="모터 사이클 리스트", response={200: List[VehicleListSchema]}, auth=None)
 def get_vehicle_list(request):
     params = prepare_for_query(request)
     result = Vehicle.objects.get_queryset(**params).prefetch_related(
@@ -145,7 +144,7 @@ def get_vehicle_list(request):
     return result
 
 
-@vehicle_router.get("/{id}", description="모터 사이클 get by id", response={200: List[VehicleListSchema]}, tags=["vehicle"],
+@vehicle_router.get("/{id}", description="모터 사이클 get by id", response={200: List[VehicleListSchema]},
                     auth=None)
 def get_vehicle_by_id(request, id: int):
     result = Vehicle.objects.get_queryset(id=id).prefetch_related(

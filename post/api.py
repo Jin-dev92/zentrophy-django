@@ -3,12 +3,10 @@ from typing import List
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from ninja import Router
-from ninja.responses import Response
 
 from conf.custom_exception import DataBaseORMException
 from post.models import FAQ, Notice, FAQCategory
 from post.schema import FAQInsertSchema, FAQListSchema, NoticeListSchema, NoticeInsertSchema, FAQCategorySchema
-from util.default import ResponseDefaultHeader
 from util.params import prepare_for_query
 
 faq_router = Router()
@@ -23,7 +21,7 @@ def get_faq_list(request, id: int = None, category: int = None):
 
 
 @transaction.atomic(using='default')
-@faq_router.post("/", description="FAQ 생성", response=ResponseDefaultHeader.Schema)
+@faq_router.post("/", description="FAQ 생성")
 def create_faq(request, payload: FAQInsertSchema):
     try:
         with transaction.atomic():
@@ -32,20 +30,15 @@ def create_faq(request, payload: FAQInsertSchema):
     except Exception as e:
         raise DataBaseORMException
 
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="FAQ 생성 혹은 수정이 되었습니다."
-    )
 
-
-@faq_router.delete("/", description="FAQ 삭제", response=ResponseDefaultHeader.Schema)
+@faq_router.delete("/", description="FAQ 삭제")
 def delete_faq(request, id: int):
     queryset = get_object_or_404(FAQ, id=id).soft_delete()
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="FAQ가 삭제되었습니다",
-        data=queryset
-    )
+    # return ResponseDefaultHeader(
+    #     code=Response.status_code,
+    #     message="FAQ가 삭제되었습니다",
+    #     data=queryset
+    # )
 
 
 @notice_router.get('/', description="공지사항 리스트", response=List[NoticeListSchema], auth=None)
@@ -56,7 +49,7 @@ def get_notice_list(request, id: int):
 
 
 @transaction.atomic(using='default')
-@notice_router.post('/', description="공지사항 리스트 생성/수정", response=ResponseDefaultHeader.Schema)
+@notice_router.post('/', description="공지사항 리스트 생성/수정")
 def create_notice(request, payload: NoticeInsertSchema):
     try:
         with transaction.atomic():
@@ -65,20 +58,20 @@ def create_notice(request, payload: NoticeInsertSchema):
     except Exception as e:
         raise DataBaseORMException
 
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="공지사항 생성 혹은 수정이 되었습니다."
-    )
+    # return ResponseDefaultHeader(
+    #     code=Response.status_code,
+    #     message="공지사항 생성 혹은 수정이 되었습니다."
+    # )
 
 
-@notice_router.delete("/", description="공지사항 삭제", response=ResponseDefaultHeader.Schema)
+@notice_router.delete("/", description="공지사항 삭제")
 def delete_notice(request, id: int):
     queryset = get_object_or_404(Notice, id=id).soft_delete()
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="공지사항이 삭제되었습니다",
-        data=queryset
-    )
+    # return ResponseDefaultHeader(
+    #     code=Response.status_code,
+    #     message="공지사항이 삭제되었습니다",
+    #     data=queryset
+    # )
 
 
 @faq_category_router.get('/', description="FAQ 카테고리 리스트", response=List[FAQCategorySchema], auth=None)
@@ -86,21 +79,18 @@ def get_faq_category_list(request):
     return FAQCategory.objects.all()
 
 
-@faq_category_router.post('/', description='FAQ 카테고리 생성', response=ResponseDefaultHeader.Schema)
+@faq_category_router.post('/', description='FAQ 카테고리 생성')
 def create_faq_category(request, category_name: str):
     queryset = FAQCategory.objects.create(category_name=category_name)
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="FAQ 카테고리가 생성되었습니다",
-        data=queryset
-    )
+    # return ResponseDefaultHeader(
+    #     code=Response.status_code,
+    #     message="FAQ 카테고리가 생성되었습니다",
+    #     data=queryset
+    # )
 
 
-@faq_category_router.delete('/', description='FAQ 카테고리 삭제', response=ResponseDefaultHeader.Schema)
+#
+
+@faq_category_router.delete('/', description='FAQ 카테고리 삭제')
 def delete_faq_category(request, id: int):
     queryset = get_object_or_404(FAQCategory, id=id)
-    return ResponseDefaultHeader(
-        code=Response.status_code,
-        message="FAQ 카테고리가 삭제되었습니다",
-        # data=queryset
-    )

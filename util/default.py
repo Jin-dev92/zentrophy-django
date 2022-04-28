@@ -21,3 +21,6 @@ class ResponseDefaultHeader:
 
 # class CommonBase64FileSchema(Schema):
 #     base64_encoded: str
+
+
+# class DefaultResponse(Schema)
