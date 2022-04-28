@@ -6,8 +6,8 @@ class UserNotAccessDeniedException(Exception):
     pass
 
 
-class MustHaveSplitWordException(Exception):
-    pass
+# class MustHaveSplitWordException(Exception):
+#     pass
 
 
 class NotEnoughProductsException(Exception):
@@ -38,14 +38,6 @@ class AccessDeniedException(Exception):
     pass
 
 
-class WrongBirthNumberException(Exception):
-    pass
-
-
-class WrongBusinessNumberException(Exception):
-    pass
-
-
 class WrongAmountVehicleColorException(Exception):
     pass
 
@@ -60,3 +52,5 @@ class IncorrectTotalAmountException(Exception):
 
 class WrongParameterException(Exception):
     pass
+
+

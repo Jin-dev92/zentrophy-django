@@ -9,7 +9,7 @@ class PlacementType(IntEnum):
     EXCHANGE = 2
 
 
-class OperationState(models.IntegerChoices):
+class OperationState(IntEnum):
     OPERATING = 0  # 운영중
     CONSTRUCTING = 1  # 점검중
     SOON = 2  # 설치 예정

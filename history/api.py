@@ -15,10 +15,8 @@ from member.models import MemberOwnedVehicles
 from order.models import Order, IntegratedFeePlan
 from placement.models import Placement
 from product.models import Product
-# from util.default import ResponseDefaultHeader
 from util.params import prepare_for_query
 
-# from ninja.responses import Response
 
 refund_router = Router()
 after_service_router = Router()
