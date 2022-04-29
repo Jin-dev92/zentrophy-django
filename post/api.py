@@ -90,15 +90,8 @@ def get_faq_category_list(request):
 @faq_category_router.post('/', description='FAQ 카테고리 생성')
 def create_faq_category(request, category_name: str):
     queryset = FAQCategory.objects.create(category_name=category_name)
-    # return ResponseDefaultHeader(
-    #     code=Response.status_code,
-    #     message="FAQ 카테고리가 생성되었습니다",
-    #     data=queryset
-    # )
 
-
-#
 
 @faq_category_router.delete('/', description='FAQ 카테고리 삭제')
 def delete_faq_category(request, id: int):
-    queryset = get_object_or_404(FAQCategory, id=id)
+    queryset = get_object_or_404(FAQCategory, id=id).soft_delete()
