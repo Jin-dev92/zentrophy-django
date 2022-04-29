@@ -31,8 +31,6 @@ def create_faq(request, payload: FAQInsertSchema, id: int = None):
     try:
         with transaction.atomic():
             obj = FAQ.objects.update_or_create(id=id, defaults=payload.dict())
-            obj[0].category_id = payload.dict().get('category_id')
-            obj[0].save(update_fields=['category'])
 
     except Exception as e:
         print(e)
