@@ -15,19 +15,27 @@ faq_category_router = Router()
 
 
 @faq_router.get('/', description="FAQ 목록", response=List[FAQListSchema], auth=None)
-def get_faq_list(request, id: int = None, category: int = None):
+def get_faq_list(request, category: int = None):
     params = prepare_for_query(request)
-    return FAQ.objects.get_queryset(**params).all()
+    return FAQ.objects.get_queryset(**params)
+
+
+@faq_router.get('/{id}', description="FAQ get by id", response=List[FAQListSchema], auth=None)
+def get_faq_list(request, id: int):
+    return FAQ.objects.get_queryset(id=id)
 
 
 @transaction.atomic(using='default')
-@faq_router.post("/", description="FAQ 생성")
-def create_faq(request, payload: FAQInsertSchema):
+@faq_router.post("/", description="FAQ 생성 / 수정")
+def create_faq(request, payload: FAQInsertSchema, id: int = None):
     try:
         with transaction.atomic():
-            FAQ.objects.update_or_create(**payload.dict())
+            obj = FAQ.objects.update_or_create(id=id, defaults=payload.dict())
+            obj[0].category_id = payload.dict().get('category_id')
+            obj[0].save(update_fields=['category'])
 
     except Exception as e:
+        print(e)
         raise DataBaseORMException
 
 

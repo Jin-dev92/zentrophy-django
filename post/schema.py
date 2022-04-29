@@ -12,9 +12,7 @@ class FAQCategorySchema(Schema):
 
 
 class FAQInsertSchema(PostInsertSchema):
-    # title: str
-    # content: str
-    category: int
+    category_id: int
 
 
 class FAQListSchema(Schema):
