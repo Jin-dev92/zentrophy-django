@@ -1,21 +1,14 @@
 import base64
-import imghdr
-import io
 import os
-
-from PIL import Image
-
-
-# def is_base64_image():
-#     pass
+from django.core.files.base import ContentFile
 
 
 def base64_decode(file):
-    image_data = base64.b64decode(file)
-    extension_check = imghdr.what(None, h=image_data)  # 이미지인지 확장자를 통해 확인함. 아닐 시 error 뱉음.
-    data_bytes_io = io.BytesIO(image_data)
-    image = Image.open(data_bytes_io)
-    return image
+    convert_str = file + '=' * (4 - len(file) % 4)
+    format, imgstr = convert_str.split(';base64,')
+    ext = format.split('/')[-1]
+    data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)  # You can save this as file instance.
+    return data
 
 
 def delete_file(file):

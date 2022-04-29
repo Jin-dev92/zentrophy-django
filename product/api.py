@@ -130,7 +130,6 @@ def delete_display_line_by_id(request, id: int):
     return get_object_or_404(ProductDisplayLine, id=id).soft_delete()
 
 
-
 @vehicle_router.get("/", description="모터 사이클 리스트", response={200: List[VehicleListSchema]}, auth=None)
 def get_vehicle_list(request):
     params = prepare_for_query(request)
@@ -158,8 +157,8 @@ def get_vehicle_by_id(request, id: int):
 
 
 @transaction.atomic(using='default')
-@vehicle_router.post("/", description="모터 사이클 등록")
-def create_vehicle(request, payload: VehicleInsertSchema):
+@vehicle_router.post("/", description="모터 사이클 등록 / 수정")
+def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = None):
     global vehicle_color_exceed
     global vehicle_image_exceed
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
@@ -169,68 +168,59 @@ def create_vehicle(request, payload: VehicleInsertSchema):
     files_list = [color['files'] for color in vehicle_color_params]
     try:
         with transaction.atomic():
-            vehicle_queryset = Vehicle.objects.create(**vehicle)
+            vehicle_queryset = Vehicle.objects.update_or_create(id=id, defaults=vehicle)
+            if not vehicle_queryset[1]:
+                for color in vehicle_queryset[0].vehiclecolor_set.all():
+                    color.soft_delete()
+
             color_bulk_create_list = VehicleColor.objects.bulk_create(
-                objs=[VehicleColor(vehicle=vehicle_queryset, **color) for color in vehicle_color],
+                objs=[VehicleColor(vehicle=vehicle_queryset[0], **color) for color in vehicle_color],
                 batch_size=vehicle_color_exceed)
             if len(files_list) > 0:
+                objs = []
+                for idx, file_list in enumerate(files_list):
+                    for file in file_list:
+                        objs.append(
+                            VehicleImage(vehicle_color=color_bulk_create_list[idx], origin_image=base64_decode(file)))
+                # temp = [VehicleImage(vehicle_color=color_bulk_create_list[idx], or/igin_image=base64_decode(file)) for file in file_list for idx, file_list in enumerate(files_list)]
                 VehicleImage.objects.bulk_create(
-                    objs=[VehicleImage(vehicle_color=color, origin_image=base64_decode(file)) for color in
-                          color_bulk_create_list for file in files_list],
+                    objs=objs,
                     batch_size=vehicle_color_exceed * vehicle_image_exceed
-                )
-
-            # for idx, color in enumerate(vehicle_color):
-            #     color_queryset = VehicleColor.objects.create(vehicle=vehicle_queryset, **color)
-            #     obj_image = [VehicleImage(vehicle_color=color_queryset, origin_image=base64_decode(files_list[idx]))]
-
-            # vehicle_queryset = Vehicle.objects.update_or_create(**vehicle)
-            # color_is_updated_or_created = [VehicleColor.objects.update_or_create(vehicle=vehicle_queryset[0], **color)
-            #                                # 선언 할 때마다 db에 hit 하는가?
-            #                                for color in vehicle_color]
-            # obj_image = [
-            #     [VehicleImage(vehicle_color=color[0], origin_image=base64_decode(file)) for file in
-            #      files_list[idx]]
-            #     for idx, color in enumerate(color_is_updated_or_created)
-            # ]
-            # if len(obj_image) > 0:
-            #     for temp in obj_image:
-            #         VehicleImage.objects.bulk_create(objs=temp,
-            #                                          batch_size=vehicle_color_size * vehicle_image_size)  # 최대 25개 생성
+                )  # 최대 25개 생성
 
     except Exception as e:
         raise Exception(e)
 
 
-@transaction.atomic(using='default')
-@vehicle_router.post("/{id}", description="모터사이클 수정")
-def modify_vehicle(request, id: int, payload: VehicleInsertSchema):
-    global vehicle_color_exceed
-    global vehicle_image_exceed
-    target = Vehicle.objects.get_queryset(id=id)
-    vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
-    vehicle_color_params = payload.dict().get('vehicle_color')
-    vehicle_color = [{k: v for k, v in color.items() if k not in {'files'}} for color in
-                     vehicle_color_params]
-    files_list = [color['files'] for color in vehicle_color_params]
-    try:
-        with transaction.atomic():
-            target.update(**vehicle)
-            for color in VehicleColor.objects.get_queryset(vehicle_id=id):
-                color.soft_delete()
-            for image in VehicleImage.objects.get_queryset(vehicle__vehiclecolor__id=id):
-                image.soft_delete()
-
-            color_bulk_create_list = VehicleColor.objects.bulk_create(
-                objs=[VehicleColor(vehicle_id=id, **color) for color in vehicle_color], batch_size=vehicle_color_exceed)
-            VehicleImage.objects.bulk_create(
-                objs=[VehicleImage(vehicle_color=color, origin_image=base64_decode(file)) for color in
-                      color_bulk_create_list for file in files_list],
-                batch_size=vehicle_color_exceed * vehicle_image_exceed
-            )
-
-    except Exception as a:
-        raise a
+# @transaction.atomic(using='default')
+# @vehicle_router.post("/{id}", description="모터사이클 수정")
+# def modify_vehicle(request, id: int, payload: VehicleInsertSchema):
+#     global vehicle_color_exceed
+#     global vehicle_image_exceed
+#     target = Vehicle.objects.get_queryset(id=id)
+#     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
+#     vehicle_color_params = payload.dict().get('vehicle_color')
+#     vehicle_color = [{k: v for k, v in color.items() if k not in {'files'}} for color in
+#                      vehicle_color_params]
+#     files_list = [color['files'] for color in vehicle_color_params]
+#     try:
+#         with transaction.atomic():
+#             target.update(**vehicle)
+#             for color in VehicleColor.objects.get_queryset(vehicle_id=id):
+#                 color.soft_delete()
+#             for image in VehicleImage.objects.get_queryset(vehicle__vehiclecolor__id=id):
+#                 image.soft_delete()
+#
+#             color_bulk_create_list = VehicleColor.objects.bulk_create(
+#                 objs=[VehicleColor(vehicle_id=id, **color) for color in vehicle_color], batch_size=vehicle_color_exceed)
+#             VehicleImage.objects.bulk_create(
+#                 objs=[VehicleImage(vehicle_color=color, origin_image=base64_decode(file)) for color in
+#                       color_bulk_create_list for file in files_list],
+#                 batch_size=vehicle_color_exceed * vehicle_image_exceed
+#             )
+#
+#     except Exception as a:
+#         raise a
 
 
 @vehicle_router.delete("/", description="모터사이클 삭제")

@@ -41,7 +41,7 @@ def get_order_list_by_id(request, id: int):
 
 @login_required
 @router.post('/', description="주문 생성 / 수정")
-def get_order_list_by_id(request, payload: OrderCreateSchema, id: int = None):
+def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
     payload = payload.dict()
     order_params = {k: v for k, v in payload.items() if k not in {'buy_list', 'extra_subside'}}
     order_params['buy_list']: list = []

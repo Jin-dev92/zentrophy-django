@@ -21,7 +21,7 @@ def get_faq_list(request, category: int = None):
 
 
 @faq_router.get('/{id}', description="FAQ get by id", response=List[FAQListSchema], auth=None)
-def get_faq_list(request, id: int):
+def get_faq_list_by_id(request, id: int):
     return FAQ.objects.get_queryset(id=id)
 
 
