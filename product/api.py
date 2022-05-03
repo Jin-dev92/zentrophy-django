@@ -43,7 +43,6 @@ def get_product_list(request, id: int = None, sort: ProductListSort = ProductLis
         field_name = 'product_display_line__id'
 
     global current_product_sort
-    # noinspection PyUnboundLocalVariable
     if current_product_sort == field_name:
         if field_name[0] != '-':
             field_name = '-' + field_name
@@ -182,7 +181,6 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
                     for file in file_list:
                         objs.append(
                             VehicleImage(vehicle_color=color_bulk_create_list[idx], origin_image=base64_decode(file)))
-                # temp = [VehicleImage(vehicle_color=color_bulk_create_list[idx], or/igin_image=base64_decode(file)) for file in file_list for idx, file_list in enumerate(files_list)]
                 VehicleImage.objects.bulk_create(
                     objs=objs,
                     batch_size=vehicle_color_exceed * vehicle_image_exceed

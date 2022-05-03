@@ -36,6 +36,7 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
     ).order_by(field_name)
 
 
+@login_required
 @router.get('/{id}', description="id로 회원 찾기", response=List[MemberListSchema])
 def get_member_by_id(request, id: int):
     queryset = User.objects.filter(id=id).prefetch_related(
@@ -51,6 +52,7 @@ def create_user(request, payload: MemberInsertSchema = Form(...)):
     return queryset
 
 
+@login_required
 @router.put("/", description="회원 수정", auth=None)
 def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
     if request.user == get_object_or_404(User, id=id):
@@ -60,6 +62,7 @@ def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
     return queryset
 
 
+@login_required
 @router.get('/logout', description="로그 아웃")
 def member_logout(request):
     logout(request)
