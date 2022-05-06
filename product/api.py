@@ -31,13 +31,17 @@ vehicle_image_exceed = 5
                     tags=["product"],
                     auth=None
                     )
-def get_product_list(request, id: int = None, sort: ProductListSort = ProductListSort.CREATED_AT):
+def get_product_list(request, sort: ProductListSort = ProductListSort.CREATED_AT):
+    # CREATED_AT = 0
+    # SALE_COUNT = 1
+    # STOCK_COUNT = 2
+    # DISPLAY_LINE = 3
     params = prepare_for_query(request, ['sort'])
     if sort == ProductListSort.CREATED_AT:
         field_name = "is_created"
     elif sort == ProductListSort.SALE_COUNT:
         field_name = 'productoptions__sale_count'
-    elif sort == ProductListSort.DISPLAY_LINE:
+    elif sort == ProductListSort.STOCK_COUNT:
         field_name = 'productoptions__stock_count'
     elif sort == ProductListSort.DISPLAY_LINE:
         field_name = 'product_display_line__id'
