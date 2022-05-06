@@ -52,5 +52,3 @@ class IncorrectTotalAmountException(Exception):
 
 class WrongParameterException(Exception):
     pass
-
-

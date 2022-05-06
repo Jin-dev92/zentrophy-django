@@ -1,12 +1,12 @@
-from typing import List, Optional
+from typing import List
 
 from django.db import transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, Router, File
 
-from conf.custom_exception import DisplayLineExceededSizeException
-from product.constant import ProductListSort
+from conf.custom_exception import DisplayLineExceededSizeException, WrongParameterException
+from product.constant import ProductListSort, ProductLabel
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
@@ -26,35 +26,41 @@ vehicle_image_exceed = 5
 
 
 @product_router.get("/",
-                    description="상품 리스트 가져오기    UPDATED_AT = 0, SALE = 1, STOCK_COUNT = 2, DISPLAY_LINE = 3",
+                    description="상품 리스트 가져오기    생성 순 = 0, 판매량 순 = 1, 재고량 순 = 2 두번 호출 시 역순",
                     response=List[ProductListSchema],
                     tags=["product"],
                     auth=None
                     )
-def get_product_list(request, sort: ProductListSort = ProductListSort.CREATED_AT):
-    # CREATED_AT = 0
-    # SALE_COUNT = 1
-    # STOCK_COUNT = 2
-    # DISPLAY_LINE = 3
-    params = prepare_for_query(request, ['sort'])
+def get_product_list(request,
+                     product_label: ProductLabel = ProductLabel.NEW,
+                     display_line_id: int = None,
+                     sold_out: bool = False,
+                     sort: ProductListSort = ProductListSort.CREATED_AT
+                     ):
+    global current_product_sort
+    params = prepare_for_query(request, ['sort', 'sold_out'])
     if sort == ProductListSort.CREATED_AT:
         field_name = "is_created"
     elif sort == ProductListSort.SALE_COUNT:
         field_name = 'productoptions__sale_count'
     elif sort == ProductListSort.STOCK_COUNT:
         field_name = 'productoptions__stock_count'
-    elif sort == ProductListSort.DISPLAY_LINE:
-        field_name = 'product_display_line__id'
+    else:
+        raise WrongParameterException
 
-    global current_product_sort
     if current_product_sort == field_name:
         if field_name[0] != '-':
             field_name = '-' + field_name
         else:
             field_name = field_name[1:]
-    else:
-        pass
+
     current_product_sort = field_name
+
+    if display_line_id:
+        get_object_or_404(ProductDisplayLine, id=display_line_id)
+
+    if sold_out:
+        params['productoptions__stock_count'] = 0
 
     products = Product.objects.get_queryset(**params).prefetch_related(
         Prefetch('productoptions_set', to_attr='product_options'),

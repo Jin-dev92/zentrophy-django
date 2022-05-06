@@ -125,7 +125,7 @@ class ProductListSchema(Schema):
     id: int = None
     product_name: str = None
     product_price: int = None
-    product_label: str = None
+    product_label: int = None
     is_display: bool = None
     is_refundable: bool = None
     product_description: str = Field(default="", title="상품 설명")  # 상품 설명
