@@ -18,7 +18,7 @@ class FAQ(Post):
 
 
 class FAQCategory(SoftDeleteModel):
-    category_name = models.CharField(max_length=20)
+    category_name = models.CharField(max_length=20, unique=True)
 
 
 class Notice(Post):

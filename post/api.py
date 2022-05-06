@@ -1,12 +1,15 @@
 from typing import List
 
 from django.db import transaction
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
+
 from ninja import Router
 
 from conf.custom_exception import DataBaseORMException
 from post.models import FAQ, Notice, FAQCategory
 from post.schema import FAQInsertSchema, FAQListSchema, NoticeListSchema, NoticeInsertSchema, FAQCategorySchema
+from util.exception.constant import DB_UNIQUE_CONSTRAINT
 from util.params import prepare_for_query
 
 faq_router = Router()
@@ -87,7 +90,11 @@ def get_faq_category_list(request):
 
 @faq_category_router.post('/', description='FAQ 카테고리 생성')
 def create_faq_category(request, category_name: str):
-    queryset = FAQCategory.objects.create(category_name=category_name)
+    try:
+        queryset = FAQCategory.objects.create(category_name=category_name)
+    except IntegrityError:
+        raise IntegrityError(DB_UNIQUE_CONSTRAINT['desc'])
+        # todo ExceptionHandler를 통해 조절 할 것.
 
 
 @faq_category_router.delete('/', description='FAQ 카테고리 삭제')

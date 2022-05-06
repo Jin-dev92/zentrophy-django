@@ -61,7 +61,7 @@ class VehicleColorSchema(Schema):
     price: int = 0
 
 
-class VehicleColorInsertSchema(Schema):  # 모터사이클 색상 스키마\
+class VehicleColorInsertSchema(Schema):  # 모터사이클 색상 스키마
     color_name: str = Field(title="색 이름")
     sale_count: int = Field(default=0, title="판매 수량")
     stock_count: int = Field(default=0, title="재고 수량")
