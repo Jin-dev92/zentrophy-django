@@ -51,7 +51,7 @@ def delete_faq(request, id: int):
 
 
 @notice_router.get('/', description="공지사항 리스트", response=List[NoticeListSchema], auth=None)
-def get_notice_list(request, id: int):
+def get_notice_list(request, id: int = None):
     params = prepare_for_query(request)
     queryset = Notice.objects.get_queryset(**params).all()
     return queryset
