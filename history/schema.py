@@ -66,7 +66,7 @@ class WarrantyListSchema(Schema):
 class WarrantyInsertSchema(Schema):
     name: str
     validity: datetime = Field(title="유효기간")
-    is_warranty: bool = Field(title="보증 가능 여부")
+    is_warranty: bool = Field(title="보증 가능 여부 // True = 보증 가능, False = 보증 제외")
 
 
 class BatteryExchangeInsertSchema(Schema):

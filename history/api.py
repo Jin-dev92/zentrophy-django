@@ -121,23 +121,15 @@ def delete_refund(request, id: int):
 @warranty_router.get('/', description="보증 범위 리스트",
                      response=List[WarrantyListSchema]
                      )
-def get_warranty_list(request):
-    params = prepare_for_query(request)
-    qs = Warranty.objects.get_queryset(**params)
+def get_warranty_list(request, is_warranty: bool = True):
+    # params = prepare_for_query(request)
+    qs = Warranty.objects.get_queryset(is_warranty=is_warranty)
     return qs
 
 
-@warranty_router.post('/', description="보증 범위 객체 생성")
-def create_warranty(request, payload: WarrantyInsertSchema):
-    qs = Warranty.objects.create(**payload.dict())
-    return qs
-
-
-@warranty_router.put('/', description="보증 범위 수정")
-def modify_warranty(request, id: int, validity: datetime = None):
-    params = prepare_for_query(request)
-    qs = get_object_or_404(Warranty, id=id, deleted_at__isnull=True).objects.update(**params)
-    return qs
+@warranty_router.post('/', description="보증 범위 객체 생성 / 수정")
+def create_or_update_warranty(request, payload: WarrantyInsertSchema, id: int = None):
+    Warranty.objects.update_or_create(id=id, defaults=payload.dict())
 
 
 @warranty_router.delete('/', description="보증 범위 객체 삭제")
