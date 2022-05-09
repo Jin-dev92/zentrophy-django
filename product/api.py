@@ -33,7 +33,7 @@ vehicle_image_exceed = 5
                     )
 def get_product_list(request,
                      product_label: ProductLabel = ProductLabel.NEW,
-                     display_line_id: int = None,
+                     product_display_line: int = None,
                      sold_out: bool = False,
                      sort: ProductListSort = ProductListSort.CREATED_AT
                      ):
@@ -56,12 +56,11 @@ def get_product_list(request,
 
     current_product_sort = field_name
 
-    if display_line_id:
-        get_object_or_404(ProductDisplayLine, id=display_line_id)
+    if product_display_line:
+        get_object_or_404(ProductDisplayLine, id=product_display_line)
 
     if sold_out:
         params['productoptions__stock_count'] = 0
-
     products = Product.objects.get_queryset(**params).prefetch_related(
         Prefetch('productoptions_set', to_attr='product_options'),
         Prefetch('productimage_set', to_attr='product_image'),
