@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
-from conf.custom_exception import RefuseMustHaveReasonException
+from conf.custom_exception import RefuseMustHaveReasonException, LoginRequiredException
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus, BatteryExchangeSort
 from history.models import AfterService, Refund, Warranty, BatteryExchange, Cart
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, \
@@ -17,7 +17,6 @@ from placement.models import Placement
 from product.models import Product
 from util.params import prepare_for_query
 
-
 refund_router = Router()
 after_service_router = Router()
 warranty_router = Router()
@@ -27,11 +26,11 @@ cart_router = Router()
 
 # A/S
 @login_required
-@after_service_router.get("/", description="a/s 특정한 내역")
+@after_service_router.get("/", description="a/s 특정한 내역", response=List[AfterServiceListSchema])
 def get_after_service_list(request, status: AfterServiceStatus = None, is_created__gte: date = None,
                            is_created__lte: date = None):
     params = prepare_for_query(request=request)
-    queryset = AfterService.objects.get_queryset(**params).select_related('place', 'vehicle', 'user')
+    queryset = AfterService.objects.get_queryset(**params).select_related('place', 'owned_vehicle', 'user')
     return queryset
 
 
@@ -45,26 +44,25 @@ def get_after_service_by_id(request, id: int):
 
 
 @login_required
-@after_service_router.post("/", description="a/s 내역 생성")
+@after_service_router.post("/", description="a/s 내역 생성 / 수정")
 def create_after_service_history(request, payload: AfterServiceInsertSchema):
-    user = request.user
-    # if not user.is_superuser:
-    #     raise AccessDeniedException
+    if not request.user.is_authenticated:
+        raise LoginRequiredException
     params = payload.dict()
     except_params = {k: v for k, v in params.items() if k in {'place_id', 'owned_vehicle_id'}}
     place = Placement.objects.get_queryset(id=params.get('place_id'))
-    owned_vehicle = MemberOwnedVehicles.objects.get_queryset(id=params.get('vehicle_id'))
-    queryset = AfterService.objects.create(user=user, place=place, owned_vehicle=owned_vehicle, **except_params)
-    return queryset
+    owned_vehicle = MemberOwnedVehicles.objects.get_queryset(owner=request.user, id=params['owned_vehicle_id'])
+    AfterService.objects.update_or_create(user=request.user, place=place.first(), owned_vehicle=owned_vehicle.first(),
+                                          defaults=except_params)
 
 
-@login_required
-@after_service_router.put("/", description="a/s 상태 수정")
-def modify_after_service(request, id: int, payload: AfterServiceInsertSchema):
-    obj = get_object_or_404(AfterService, id=id, user=request.user)
-    queryset = obj.objects.update(**payload.dict())
-    obj.save()
-    return queryset
+# @login_required
+# @after_service_router.put("/", description="a/s 상태 수정")
+# def modify_after_service(request, id: int, payload: AfterServiceInsertSchema):
+#     obj = get_object_or_404(AfterService, id=id, user=request.user)
+#     queryset = obj.objects.update(**payload.dict())
+#     obj.save()
+#     return queryset
 
 
 @after_service_router.delete("/", description="a/s 상태 삭제")

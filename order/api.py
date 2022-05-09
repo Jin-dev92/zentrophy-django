@@ -23,19 +23,19 @@ upload_exceed_count = 5
 @login_required
 @router.get('/', response=List[OrderListSchema], description="주문 조건 검색")
 def get_order_list(request):
-    params = prepare_for_query(request)
-    queryset = Order.objects.get_queryset(params).select_related('owner') \
-        .prefetch_related('extra_subside',
-                          Prefetch('necessarydocumentfile_set', to_attr="files"))
+    # params = prepare_for_query(request)
+    queryset = Order.objects.get_queryset().select_related('owner').prefetch_related(
+        'extra_subside',
+        Prefetch('necessarydocumentfile_set', to_attr="files"))
     return queryset
 
 
 @login_required
 @router.get('/{id}', description="주문 id로 검색", response=List[OrderListSchema])
 def get_order_list_by_id(request, id: int):
-    queryset = Order.objects.get_queryset(id=id).select_related('owner') \
-        .prefetch_related('extra_subside',
-                          Prefetch('necessarydocumentfile_set', to_attr="files"))
+    queryset = Order.objects.get_queryset(id=id).select_related('owner').prefetch_related(
+        'extra_subside',
+        Prefetch('necessarydocumentfile_set', to_attr="files"))
     return queryset
 
 

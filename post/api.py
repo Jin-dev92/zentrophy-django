@@ -59,28 +59,20 @@ def get_notice_list(request, id: int = None):
 
 @transaction.atomic(using='default')
 @notice_router.post('/', description="공지사항 리스트 생성/수정")
-def create_notice(request, payload: NoticeInsertSchema):
+def create_notice(request, payload: NoticeInsertSchema, id: int = None):
     try:
         with transaction.atomic():
-            Notice.objects.update_or_create(**payload.dict())
+            if id and id > 0:
+                get_object_or_404(Notice, id=id)
+            Notice.objects.update_or_create(id=id, defaults=payload.dict())
 
     except Exception as e:
         raise DataBaseORMException
-
-    # return ResponseDefaultHeader(
-    #     code=Response.status_code,
-    #     message="공지사항 생성 혹은 수정이 되었습니다."
-    # )
 
 
 @notice_router.delete("/", description="공지사항 삭제")
 def delete_notice(request, id: int):
     queryset = get_object_or_404(Notice, id=id).soft_delete()
-    # return ResponseDefaultHeader(
-    #     code=Response.status_code,
-    #     message="공지사항이 삭제되었습니다",
-    #     data=queryset
-    # )
 
 
 @faq_category_router.get('/', description="FAQ 카테고리 리스트", response=List[FAQCategorySchema], auth=None)
