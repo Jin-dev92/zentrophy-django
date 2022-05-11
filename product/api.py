@@ -171,9 +171,9 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
     global vehicle_image_exceed
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
     vehicle_color_params = payload.dict().get('vehicle_color')
-    vehicle_color = [{k: v for k, v in color.items() if k not in {'files'}} for color in
+    vehicle_color = [{k: v for k, v in color.items() if k not in {'vehicle_image'}} for color in
                      vehicle_color_params]
-    files_list = [color['files'] for color in vehicle_color_params]
+    files_list = [color['vehicle_image'] for color in vehicle_color_params]
     try:
         with transaction.atomic():
             vehicle_queryset = Vehicle.objects.update_or_create(id=id, defaults=vehicle)
