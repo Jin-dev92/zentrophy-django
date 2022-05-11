@@ -30,13 +30,13 @@ def get_placement_by_id(request, id: int):
 
 @transaction.atomic(using='default')
 @router.post("/",
-             description="플레이스 생성, # operation_start,operation_end hh:mm 형식으로 보내주세요 다른 형식도 되긴할듯, id는 update 에 사용됨, 단순 create 에서는 사용 x")
+             description="플레이스 생성")
 def create_placement(request, payload: PlacementInsertSchema, id: int = None, file: UploadedFile = None):
     try:
         with transaction.atomic():
-            payload = payload.dict()
-            payload['image'] = file
-            Placement.objects.update_or_create(id=id, defaults=payload)
+            # payload = payload.dict()
+            payload.dict()['image'] = file
+            Placement.objects.update_or_create(id=id, defaults=payload.dict())
     except Exception as e:
         raise e
     return True
