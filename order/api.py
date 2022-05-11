@@ -83,7 +83,7 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
 
 @login_required
 @router.delete('/', description="주문 삭제")
-def get_order_list_by_id(request, id: int):
+def delete_order_list_by_id(request, id: int):
     queryset = get_object_or_404(Order, id=id).soft_delete()
     return queryset
 

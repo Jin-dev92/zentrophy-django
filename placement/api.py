@@ -34,12 +34,11 @@ def get_placement_by_id(request, id: int):
 def create_placement(request, payload: PlacementInsertSchema, id: int = None, file: UploadedFile = None):
     try:
         with transaction.atomic():
-            # payload = payload.dict()
-            payload.dict()['image'] = file
-            Placement.objects.update_or_create(id=id, defaults=payload.dict())
+            params = payload.dict()
+            params['image'] = file
+            Placement.objects.update_or_create(id=id, defaults=params)
     except Exception as e:
         raise e
-    return True
 
 
 @router.delete("/", description="플레이스 삭제")
