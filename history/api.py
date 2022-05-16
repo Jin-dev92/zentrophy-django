@@ -14,7 +14,7 @@ from history.schema import AfterServiceInsertSchema, RefundInsertSchema, Warrant
 from member.models import MemberOwnedVehicles
 from order.models import Order
 from placement.models import Placement
-from product.models import Product
+from product.models import ProductOptions
 from util.params import prepare_for_query
 
 refund_router = Router()
@@ -150,7 +150,7 @@ def create_cart(request, payload: CartCreateSchema):
     product_options_id = payload.dict()['product_options_id']
     amount = payload.dict()['amount']
     queryset = Cart.objects.create(
-        product_options=get_object_or_404(Product, id=product_options_id),
+        product_options=get_object_or_404(ProductOptions, id=product_options_id),
         owner=request.user,
         amount=amount
     )
