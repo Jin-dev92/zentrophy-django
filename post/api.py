@@ -86,7 +86,6 @@ def create_faq_category(request, category_name: str):
         queryset = FAQCategory.objects.create(category_name=category_name)
     except IntegrityError:
         raise IntegrityError(DB_UNIQUE_CONSTRAINT['desc'])
-        # todo ExceptionHandler를 통해 조절 할 것.
 
 
 @faq_category_router.delete('/', description='FAQ 카테고리 삭제')

@@ -3,7 +3,7 @@ from typing import List
 
 from ninja import Schema, Field
 
-from member.constant import CardCompany
+# from member.constant import CardCompany
 from product.schema import VehicleListSchema
 
 
@@ -18,10 +18,10 @@ class MemberInsertSchema(Schema):
 
 
 class CardInsertSchema(Schema):
-    card_number: str = None
-    card_company: CardCompany = Field(title='카드사')
-    validate_date: date = None
-    security_code: str = None
+    card_number: str
+    user_name: str
+    validate_date: str
+    cvc: str
 
 
 class PaymentMethodListSchema(Schema):

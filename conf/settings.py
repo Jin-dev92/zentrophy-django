@@ -160,8 +160,8 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = '/member/login/'  # 로그인 기본값
-LOGOUT_URL = '/member/logout/'  # 로그아웃 기본값
+LOGIN_URL = '/login/'  # 로그인 기본값
+LOGOUT_URL = '/logout/'  # 로그아웃 기본값
 LOGIN_REDIRECT_URL = '/'  # 반드시 정의할 것!
 # LOGOUT_REDIRECT_URL = None
 AUTH_USER_MODEL = 'member.User'

@@ -28,8 +28,8 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
     field_name = 'date_joined'
     if sort == MemberSort.RECENT:
         field_name = '-date_joined'
-    if not has_permission(request):  # 어드민이 아니면
-        params = {id: request.user.id}  # 위한 코드
+    # if not has_permission(request):  # 어드민이 아니면
+    #     params = {id: request.user.id}  # 위한 코드
     return User.objects.filter(**params).prefetch_related(
         Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
         Prefetch('paymentmethod_set', to_attr="payment_method")
@@ -49,7 +49,7 @@ def get_member_by_id(request, id: int):
 @router.post("/", description="회원 생성", auth=None)
 def create_user(request, payload: MemberInsertSchema = Form(...)):
     queryset = User.objects.create_user(**payload.dict())
-    return queryset
+    # return queryset
 
 
 @login_required
@@ -62,18 +62,19 @@ def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
     return queryset
 
 
-@login_required
-@router.get('/logout', description="로그 아웃")
-def member_logout(request):
-    logout(request)
-
-
-@router.post("/login", description="로그인", auth=None)
-def member_login(request, email: str = Form(...), password: str = Form(...)):
-    user = authenticate(request, email=email, password=password)
-    if user is None:
-        raise AccessDeniedException
-    login(request, user)
+# @login_required
+# @router.get('/logout', description="로그 아웃")
+# def member_logout(request):
+#     logout(request)
+#
+#
+# @router.post("/login", description="로그인", auth=None)
+# def member_login(request, email: str = Form(...), password: str = Form(...)):
+#     print("testsete")
+#     user = authenticate(request, email=email, password=password)
+#     if user is None:
+#         raise AccessDeniedException
+#     login(request, user)
 
 
 @router.delete("/", description="회원 삭제")
@@ -106,9 +107,6 @@ def get_payment_method(request):
 @transaction.atomic(using='default')
 @payment_method_router.post('/', description="결제 수단 생성")
 def create_payment_method(request, payload: PaymentMethodInsertSchema = Form(...)):
-    # if not has_permission(request):
-    #     raise LoginRequiredException
-
     try:
         with transaction.atomic():
             payment_method = PaymentMethod.objects.update_or_create(

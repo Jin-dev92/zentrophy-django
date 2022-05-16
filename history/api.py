@@ -138,79 +138,21 @@ def delete_warranty(request, id: int):
     return qs
 
 
-# @login_required
-# @battery_router.get('/', description="배터리 교환 내역 조회")
-# def get_battery_exchange_history_list(request, sort: BatteryExchangeSort = None):
-#     # [정렬] -  { 최근 지불 일정, 늦은 지불 일정, 높은 요금 순, 낮은 요금 순 , 누적 사용량 높은 순 , 누적 사용량 낮은 순 }
-#     params = prepare_for_query(request=request, exceptions=['sort'])
-#     if sort == BatteryExchangeSort.RECENT_PAYMENT_DATE:
-#         field_name = 'is_created'
-#     elif sort == BatteryExchangeSort.LATEST_PAYMENT_DATE:
-#         field_name = '-is_created'
-#     elif sort == BatteryExchangeSort.HIGH_PAYMENT:  # todo 나이스페이 관련 작업 후 변경
-#         field_name = '-order__is_created'
-#     elif sort == BatteryExchangeSort.LOW_PAYMENT:
-#         field_name = '-order__is_created'
-#     elif sort == BatteryExchangeSort.HIGH_USED_BATTERY:
-#         field_name = 'used_battery'
-#     elif sort == BatteryExchangeSort.LOW_USED_BATTERY:
-#         field_name = '-used_battery'
-#     else:
-#         field_name = 'order__is_created'
-#
-#     queryset = BatteryExchange.objects.get_queryset(**params).select_related('place', 'order', 'member_vehicle',
-#                                                                              'fee_plan').order_by(field_name)
-#
-#     return queryset
-#
-#
-# @login_required
-# @battery_router.get('/user', description="배터리 교환 내역 조회")
-# def get_battery_exchange_history_by_user(request):
-#     order = get_object_or_404(Order, deleted_at__isnull=True, owner=request.user)
-#     queryset = BatteryExchange.objects.get_queryset(order=order).select_related('place', 'order', 'member_vehicle',
-#                                                                                 'fee_plan')
-#     return queryset
-#
-#
-# @battery_router.post('/', description="배터리 교환 내역 생성")
-# def create_battery_history(request, payload: BatteryExchangeInsertSchema):
-#     params = payload.dict()
-#     place = get_object_or_404(Placement, id=params['place_id'])
-#     order = get_object_or_404(Order, id=params['order_id'])
-#     member_owned_vehicles = get_object_or_404(MemberOwnedVehicles, id=params['member_owned_vehicles_id'])
-#     fee_plan = get_object_or_404(IntegratedFeePlan, params['fee_plan_id'])
-#     queryset = BatteryExchange.objects.update_or_create(
-#         place=place,
-#         order=order,
-#         member_vehicle=member_owned_vehicles,
-#         fee_plan=fee_plan,
-#         used_battery=params['used_battery'],
-#     )
-#     return queryset
-#
-#
-# @battery_router.delete('/', description="배터리 교환 내역 삭제")
-# def delete_battery_history(request, id: int):
-#     queryset = get_object_or_404(BatteryExchange, id=id).soft_delete()
-#     return queryset
-
-
 @login_required
 @cart_router.get('/', description="장바구니 목록 확인", response={200: List[CartListSchema]})
 def get_cart_list(request):
     queryset = Cart.objects.get_queryset(owner=request.user, deleted_at__isnull=True).select_related(
-        'product')
+        'product_options')
     return queryset
 
 
 @login_required
 @cart_router.post('/', description="장바구니 목록 생성")
-def create_cart_list(request, payload: CartCreateSchema):
-    product_id = payload.dict()['product_id']
+def create_cart(request, payload: CartCreateSchema):
+    product_options_id = payload.dict()['product_options_id']
     amount = payload.dict()['amount']
     queryset = Cart.objects.create(
-        product=get_object_or_404(Product, id=product_id),
+        product_options=get_object_or_404(Product, id=product_options_id),
         owner=request.user,
         amount=amount
     )

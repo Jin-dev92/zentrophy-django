@@ -3,7 +3,7 @@ from django.db import models
 from conf.settings import LICENSE_NUMBER_LENGTH
 from history.constant import RefundStatus, AfterServiceStatus, RefundMethod, AfterServiceCategory
 from order.models import Order
-from product.models import Product
+from product.models import ProductOptions
 from util.models import TimeStampModel, SoftDeleteModel
 
 
@@ -25,14 +25,6 @@ class AfterService(TimeStampModel, SoftDeleteModel):
     category = models.PositiveSmallIntegerField(default=AfterServiceCategory.ETC)
 
 
-# class BatteryExchange(TimeStampModel, SoftDeleteModel):
-#     place = models.ForeignKey(Placement, on_delete=models.CASCADE)
-#     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-#     member_vehicle = models.ForeignKey(MemberOwnedVehicles, on_delete=models.CASCADE, null=True)
-#     fee_plan = models.ForeignKey('order.IntegratedFeePlan', on_delete=models.SET_NULL, null=True)
-#     used_battery = models.FloatField(default=0.0)
-
-
 class Warranty(TimeStampModel, SoftDeleteModel):
     name = models.CharField(max_length=100, blank=True)
     validity = models.DateTimeField(null=True)
@@ -40,7 +32,7 @@ class Warranty(TimeStampModel, SoftDeleteModel):
 
 
 class Cart(TimeStampModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
+    product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE, null=True)
     owner = models.ForeignKey('member.User', on_delete=models.CASCADE, null=True)
     amount = models.IntegerField(default=0)
 

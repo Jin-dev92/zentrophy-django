@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 
 from conf.custom_exception import AlreadyExistsException
-from member.constant import CardCompany
+# from member.constant import CardCompany
 from util.models import TimeStampModel, SoftDeleteModel
 
 
@@ -15,7 +15,6 @@ class UserManager(BaseUserManager):
         user = self.model(
             username=username,
             email=self.normalize_email(email),
-            # **self.parameters_validation_check(**kwargs)
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -85,6 +84,6 @@ class PaymentMethod(TimeStampModel, SoftDeleteModel):
 
 class Card(SoftDeleteModel):
     card_number = models.CharField(max_length=16, null=True)
-    card_company = models.CharField(max_length=10, choices=CardCompany.choices, default=CardCompany.ETC)
-    validate_date = models.DateField(null=True)
-    security_code = models.CharField(max_length=4, null=True)
+    user_name = models.CharField(max_length=100, null=True)
+    validate_date = models.CharField(max_length=4, null=True)
+    cvc = models.CharField(max_length=4, null=True)
