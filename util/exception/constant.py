@@ -33,3 +33,7 @@ DB_UNIQUE_CONSTRAINT = {
     'code': 4000003,
     'desc': "유니크 키 조건에 위배되는 값입니다."
 }
+FORMAT_NOT_SUPPORTED = {
+    'code': 4000005,
+    'desc': "지원 하지 않는 값입니다. 데이터를 확인하세요"
+}

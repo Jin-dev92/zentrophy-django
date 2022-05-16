@@ -6,7 +6,7 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router, Form
 
-from conf.custom_exception import UserNotAccessDeniedException, DataBaseORMException
+from conf.custom_exception import UserNotAccessDeniedException
 from member.constant import MemberSort
 from member.models import User, PaymentMethod, Card
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
@@ -105,7 +105,8 @@ def create_payment_method(request, id: int = None, payload: PaymentMethodInsertS
                 }
             )
     except Exception as e:
-        raise DataBaseORMException
+        raise e
+        # raise DataBaseORMException
 
 
 @payment_method_router.delete('/')

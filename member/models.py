@@ -101,9 +101,9 @@ class Card(SoftDeleteModel):
             raise FormatNotSupportedException
         if len(self.cvc) != 3:
             raise FormatNotSupportedException
-        validate_month = int(self.validate_date[0:1])
+        validate_month = int(self.validate_date[0:2])
         validate_year = int(settings.YEAR_TWO_DIGIT + self.validate_date[2:4])
-        if validate_month < 0 or validate_month > 12:
+        if validate_month < 1 or validate_month > 12:
             raise FormatNotSupportedException
         if validate_year < datetime.datetime.now().year:
             raise FormatNotSupportedException

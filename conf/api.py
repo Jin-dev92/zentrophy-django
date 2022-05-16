@@ -7,7 +7,7 @@ from ninja.security import django_auth
 # util
 from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
-    LoginRequiredException, AccessDeniedException
+    LoginRequiredException, AccessDeniedException, FormatNotSupportedException
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
 from member.api import router as member_router, payment_method_router
@@ -17,7 +17,8 @@ from post.api import faq_router, notice_router, faq_category_router
 from product.api import display_line_router as display_line_router
 from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
-from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED
+from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
+    FORMAT_NOT_SUPPORTED
 from util.util import ORJSONParser
 
 # models & schema
@@ -147,3 +148,9 @@ def refuse_must_have_reason_exception_handler(request, exec):
 def login_required_exception_handler(request, exec):
     return api.create_response(request, data={'code': LOGIN_REQUIRED['code'],
                                               'desc': LOGIN_REQUIRED['desc']})
+
+
+@api.exception_handler(exc_class=FormatNotSupportedException)
+def format_not_supported_exception_handler(request, exec):
+    return api.create_response(request, data={'code': FORMAT_NOT_SUPPORTED['code'],
+                                              'desc': FORMAT_NOT_SUPPORTED['desc']})
