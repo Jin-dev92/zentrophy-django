@@ -1,7 +1,10 @@
+import datetime
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin, Group
 from django.db import models
 
-from conf.custom_exception import AlreadyExistsException
+from conf import settings
+from conf.custom_exception import AlreadyExistsException, FormatNotSupportedException
 # from member.constant import CardCompany
 from util.models import TimeStampModel, SoftDeleteModel
 
@@ -87,3 +90,20 @@ class Card(SoftDeleteModel):
     user_name = models.CharField(max_length=100, null=True)
     validate_date = models.CharField(max_length=4, null=True)
     cvc = models.CharField(max_length=4, null=True)
+
+    def __str__(self):
+        return self.card_number
+
+    def format(self):
+        if len(self.card_number) != 16:
+            raise FormatNotSupportedException
+        if len(self.validate_date) != 4:
+            raise FormatNotSupportedException
+        if len(self.cvc) != 3:
+            raise FormatNotSupportedException
+        validate_month = int(self.validate_date[0:1])
+        validate_year = int(settings.YEAR_TWO_DIGIT + self.validate_date[2:4])
+        if validate_month < 0 or validate_month > 12:
+            raise FormatNotSupportedException
+        if validate_year < datetime.datetime.now().year:
+            raise FormatNotSupportedException

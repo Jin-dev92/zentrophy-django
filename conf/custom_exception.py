@@ -6,10 +6,6 @@ class UserNotAccessDeniedException(Exception):
     pass
 
 
-# class MustHaveSplitWordException(Exception):
-#     pass
-
-
 class NotEnoughProductsException(Exception):
     pass
 
@@ -51,4 +47,8 @@ class IncorrectTotalAmountException(Exception):
 
 
 class WrongParameterException(Exception):
+    pass
+
+
+class FormatNotSupportedException(Exception):
     pass

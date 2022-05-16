@@ -95,6 +95,7 @@ def create_payment_method(request, id: int = None, payload: PaymentMethodInsertS
             params = payload.dict()
             card = params['card']
             card_queryset = Card.objects.create(**card)
+            card_queryset.format()
             payment_queryset = PaymentMethod.objects.update_or_create(
                 id=id,
                 defaults={

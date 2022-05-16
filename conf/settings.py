@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
+import datetime
 import os
 from pathlib import Path
 
@@ -166,6 +167,7 @@ LOGIN_REDIRECT_URL = '/'  # 반드시 정의할 것!
 # LOGOUT_REDIRECT_URL = None
 AUTH_USER_MODEL = 'member.User'
 
+YEAR_TWO_DIGIT = str(datetime.datetime.now().year)[0:2]
 LICENSE_NUMBER_LENGTH = 16
 OPTION_SPLIT = "++"
 # permmistion groups
