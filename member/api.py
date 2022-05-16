@@ -1,14 +1,12 @@
 from typing import List, Optional
 
-from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router, Form
 
-from conf.custom_exception import UserNotAccessDeniedException, AccessDeniedException, \
-    DataBaseORMException
+from conf.custom_exception import UserNotAccessDeniedException, DataBaseORMException
 from member.constant import MemberSort
 from member.models import User, PaymentMethod, Card
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
@@ -62,21 +60,6 @@ def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
     return queryset
 
 
-# @login_required
-# @router.get('/logout', description="로그 아웃")
-# def member_logout(request):
-#     logout(request)
-#
-#
-# @router.post("/login", description="로그인", auth=None)
-# def member_login(request, email: str = Form(...), password: str = Form(...)):
-#     print("testsete")
-#     user = authenticate(request, email=email, password=password)
-#     if user is None:
-#         raise AccessDeniedException
-#     login(request, user)
-
-
 @router.delete("/", description="회원 삭제")
 def delete_user(request, id: int):
     member = get_object_or_404(User, id=id)
@@ -106,16 +89,20 @@ def get_payment_method(request):
 @login_required
 @transaction.atomic(using='default')
 @payment_method_router.post('/', description="결제 수단 생성")
-def create_payment_method(request, payload: PaymentMethodInsertSchema = Form(...)):
+def create_payment_method(request, id: int = None, payload: PaymentMethodInsertSchema = Form(...)):
     try:
         with transaction.atomic():
-            payment_method = PaymentMethod.objects.update_or_create(
-                name=payload.dict()['name'],
-                owner=request.user
+            params = payload.dict()
+            card = params['card']
+            card_queryset = Card.objects.create(**card)
+            payment_queryset = PaymentMethod.objects.update_or_create(
+                id=id,
+                defaults={
+                    'name': params['name'],
+                    'owner': request.user,
+                    'card': card_queryset
+                }
             )
-            card = Card.objects.update_or_create(**payload.dict()['card'])
-            payment_method[0].card = card[0]
-            payment_method[0].save()
     except Exception as e:
         raise DataBaseORMException
 
