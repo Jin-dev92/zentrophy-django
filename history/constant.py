@@ -30,10 +30,10 @@ class AfterServiceCategory(IntEnum):
 
 
 # [정렬] -  { 최근 지불 일정, 늦은 지불 일정, 높은 요금 순, 낮은 요금 순 , 누적 사용량 높은 순 , 누적 사용량 낮은 순 }
-class BatteryExchangeSort(IntEnum):
-    RECENT_PAYMENT_DATE = 0
-    LATEST_PAYMENT_DATE = 1
-    HIGH_PAYMENT = 2
-    LOW_PAYMENT = 3
-    HIGH_USED_BATTERY = 4
-    LOW_USED_BATTERY = 5
+# class BatteryExchangeSort(IntEnum):
+#     RECENT_PAYMENT_DATE = 0
+#     LATEST_PAYMENT_DATE = 1
+#     HIGH_PAYMENT = 2
+#     LOW_PAYMENT = 3
+#     HIGH_USED_BATTERY = 4
+#     LOW_USED_BATTERY = 5
