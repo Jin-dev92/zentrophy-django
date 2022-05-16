@@ -44,6 +44,7 @@ class RefundListSchema(Schema):
 class RefundInsertSchema(Schema):
     order_id: int
     reject_reason: str = None
+    refund_location: str = None
     method: RefundMethod = Field(
         title="환불 방법",
         default=RefundMethod.RECALL_REQUEST,

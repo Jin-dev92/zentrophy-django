@@ -10,6 +10,7 @@ from util.models import TimeStampModel, SoftDeleteModel
 class Refund(TimeStampModel, SoftDeleteModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     reject_reason = models.CharField(max_length=200, blank=True)
+    refund_location = models.CharField(max_length=200, blank=True)
     method = models.PositiveSmallIntegerField(default=RefundMethod.RECALL_REQUEST)
     status = models.PositiveSmallIntegerField(default=RefundStatus.WAITING)
 
@@ -37,4 +38,4 @@ class Cart(TimeStampModel):
     amount = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.product.product_name + "//" + str(self.amount) + self.owner.email
+        return self.product_options.option_name + "//" + str(self.amount) + self.owner.email

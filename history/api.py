@@ -74,8 +74,6 @@ def delete_after_service(request, id: int):
 @login_required
 @refund_router.get("/", description="환불 내역 조회",
                    response=List[RefundListSchema],
-                   # response=ResponseDefaultHeader.Schema,
-                   # auth=None
                    )
 def get_refund_list(request, method: RefundMethod = None, status: RefundStatus = None):
     params = prepare_for_query(request=request)
@@ -94,10 +92,10 @@ def get_refund_by_id(id: int):
 @refund_router.post("/", description="환불 내역 생성")
 def create_refund_history(request, payload: RefundInsertSchema):
     params = payload.dict()
-    except_params = {k: v for k, v in params.items() if k in {'order_id'}}
+    except_params = {k: v for k, v in params.items() if k not in {'order_id'}}
+    print(except_params)
     order = get_object_or_404(Order, id=params.get('order_id'), deleted_at__isnull=True)
     queryset = Refund.objects.create(order=order, **except_params)
-    return queryset
 
 
 @login_required
@@ -156,7 +154,7 @@ def create_cart(request, payload: CartCreateSchema):
         owner=request.user,
         amount=amount
     )
-    return queryset
+    # return queryset
 
 
 @login_required
