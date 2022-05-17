@@ -12,7 +12,7 @@ class OrderDetail(SoftDeleteModel):
     amount = models.IntegerField(default=0)
 
 
-class NecessaryDocumentFile(TimeStampModel):
+class DocumentFile(TimeStampModel):
     id = models.AutoField(primary_key=True)
     file = models.FileField(upload_to="order/%Y/%M", )
     order = models.ForeignKey('order.Order', on_delete=models.CASCADE)

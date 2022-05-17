@@ -10,7 +10,7 @@ from ninja.files import UploadedFile
 from conf.custom_exception import AlreadyExistsException, IncorrectTotalAmountException, \
     WrongParameterException
 from order.constant import OrderState
-from order.models import Order, Subside, NecessaryDocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor
+from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
 from product.models import ProductOptions, VehicleColor, Product
 
@@ -31,7 +31,7 @@ def get_order_list(request):
         'extra_subside',
         'ordered_product_options',
         'ordered_vehicle_color',
-        Prefetch('necessarydocumentfile_set', to_attr="files"))
+        Prefetch('documentfile_set', to_attr="files"))
     return queryset
 
 
@@ -42,7 +42,7 @@ def get_order_list_by_id(request, id: int):
         'extra_subside',
         'ordered_product_options',
         'ordered_vehicle_color',
-        Prefetch('necessarydocumentfile_set', to_attr="files"))
+        Prefetch('documentfile_set', to_attr="files"))
     return queryset
 
 
@@ -133,13 +133,13 @@ def modify_extra_subside(request, payload: SubsideInsertSchema = None):
 @login_required
 @file_router.post('/', description="계획서 및 보조금 신청서 업로드")
 def upload_files(request, order_id: int, files: List[UploadedFile]):
-    queryset = NecessaryDocumentFile.objects.bulk_create(
-        objs=[NecessaryDocumentFile(order_id=order_id, file=file) for file in files], batch_size=upload_exceed_count)
-    return queryset
+    order = get_object_or_404(Order, id=order_id)
+    queryset = DocumentFile.objects.bulk_create(
+        objs=[DocumentFile(order=order, file=file) for file in files], batch_size=upload_exceed_count)
 
 
 @login_required
 @file_router.delete('/', description="계획서 및 보조금 신청서 삭제")
 def delete_files(request, id: int):
-    queryset = get_object_or_404(NecessaryDocumentFile, id=id).delete()
+    queryset = get_object_or_404(DocumentFile, id=id).delete()
     return queryset
