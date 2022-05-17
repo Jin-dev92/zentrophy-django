@@ -139,8 +139,8 @@ def delete_warranty(request, id: int):
 @login_required
 @cart_router.get('/', description="장바구니 목록 확인", response={200: List[CartListSchema]})
 def get_cart_list(request):
-    queryset = Cart.objects.get_queryset(owner=request.user, deleted_at__isnull=True).select_related(
-        'product_options')
+    print(request.user)
+    queryset = Cart.objects.filter(owner=request.user).select_related('product_options')
     return queryset
 
 
@@ -154,7 +154,6 @@ def create_cart(request, payload: CartCreateSchema):
         owner=request.user,
         amount=amount
     )
-    # return queryset
 
 
 @login_required

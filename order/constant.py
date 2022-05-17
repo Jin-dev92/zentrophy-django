@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 
-class OrderState(Enum):
+class OrderState(IntEnum):
     ACCEPT_ORDER = 0
     REVIEW_DOCS = 1
     WAIT_PAYMENT = 2
@@ -10,7 +10,7 @@ class OrderState(Enum):
     IS_CANCELED = 5
 
 
-class PaymentType(Enum):
+class PaymentType(IntEnum):
     PRODUCT = 0
     VEHICLE = 1
     PERIOD = 2

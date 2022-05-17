@@ -29,6 +29,7 @@ class ProductImageListSchema(Schema):
 
 
 class ProductOptionsListSchema(Schema):
+    id: int
     product_id: int
     option_name: str = Field(default=None,
                              title="옵션 이름")  # 옵션 이름

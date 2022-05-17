@@ -39,7 +39,8 @@ class Order(TimeStampModel, SoftDeleteModel):
     owner = models.ForeignKey('member.User',
                               on_delete=models.CASCADE,
                               null=True)
-    buy_list = models.JSONField(default=dict, null=True)
+    ordered_product_options = models.ManyToManyField('order.OrderedProductOptions')
+    ordered_vehicle_color = models.ManyToManyField('order.OrderedVehicleColor')
     subside = models.BooleanField(default=False)
     extra_subside = models.ManyToManyField(ExtraSubside)
     is_visited = models.BooleanField(default=False)
@@ -48,3 +49,22 @@ class Order(TimeStampModel, SoftDeleteModel):
 
     def __str__(self):
         return str(self.id)
+
+    def check_total(self):
+        return
+
+
+class OrderedProductOptions(TimeStampModel):
+    product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE)
+    amount = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.product_options.option_name + self.amount
+
+
+class OrderedVehicleColor(TimeStampModel):
+    vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.CASCADE)
+    amount = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.vehicle_color.color_name + self.amount

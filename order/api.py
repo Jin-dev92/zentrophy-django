@@ -9,10 +9,10 @@ from ninja.files import UploadedFile
 
 from conf.custom_exception import AlreadyExistsException, IncorrectTotalAmountException, \
     WrongParameterException
-from order.models import Order, Subside, NecessaryDocumentFile, ExtraSubside
+from order.constant import OrderState
+from order.models import Order, Subside, NecessaryDocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
-from product.models import ProductOptions, VehicleColor
-from util.params import prepare_for_query
+from product.models import ProductOptions, VehicleColor, Product
 
 router = Router()
 subside_router = Router()
@@ -23,9 +23,14 @@ upload_exceed_count = 5
 @login_required
 @router.get('/', response=List[OrderListSchema], description="주문 조건 검색")
 def get_order_list(request):
-    # params = prepare_for_query(request)
-    queryset = Order.objects.get_queryset().select_related('owner').prefetch_related(
+    if request.user.is_staff:
+        target = Order.objects.get_queryset()
+    else:
+        target = Order.objects.get_queryset(owner=request.user)
+    queryset = target.select_related('owner').prefetch_related(
         'extra_subside',
+        'ordered_product_options',
+        'ordered_vehicle_color',
         Prefetch('necessarydocumentfile_set', to_attr="files"))
     return queryset
 
@@ -35,50 +40,44 @@ def get_order_list(request):
 def get_order_list_by_id(request, id: int):
     queryset = Order.objects.get_queryset(id=id).select_related('owner').prefetch_related(
         'extra_subside',
+        'ordered_product_options',
+        'ordered_vehicle_color',
         Prefetch('necessarydocumentfile_set', to_attr="files"))
     return queryset
 
 
 @login_required
-@router.post('/', description="주문 생성 / 수정")
-def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
-    payload = payload.dict()
-    order_params = {k: v for k, v in payload.items() if k not in {'buy_list', 'extra_subside'}}
-    order_params['buy_list']: list = []
+@router.post('/', description="주문 생성 ")
+def create_order(request, payload: OrderCreateSchema):
+    params = payload.dict()
+    order_params = {k: v for k, v in params.items() if
+                    k not in {'ordered_product_options', 'ordered_vehicle_color', 'extra_subside'}}
     order_params['owner'] = request.user
-    buy_list: list[dict] = payload.get('buy_list')
-    # 총금액 계산 -> 총 금액 validator -> True 시 json_data 생성
-    total = 0
-    for goods in buy_list:
-        if goods.get('product_options_pk') > 0:  # goods 가 상품 일 때
-            product_options = get_object_or_404(ProductOptions, id=goods.get('product_options_pk'))
-            total += int(goods.get('amount')) * product_options.product.product_price
-            order_params['buy_list'].append(
-                {
-                    'product': product_options.product.objects.values(),
-                    'product_options': product_options.objects.values(),
-                    'amount': int(goods.get('amount'))
-                }
+    order_queryset = Order.objects.create(**order_params)
+    if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
+        order_queryset.extra_subside.add(
+            *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
+    if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
+        order_queryset.ordered_product_options.add(
+            *OrderedProductOptions.objects.bulk_create(
+                objs=[
+                    OrderedProductOptions(**ordered_po) for ordered_po in
+                    params['ordered_product_options']]
             )
-        elif goods.get('vehicle_color_pk') > 0:  # goods 가 모터 사이클 일 때
-            vehicle_color = get_object_or_404(VehicleColor, id=goods.get('vehicle_color_pk'))
-            total += int(goods.get('amount')) * vehicle_color.price
-            order_params['buy_list'].append(
-                {
-                    'vehicle': vehicle_color.vehicle.objects.values(),
-                    'vehicle_color': vehicle_color.objects.values(),
-                    'amount': int(goods.get('amount'))
-                }
-            )
-        else:
-            raise WrongParameterException
+        )
+    if params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
+        order_queryset.ordered_vehicle_color.add(
+            *OrderedVehicleColor.objects.bulk_create(
+                objs=[OrderedVehicleColor(**ordered_vc) for ordered_vc in params['ordered_vehicle_color']])
+        )
 
-    print("order_params['buy_list'] :", order_params['buy_list'])
-    if int(payload.get('total')) != total:
-        raise IncorrectTotalAmountException
-    order_queryset = Order.objects.update_or_create(id=id, defaults=order_params)
-    order_queryset[0].extra_subside.add(
-        ExtraSubside.objects.in_bulk(id_list=payload.get('extra_subside')))  # manytomany field
+
+@login_required
+@router.put('/', description="주문 상태 변경")
+def change_order_state(request, id: int, state: OrderState):
+    target = get_object_or_404(Order, id=id)
+    target.state = state
+    target.save(update_fields=['state'])
 
 
 @login_required
@@ -134,7 +133,6 @@ def modify_extra_subside(request, payload: SubsideInsertSchema = None):
 @login_required
 @file_router.post('/', description="계획서 및 보조금 신청서 업로드")
 def upload_files(request, order_id: int, files: List[UploadedFile]):
-    # order = get_object_or_404(Order, id=order_id)
     queryset = NecessaryDocumentFile.objects.bulk_create(
         objs=[NecessaryDocumentFile(order_id=order_id, file=file) for file in files], batch_size=upload_exceed_count)
     return queryset

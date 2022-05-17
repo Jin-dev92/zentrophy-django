@@ -154,3 +154,8 @@ def login_required_exception_handler(request, exec):
 def format_not_supported_exception_handler(request, exec):
     return api.create_response(request, data={'code': FORMAT_NOT_SUPPORTED['code'],
                                               'desc': FORMAT_NOT_SUPPORTED['desc']})
+
+# @api.exception_handler(exc_class=NotBase64Exception)
+# def not_base64_exception_handler(request, exec):
+#     return api.create_response(request, data={'code': FORMAT_NOT_SUPPORTED['code'],
+#                                               'desc': FORMAT_NOT_SUPPORTED['desc']})

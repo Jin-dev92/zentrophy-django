@@ -7,10 +7,21 @@ from member.schema import MemberListSchema
 from order.constant import OrderState
 
 
+class OrderedProductOptionsSchema(Schema):
+    product_options_id: int = 0
+    amount: int = 0
+
+
+class OrderedVehicleColorSchema(Schema):
+    vehicle_color_id: int = 0
+    amount: int = 0
+
+
 class OrderListSchema(Schema):
     id: int
     owner: MemberListSchema = None
-    buy_list: list = Field(default=[], title="구매 목록")
+    ordered_product_options: List[OrderedProductOptionsSchema] = None
+    ordered_vehicle_color: List[OrderedVehicleColorSchema] = None
     subside: int = Field(default=0, title="기본 보조금")
     extra_subside: list = Field(default=[], title="추가 보조금")
     is_visited: bool = Field(default=False, title="방문 구매 여부")
@@ -18,19 +29,14 @@ class OrderListSchema(Schema):
     state: OrderState = Field(default=OrderState.ACCEPT_ORDER,
                               title="주문 상태",
                               description="0: 주문 수락, 1: 서류 검토중, 2: 결제 대기중, 3: 배달 준비중, 4: 배달 완료, 5: 주문 취소")
-    files: str = Field(default=None, title="첨부 파일")
+    files: List[str] = Field(default=None, title="첨부 파일")
     is_created: datetime
     is_updated: datetime
 
 
-class OrderDetailSchema(Schema):
-    product_options_pk: int = None
-    vehicle_color_pk: int = None
-    amount: int = 0
-
-
 class OrderCreateSchema(Schema):
-    buy_list: List[OrderDetailSchema] = None
+    ordered_product_options: List[OrderedProductOptionsSchema] = None
+    ordered_vehicle_color: List[OrderedVehicleColorSchema] = None
     subside: bool = Field(default=False, description="기본 보조금 여부")
     extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")
     total: int = 0

@@ -52,3 +52,7 @@ class WrongParameterException(Exception):
 
 class FormatNotSupportedException(Exception):
     pass
+
+
+# class NotBase64Exception(Exception):
+#     pass
