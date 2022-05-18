@@ -7,7 +7,7 @@ from ninja.security import django_auth
 # util
 from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
-    LoginRequiredException, AccessDeniedException, FormatNotSupportedException
+    LoginRequiredException, AccessDeniedException, FormatNotSupportedException, WrongParameterException
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
 from member.api import router as member_router, payment_method_router
@@ -18,7 +18,7 @@ from product.api import display_line_router as display_line_router
 from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
-    FORMAT_NOT_SUPPORTED
+    FORMAT_NOT_SUPPORTED, WRONG_PARAMETER
 from util.util import ORJSONParser
 
 # models & schema
@@ -155,7 +155,8 @@ def format_not_supported_exception_handler(request, exec):
     return api.create_response(request, data={'code': FORMAT_NOT_SUPPORTED['code'],
                                               'desc': FORMAT_NOT_SUPPORTED['desc']})
 
-# @api.exception_handler(exc_class=NotBase64Exception)
-# def not_base64_exception_handler(request, exec):
-#     return api.create_response(request, data={'code': FORMAT_NOT_SUPPORTED['code'],
-#                                               'desc': FORMAT_NOT_SUPPORTED['desc']})
+
+@api.exception_handler(exc_class=WrongParameterException)
+def wrong_parameter_exception_handler(request, exec):
+    return api.create_response(request, data={'code': WRONG_PARAMETER['code'],
+                                              'desc': WRONG_PARAMETER['desc']})

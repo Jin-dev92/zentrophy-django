@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import List
 
 from ninja import Schema, Field
@@ -8,21 +8,26 @@ from order.constant import OrderState
 
 
 class CustomerInfo(Schema):
-    pass
+    name: str = None
+    birth: date = None
+    tel: str = None
+    email: str = None
+    is_apply_subside: bool = False
 
 
 class OrderLocationInfo(Schema):
-    pass
+    address: str = None
+    detail: str = None
 
 
 class OrderedProductOptionsSchema(Schema):
-    product_options_id: int = 0
-    amount: int = 0
+    product_options_id: int = None
+    amount: int = None
 
 
 class OrderedVehicleColorSchema(Schema):
-    vehicle_color_id: int = 0
-    amount: int = 0
+    vehicle_color_id: int = None
+    amount: int = None
 
 
 class OrderListSchema(Schema):
@@ -45,8 +50,8 @@ class OrderListSchema(Schema):
 
 
 class OrderCreateSchema(Schema):
-    ordered_product_options: List[OrderedProductOptionsSchema] = []
-    ordered_vehicle_color: List[OrderedVehicleColorSchema] = []
+    ordered_product_options: List[OrderedProductOptionsSchema] = None
+    ordered_vehicle_color: List[OrderedVehicleColorSchema] = None
     customer_info: CustomerInfo = None
     order_location_info: OrderLocationInfo = None
     subside: bool = Field(default=False, description="기본 보조금 여부")

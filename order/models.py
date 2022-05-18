@@ -61,7 +61,7 @@ class OrderedProductOptions(TimeStampModel):
     amount = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.product_options.option_name + self.amount
+        return self.product_options.option_name
 
 
 class OrderedVehicleColor(TimeStampModel):
@@ -69,4 +69,19 @@ class OrderedVehicleColor(TimeStampModel):
     amount = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.vehicle_color.color_name + self.amount
+        return self.vehicle_color.color_name
+
+
+class CustomerInfo(TimeStampModel):
+    name = models.CharField(max_length=100, null=True)
+    birth = models.DateField(null=True)
+    tel: str = models.CharField(max_length=20, null=True)
+    email = models.EmailField(max_length=100)
+    is_apply_subside = models.BooleanField(default=False)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+
+
+class OrderLocationInfo(TimeStampModel):
+    address = models.CharField(max_length=100, null=True)
+    detail = models.CharField(max_length=100, null=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)

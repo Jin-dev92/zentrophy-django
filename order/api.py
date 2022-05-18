@@ -7,9 +7,10 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
 
-from conf.custom_exception import AlreadyExistsException, LoginRequiredException
+from conf.custom_exception import AlreadyExistsException, LoginRequiredException, WrongParameterException
 from order.constant import OrderState
-from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor
+from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
+    OrderLocationInfo, CustomerInfo
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
 
 router = Router()
@@ -21,7 +22,7 @@ upload_exceed_count = 5
 @login_required
 @router.get('/', response=List[OrderListSchema], description="주문 조건 검색")
 def get_order_list(request):
-    if str(request.user) == 'AnonymousUser':  # @todo 나중에 수정
+    if str(request.user) == 'AnonymousUser':  # @todo 디버그 모드 on 일때 에러 방지.
         raise LoginRequiredException
     if request.user.is_staff:
         target = Order.objects.get_queryset()
@@ -47,29 +48,42 @@ def get_order_list_by_id(request, id: int):
 
 
 @login_required
+@transaction.atomic(using='default')
 @router.post('/', description="주문 생성")
 def create_order(request, payload: OrderCreateSchema):
-    params = payload.dict()
-    order_params = {k: v for k, v in params.items() if
-                    k not in {'ordered_product_options', 'ordered_vehicle_color', 'extra_subside'}}
-    order_params['owner'] = request.user
-    order_queryset = Order.objects.create(**order_params)
-    if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
-        order_queryset.extra_subside.add(
-            *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
-    if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
-        order_queryset.ordered_product_options.add(
-            *OrderedProductOptions.objects.bulk_create(
-                objs=[
-                    OrderedProductOptions(**ordered_po) for ordered_po in
-                    params['ordered_product_options']]
-            )
-        )
-    if params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0 and params['ordered_vehicle_color']:
-        order_queryset.ordered_vehicle_color.add(
-            *OrderedVehicleColor.objects.bulk_create(
-                objs=[OrderedVehicleColor(**ordered_vc) for ordered_vc in params['ordered_vehicle_color']])
-        )
+    if str(request.user) == 'AnonymousUser':  # @todo 디버그 모드 on 일때 에러 방지.
+        raise LoginRequiredException
+    try:
+        with transaction.atomic():
+            params = payload.dict()
+            order_params = {k: v for k, v in params.items() if
+                            k not in {'ordered_product_options', 'ordered_vehicle_color', 'extra_subside',
+                                      'customer_info',
+                                      'order_location_info'}}
+            order_params['owner'] = request.user
+            order_location_info_params = params['order_location_info']
+            customer_info_params = params['customer_info']
+            order_queryset = Order.objects.create(**order_params)
+            if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
+                order_queryset.extra_subside.add(
+                    *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
+            if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
+                order_queryset.ordered_product_options.add(
+                    *OrderedProductOptions.objects.bulk_create(
+                        objs=[
+                            OrderedProductOptions(**ordered_po) for ordered_po in
+                            params['ordered_product_options']]
+                    )
+                )
+            if params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
+                order_queryset.ordered_vehicle_color.add(
+                    *OrderedVehicleColor.objects.bulk_create(
+                        objs=[OrderedVehicleColor(**ordered_vc) for ordered_vc in params['ordered_vehicle_color']])
+                )
+            OrderLocationInfo.objects.create(**order_location_info_params, order=order_queryset)
+            CustomerInfo.objects.create(**customer_info_params, order=order_queryset)
+    except Exception:
+        raise WrongParameterException
 
 
 @login_required
