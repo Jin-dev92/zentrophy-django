@@ -7,6 +7,14 @@ from member.schema import MemberListSchema
 from order.constant import OrderState
 
 
+class CustomerInfo(Schema):
+    pass
+
+
+class OrderLocationInfo(Schema):
+    pass
+
+
 class OrderedProductOptionsSchema(Schema):
     product_options_id: int = 0
     amount: int = 0
@@ -22,6 +30,8 @@ class OrderListSchema(Schema):
     owner: MemberListSchema = None
     ordered_product_options: List[OrderedProductOptionsSchema] = None
     ordered_vehicle_color: List[OrderedVehicleColorSchema] = None
+    customer_info: CustomerInfo = None
+    order_location_info: OrderLocationInfo = None
     subside: int = Field(default=0, title="기본 보조금")
     extra_subside: list = Field(default=[], title="추가 보조금")
     is_visited: bool = Field(default=False, title="방문 구매 여부")
@@ -35,8 +45,10 @@ class OrderListSchema(Schema):
 
 
 class OrderCreateSchema(Schema):
-    ordered_product_options: List[OrderedProductOptionsSchema] = None
-    ordered_vehicle_color: List[OrderedVehicleColorSchema] = None
+    ordered_product_options: List[OrderedProductOptionsSchema] = []
+    ordered_vehicle_color: List[OrderedVehicleColorSchema] = []
+    customer_info: CustomerInfo = None
+    order_location_info: OrderLocationInfo = None
     subside: bool = Field(default=False, description="기본 보조금 여부")
     extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")
     total: int = 0

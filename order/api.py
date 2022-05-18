@@ -7,12 +7,10 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
 
-from conf.custom_exception import AlreadyExistsException, IncorrectTotalAmountException, \
-    WrongParameterException
+from conf.custom_exception import AlreadyExistsException, LoginRequiredException
 from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
-from product.models import ProductOptions, VehicleColor, Product
 
 router = Router()
 subside_router = Router()
@@ -23,15 +21,17 @@ upload_exceed_count = 5
 @login_required
 @router.get('/', response=List[OrderListSchema], description="주문 조건 검색")
 def get_order_list(request):
+    if str(request.user) == 'AnonymousUser':  # @todo 나중에 수정
+        raise LoginRequiredException
     if request.user.is_staff:
         target = Order.objects.get_queryset()
     else:
         target = Order.objects.get_queryset(owner=request.user)
-    queryset = target.select_related('owner').prefetch_related(
+    queryset = target.prefetch_related(
         'extra_subside',
         'ordered_product_options',
         'ordered_vehicle_color',
-        Prefetch('documentfile_set', to_attr="files"))
+        Prefetch('documentfile_set', to_attr="files")).select_related('owner')
     return queryset
 
 
@@ -47,7 +47,7 @@ def get_order_list_by_id(request, id: int):
 
 
 @login_required
-@router.post('/', description="주문 생성 ")
+@router.post('/', description="주문 생성")
 def create_order(request, payload: OrderCreateSchema):
     params = payload.dict()
     order_params = {k: v for k, v in params.items() if
@@ -65,7 +65,7 @@ def create_order(request, payload: OrderCreateSchema):
                     params['ordered_product_options']]
             )
         )
-    if params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
+    if params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0 and params['ordered_vehicle_color']:
         order_queryset.ordered_vehicle_color.add(
             *OrderedVehicleColor.objects.bulk_create(
                 objs=[OrderedVehicleColor(**ordered_vc) for ordered_vc in params['ordered_vehicle_color']])
@@ -73,11 +73,17 @@ def create_order(request, payload: OrderCreateSchema):
 
 
 @login_required
-@router.put('/', description="주문 상태 변경")
+@router.put('/', description="주문 상태 수정, OrderListSchema - state 주석 참조")
 def change_order_state(request, id: int, state: OrderState):
     target = get_object_or_404(Order, id=id)
     target.state = state
     target.save(update_fields=['state'])
+
+
+@login_required
+@router.put('/', description="주문 내역 수정")
+def modify_order(request, id: int):
+    pass
 
 
 @login_required
