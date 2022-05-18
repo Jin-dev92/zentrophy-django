@@ -32,6 +32,8 @@ def get_order_list(request):
         'extra_subside',
         'ordered_product_options',
         'ordered_vehicle_color',
+        Prefetch('customerinfo_set', to_attr="customer_info"),
+        Prefetch('orderlocationinfo_set', to_attr="order_location_info"),
         Prefetch('documentfile_set', to_attr="files")).select_related('owner')
     return queryset
 
