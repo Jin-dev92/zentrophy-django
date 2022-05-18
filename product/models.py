@@ -24,6 +24,9 @@ class VehicleImage(TimeStampModel, SoftDeleteModel):
     vehicle_color = models.ForeignKey('product.VehicleColor', on_delete=models.CASCADE, null=True)
     origin_image = ImageField(upload_to="vehicle/%Y/%M", null=True)
 
+    def __str__(self):
+        return str(self.origin_image)
+
 
 class ProductOptions(SoftDeleteModel):
     id = models.AutoField(primary_key=True)
