@@ -187,15 +187,25 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
             color_bulk_create_list = VehicleColor.objects.bulk_create(
                 objs=[VehicleColor(vehicle=vehicle_queryset[0], **color) for color in vehicle_color_params],
                 batch_size=vehicle_color_exceed)
-            objs = []
-            for index, vc in enumerate(color_bulk_create_list):
-                for file in request.FILES.getlist('color_file_' + str(index)):
-                    objs.append(VehicleImage(vehicle_color=vc, origin_image=file))
-
-            image_bulk_create_list = VehicleImage.objects.bulk_create(
-                objs=objs,
-                batch_size=vehicle_image_exceed * vehicle_color_exceed
-            )
+            # objs = [print(file_list) for file_list in request.FILES if index for index, color in
+            #         enumerate(color_bulk_create_list)]
+            # objs = [VehicleImage(vehicle_color=color_bulk_create_list[index], origin_image=image) for image in
+            #         request.FILES.getlist('color_file_'+str(index)) for index, color in
+            #         enumerate(color_bulk_create_list)]
+            for idx, color in enumerate(color_bulk_create_list):
+                file_list = request.FILES.getlist('color_file_' + str(idx))
+                if file_list:
+                    objs = [VehicleImage(vehicle_color=color,origin_image=image) for image in file_list]
+                    VehicleImage.objects.bulk_create(objs=objs, batch_size=vehicle_image_exceed)
+            # objs = []
+            # for index, vc in enumerate(color_bulk_create_list):
+            #     for file in request.FILES.getlist('color_file_' + str(index)):
+            #         objs.append(VehicleImage(vehicle_color=vc, origin_image=file))
+            #
+            # image_bulk_create_list = VehicleImage.objects.bulk_create(
+            #     objs=objs,
+            #     batch_size=vehicle_image_exceed * vehicle_color_exceed
+            # )
 
             # for idx, vc in enumerate(vehicle_color_params):
             #     VehicleImage.objects.bulk_create(
