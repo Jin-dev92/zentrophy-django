@@ -155,7 +155,7 @@ def get_vehicle_list(request):
                     auth=None)
 def get_vehicle_by_id(request, id: int):
     result = Vehicle.objects.get_queryset(id=id).prefetch_related(
-        Prefetch(lookup='vehiclecolor_set',
+        Prefetch(
                  queryset=VehicleColor.objects.get_queryset().prefetch_related(
                      Prefetch(lookup='vehicleimage_set', to_attr='vehicle_image')
                  ),
