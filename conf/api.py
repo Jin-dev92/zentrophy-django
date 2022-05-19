@@ -118,18 +118,18 @@ for item in API_LIST:
     api.add_router(prefix=item['prefix'], router=item['router'], tags=item['tags'])
 
 
-@login_required
-@api.get('/logout', description="로그 아웃")
-def member_logout(request):
-    logout(request)
-
-
-@api.post("/login", description="로그인", auth=None)
-def member_login(request, email: str = Form(...), password: str = Form(...)):
-    user = authenticate(request, email=email, password=password)
-    if user is None:
-        raise AccessDeniedException
-    login(request, user)
+# @login_required
+# @api.get('/logout', description="로그 아웃")
+# def member_logout(request):
+#     logout(request)
+#
+#
+# @api.post("/login", description="로그인", auth=None)
+# def member_login(request, email: str = Form(...), password: str = Form(...)):
+#     user = authenticate(request, email=email, password=password)
+#     if user is None:
+#         raise AccessDeniedException
+#     login(request, user)
 
 
 @api.exception_handler(exc_class=RefuseMustHaveReasonException)
