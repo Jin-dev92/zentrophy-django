@@ -190,7 +190,7 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
             objs = []
             for index, vc in enumerate(color_bulk_create_list):
                 for file in request.FILES.getlist('color_file_' + str(index)):
-                    objs.append(VehicleImage(vehicle_color=color_bulk_create_list[index], origin_image=file))
+                    objs.append(VehicleImage(vehicle_color=vc, origin_image=file))
 
             image_bulk_create_list = VehicleImage.objects.bulk_create(
                 objs=objs,
