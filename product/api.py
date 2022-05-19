@@ -183,6 +183,7 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
             if not vehicle_queryset[1]:  # 수정
                 for color in vehicle_queryset[0].vehiclecolor_set.all():
                     color.soft_delete()
+                    color.save()
 
             color_bulk_create_list = VehicleColor.objects.bulk_create(
                 objs=[VehicleColor(vehicle=vehicle_queryset[0], **color) for color in vehicle_color_params],
