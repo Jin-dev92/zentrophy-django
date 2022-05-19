@@ -188,7 +188,7 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
                 objs=[VehicleColor(vehicle=vehicle_queryset[0], **color) for color in vehicle_color_params],
                 batch_size=vehicle_color_exceed)
 
-            for color in color_bulk_create_list:
+            for color in color_bulk_create_list:  # 로컬에서 에러 나지 않지만, 서버에서는 나서 넣은 코드. 디버그모드에서는 에러를 무시 하는 듯
                 color.save()
 
             for idx, color in enumerate(color_bulk_create_list):
