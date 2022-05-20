@@ -156,10 +156,10 @@ def get_vehicle_list(request):
 def get_vehicle_by_id(request, id: int):
     result = Vehicle.objects.get_queryset(id=id).prefetch_related(
         Prefetch(
-                 queryset=VehicleColor.objects.get_queryset().prefetch_related(
-                     Prefetch(lookup='vehicleimage_set', to_attr='vehicle_image')
-                 ),
-                 to_attr='vehicle_color')
+            queryset=VehicleColor.objects.get_queryset().prefetch_related(
+                Prefetch(lookup='vehicleimage_set', to_attr='vehicle_image')
+            ),
+            to_attr='vehicle_color')
     )
     return result
 
@@ -205,6 +205,5 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
 
 
 @vehicle_router.delete("/", description="모터사이클 삭제")
-def delete_vehicle(id: int):
-    queryset = get_object_or_404(Vehicle, id=id).soft_delete()
-    return queryset
+def delete_vehicle(request, id: int):
+    get_object_or_404(Vehicle, id=id).soft_delete()
