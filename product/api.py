@@ -183,7 +183,7 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
             if not vehicle_queryset[1]:  # 수정
                 for color in vehicle_queryset[0].vehiclecolor_set.all():
                     color.soft_delete()
-
+            print()
             color_bulk_create_list = VehicleColor.objects.bulk_create(
                 objs=[VehicleColor(vehicle=vehicle_queryset[0], **color) for color in vehicle_color_params],
                 batch_size=vehicle_color_exceed)
@@ -194,8 +194,6 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
             for idx, color in enumerate(color_bulk_create_list):
                 file_list = request.FILES.getlist('color_file_' + str(idx))
                 if file_list:
-                    # for image in file_list:
-                    #     VehicleImage.objects.create(vehicle_color=color, origin_image=image)
                     objs = [VehicleImage(vehicle_color=color, origin_image=image) for image in file_list]
                     VehicleImage.objects.bulk_create(objs=objs, batch_size=vehicle_image_exceed)
             # )  # 최대 25개 생성
