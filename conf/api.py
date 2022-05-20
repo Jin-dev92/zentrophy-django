@@ -23,7 +23,8 @@ from util.util import ORJSONParser
 
 # models & schema
 
-api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
+# api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
+api = NinjaAPI(parser=ORJSONParser(), csrf=False, auth=None)
 
 API_LIST = [
     {
