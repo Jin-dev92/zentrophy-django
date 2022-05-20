@@ -1,13 +1,11 @@
 # package
-from django.contrib.auth import logout, authenticate, login
-from django.contrib.auth.decorators import login_required
-from ninja import NinjaAPI, Form
+from ninja import NinjaAPI
 from ninja.security import django_auth
 
 # util
 from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
-    LoginRequiredException, AccessDeniedException, FormatNotSupportedException, WrongParameterException
+    LoginRequiredException, FormatNotSupportedException, WrongParameterException
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
 from member.api import router as member_router, payment_method_router
