@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from ninja import Schema, Field, UploadedFile
+from ninja import Schema, Field
 
 from product.constant import ProductOptionsLabel, ProductLabel
 
@@ -76,6 +76,7 @@ class VehicleColorSchema(Schema):
 
 
 class VehicleColorListSchema(Schema):
+    id: int
     color_name: str = Field(title="색 이름")
     sale_count: int = Field(default=0, title="판매 수량")
     stock_count: int = Field(default=0, title="재고 수량")
