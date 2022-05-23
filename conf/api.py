@@ -1,11 +1,13 @@
 # package
-from ninja import NinjaAPI
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from ninja import NinjaAPI, Form
 from ninja.security import django_auth
 
 # util
 from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
-    LoginRequiredException, FormatNotSupportedException, WrongParameterException
+    LoginRequiredException, FormatNotSupportedException, WrongParameterException, AccessDeniedException
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
 from member.api import router as member_router, payment_method_router
@@ -21,8 +23,8 @@ from util.util import ORJSONParser
 
 # models & schema
 
-# api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
-api = NinjaAPI(parser=ORJSONParser(), csrf=False, auth=None)
+api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
+# api = NinjaAPI(parser=ORJSONParser(), csrf=False, auth=None)
 
 API_LIST = [
     {
@@ -117,18 +119,20 @@ for item in API_LIST:
     api.add_router(prefix=item['prefix'], router=item['router'], tags=item['tags'])
 
 
-# @login_required
-# @api.get('/logout', description="로그 아웃")
-# def member_logout(request):
-#     logout(request)
+@login_required
+@api.get('/logout', description="로그 아웃")
+def member_logout(request):
+    logout(request)
+
+
 #
 #
-# @api.post("/login", description="로그인", auth=None)
-# def member_login(request, email: str = Form(...), password: str = Form(...)):
-#     user = authenticate(request, email=email, password=password)
-#     if user is None:
-#         raise AccessDeniedException
-#     login(request, user)
+@api.post("/login", description="로그인", auth=None)
+def member_login(request, email: str = Form(...), password: str = Form(...), token: str = Form(...)):
+    user = authenticate(request, email=email, password=password, access_token=token)
+    if user is None:
+        raise AccessDeniedException
+    login(request, user)
 
 
 @api.exception_handler(exc_class=RefuseMustHaveReasonException)

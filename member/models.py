@@ -36,19 +36,6 @@ class UserManager(BaseUserManager):
 
         return super_user
 
-    # def parameters_validation_check(self, **kwargs):
-    #     is_business = kwargs.get('is_business')
-    #     for kwarg in kwargs:
-    #         if kwarg == 'member_info_number':  # 멤버 번호 유효성 체크
-    #             length = len(''.join(char for char in kwargs[kwarg] if char not in '-'))  # - 제거
-    #             if is_business:
-    #                 if length != 10:
-    #                     raise WrongBusinessNumberException
-    #             else:
-    #                 if length != 8:
-    #                     raise WrongBirthNumberException
-    #     return kwargs
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
@@ -59,6 +46,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     address = models.CharField(max_length=200, blank=True)
     address_detail = models.CharField(max_length=200, blank=True)
     zipcode = models.CharField(max_length=20, blank=True)
+    access_token = models.CharField(max_length=200, blank=True)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)

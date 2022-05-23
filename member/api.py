@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
@@ -17,65 +18,65 @@ router = Router()
 payment_method_router = Router()
 
 
-# @login_required
-# @router.get("/", description="회원 목록", response=List[MemberListSchema])
-# def get_list_member(request, id: Optional[int] = None, email: Optional[str] = None, username: Optional[str] = None,
-#                     sort: MemberSort = None):
-#     params = prepare_for_query(request=request, exceptions=['sort'])
-#     field_name = 'date_joined'
-#     if sort == MemberSort.RECENT:
-#         field_name = '-date_joined'
-#     # if not has_permission(request):  # 어드민이 아니면
-#     #     params = {id: request.user.id}  # 위한 코드
-#     return User.objects.filter(**params).prefetch_related(
-#         Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
-#         Prefetch('paymentmethod_set', to_attr="payment_method")
-#     ).order_by(field_name)
-#
-#
-# # @login_required
-# @router.get('/{id}', description="id로 회원 찾기", response=List[MemberListSchema])
-# def get_member_by_id(request, id: int):
-#     queryset = User.objects.filter(id=id).prefetch_related(
-#         Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
-#         Prefetch('paymentmethod_set', to_attr="payment_method")
-#     )
-#     return queryset
-#
-#
-# @router.post("/", description="회원 생성", auth=None)
-# def create_user(request, payload: MemberInsertSchema = Form(...)):
-#     queryset = User.objects.create_user(**payload.dict())
-#     # return queryset
-#
-#
-# # @login_required
-# @router.put("/", description="회원 수정", auth=None)
-# def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
-#     if request.user == get_object_or_404(User, id=id):
-#         queryset = User.objects.filter(id=id).update(**payload.dict())
-#     else:
-#         raise UserNotAccessDeniedException
-#     return queryset
-#
-#
-# @router.delete("/", description="회원 삭제")
-# def delete_user(request, id: int):
-#     member = get_object_or_404(User, id=id)
-#     if request.user == member or has_permission(request):
-#         queryset = member.delete()
-#         return queryset
-#
-#
-# @router.get('/forgot', description="아이디 찾기", response=str)
-# def forgot_id(request, username: str = Form(...), phone_number: str = Form(...)):
-#     return get_object_or_404(User, username=username, phone_number=phone_number).email
-#
-#
-# @router.post('/forgot', description="비밀번호 재생성")
-# def forgot_pwd(request, payload: MemberReAssignSchema = Form(...)):
-#     user = get_object_or_404(User, username=payload.dict()['username'], email=payload.dict()['email'])
-#     user.set_password(payload.dict()['password'])
+@login_required
+@router.get("/", description="회원 목록", response=List[MemberListSchema])
+def get_list_member(request, id: Optional[int] = None, email: Optional[str] = None, username: Optional[str] = None,
+                    sort: MemberSort = None):
+    params = prepare_for_query(request=request, exceptions=['sort'])
+    field_name = 'date_joined'
+    if sort == MemberSort.RECENT:
+        field_name = '-date_joined'
+    # if not has_permission(request):  # 어드민이 아니면
+    #     params = {id: request.user.id}  # 위한 코드
+    return User.objects.filter(**params).prefetch_related(
+        Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
+        Prefetch('paymentmethod_set', to_attr="payment_method")
+    ).order_by(field_name)
+
+
+@login_required
+@router.get('/{id}', description="id로 회원 찾기", response=List[MemberListSchema])
+def get_member_by_id(request, id: int):
+    queryset = User.objects.filter(id=id).prefetch_related(
+        Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
+        Prefetch('paymentmethod_set', to_attr="payment_method")
+    )
+    return queryset
+
+
+@router.post("/", description="회원 생성", auth=None)
+def create_user(request, payload: MemberInsertSchema = Form(...)):
+    queryset = User.objects.create_user(**payload.dict())
+    # return queryset
+
+
+@login_required
+@router.put("/", description="회원 수정", auth=None)
+def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
+    if request.user == get_object_or_404(User, id=id):
+        queryset = User.objects.filter(id=id).update(**payload.dict())
+    else:
+        raise UserNotAccessDeniedException
+    return queryset
+
+
+@router.delete("/", description="회원 삭제")
+def delete_user(request, id: int):
+    member = get_object_or_404(User, id=id)
+    if request.user == member or has_permission(request):
+        queryset = member.delete()
+        return queryset
+
+
+@router.get('/forgot', description="아이디 찾기", response=str)
+def forgot_id(request, username: str = Form(...), phone_number: str = Form(...)):
+    return get_object_or_404(User, username=username, phone_number=phone_number).email
+
+
+@router.post('/forgot', description="비밀번호 재생성")
+def forgot_pwd(request, payload: MemberReAssignSchema = Form(...)):
+    user = get_object_or_404(User, username=payload.dict()['username'], email=payload.dict()['email'])
+    user.set_password(payload.dict()['password'])
 
 
 # @login_required
@@ -85,7 +86,7 @@ def get_payment_method(request):
     return queryset
 
 
-# @login_required
+@login_required
 @transaction.atomic(using='default')
 @payment_method_router.post('/', description="결제 수단 생성")
 def create_payment_method(request, id: int = None, payload: PaymentMethodInsertSchema = Form(...)):
