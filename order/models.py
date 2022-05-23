@@ -82,6 +82,8 @@ class CustomerInfo(TimeStampModel):
 
 
 class OrderLocationInfo(TimeStampModel):
-    address = models.CharField(max_length=100, null=True)
+    address_1 = models.CharField(max_length=100, null=True)
+    address_2 = models.CharField(max_length=100, null=True)
+    address_3 = models.CharField(max_length=100, null=True)
     detail = models.CharField(max_length=100, null=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

@@ -16,7 +16,9 @@ class CustomerInfo(Schema):
 
 
 class OrderLocationInfo(Schema):
-    address: str = None
+    address_1: str = None
+    address_2: str = None
+    address_3: str = None
     detail: str = None
 
 
