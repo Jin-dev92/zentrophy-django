@@ -46,7 +46,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     address = models.CharField(max_length=200, blank=True)
     address_detail = models.CharField(max_length=200, blank=True)
     zipcode = models.CharField(max_length=20, blank=True)
-    access_token = models.CharField(max_length=200, blank=True)
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
@@ -95,3 +94,16 @@ class Card(SoftDeleteModel):
             raise FormatNotSupportedException
         if validate_year < datetime.datetime.now().year:
             raise FormatNotSupportedException
+
+
+class RemoteToken(TimeStampModel):
+    user = models.OneToOneField('member.User', on_delete=models.CASCADE, null=True)
+    access_token = models.CharField(max_length=200, null=True)
+    token_type = models.CharField(max_length=100, default="Bearer")
+    refresh_token = models.CharField(max_length=200, null=True)
+
+    def __str__(self):
+        return self.access_token
+
+    def format(self):
+        pass

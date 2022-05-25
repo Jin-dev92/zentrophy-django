@@ -8,11 +8,11 @@ from ninja import Router, Form
 
 from conf.custom_exception import UserNotAccessDeniedException
 from member.constant import MemberSort
-from member.models import User, PaymentMethod, Card
+from member.models import User, PaymentMethod, Card, RemoteToken
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
     MemberReAssignSchema
 from util.params import prepare_for_query
-from util.permission import has_permission
+from util.permission import has_permission, get_access_token
 
 router = Router()
 payment_method_router = Router()
@@ -44,17 +44,26 @@ def get_member_by_id(request, id: int):
     return queryset
 
 
+@transaction.atomic(using='default')
 @router.post("/", description="회원 생성", auth=None)
 def create_user(request, payload: MemberInsertSchema = Form(...)):
-    queryset = User.objects.create_user(**payload.dict())
-    # return queryset
+    try:
+        member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
+        token_info_params = payload.dict().get('token_info')
+        user_queryset = User.objects.create_user(**member_params)
+        token_queryset = RemoteToken.objects.create(**token_info_params, user=member_params)
+    except Exception as e:
+        raise e
 
 
 @login_required
 @router.put("/", description="회원 수정", auth=None)
 def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
+    email: str = payload.dict()['email']
+    password: str = payload.dict()['password']
     if request.user == get_object_or_404(User, id=id):
-        queryset = User.objects.filter(id=id).update(**payload.dict())
+        queryset = User.objects.filter(id=id).update(**payload.dict(),
+                                                     access_token=get_access_token(email=email, password=password))
     else:
         raise UserNotAccessDeniedException
     return queryset

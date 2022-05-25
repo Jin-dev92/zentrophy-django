@@ -2,9 +2,13 @@ from datetime import datetime, date
 from typing import List
 
 from ninja import Schema, Field
-
-# from member.constant import CardCompany
 from product.schema import VehicleListSchema
+
+
+class TokenSchema(Schema):
+    access_token: str
+    token_type: str
+    refresh_token: str
 
 
 class MemberInsertSchema(Schema):
@@ -14,7 +18,7 @@ class MemberInsertSchema(Schema):
     address: str
     address_detail: str
     zipcode: str
-    # is_business: bool = False
+    token_info: TokenSchema
 
 
 class CardInsertSchema(Schema):

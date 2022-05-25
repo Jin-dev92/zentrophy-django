@@ -11,6 +11,7 @@ from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExce
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
 from member.api import router as member_router, payment_method_router
+from member.schema import TokenSchema
 from order.api import router as order_router, subside_router, file_router
 from placement.api import router as placement_router
 from post.api import faq_router, notice_router, faq_category_router
@@ -24,8 +25,6 @@ from util.util import ORJSONParser
 # models & schema
 
 api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
-# api = NinjaAPI(parser=ORJSONParser(), csrf=False, auth=None)
-
 API_LIST = [
     {
         'prefix': "/member/",
@@ -125,11 +124,9 @@ def member_logout(request):
     logout(request)
 
 
-#
-#
 @api.post("/login", description="로그인", auth=None)
-def member_login(request, email: str = Form(...), password: str = Form(...), token: str = Form(...)):
-    user = authenticate(request, email=email, password=password, access_token=token)
+def member_login(request, token_info: TokenSchema = Form(...), email: str = Form(...), password: str = Form(...)):
+    user = authenticate(request, email=email, password=password)
     if user is None:
         raise AccessDeniedException
     login(request, user)
