@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 
 from conf import settings
-from conf.custom_exception import AlreadyExistsException, FormatNotSupportedException
+from conf.custom_exception import AlreadyExistsException, FormatNotSupportedException, WrongTokenException
 # from member.constant import CardCompany
 from util.models import TimeStampModel, SoftDeleteModel
 
@@ -98,12 +98,14 @@ class Card(SoftDeleteModel):
 
 class RemoteToken(TimeStampModel):
     user = models.OneToOneField('member.User', on_delete=models.CASCADE, null=True)
-    access_token = models.CharField(max_length=200, null=True)
+    access_token = models.CharField(max_length=36, null=True)
     token_type = models.CharField(max_length=100, default="Bearer")
-    refresh_token = models.CharField(max_length=200, null=True)
+    refresh_token = models.CharField(max_length=36, null=True)
 
     def __str__(self):
         return self.access_token
 
-    def format(self):
-        pass
+    # def format(self):
+    #     if len(self.access_token) != 36 or len(self.refresh_token) != 36:
+    #         raise WrongTokenException
+    #     self.access_token.split(sep='-', maxsplit=4)

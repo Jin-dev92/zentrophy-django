@@ -7,7 +7,6 @@ from product.schema import VehicleListSchema
 
 class TokenSchema(Schema):
     access_token: str
-    token_type: str
     refresh_token: str
 
 

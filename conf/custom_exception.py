@@ -50,6 +50,14 @@ class WrongParameterException(Exception):
     pass
 
 
+class WrongUserInfoException(Exception):
+    pass
+
+
+class WrongTokenException(Exception):
+    pass
+
+
 class FormatNotSupportedException(Exception):
     pass
 

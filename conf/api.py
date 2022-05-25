@@ -7,10 +7,12 @@ from ninja.security import django_auth
 # util
 from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
-    LoginRequiredException, FormatNotSupportedException, WrongParameterException, AccessDeniedException
+    LoginRequiredException, FormatNotSupportedException, WrongParameterException, AccessDeniedException, \
+    WrongUserInfoException, WrongTokenException
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
 from member.api import router as member_router, payment_method_router
+from member.models import RemoteToken
 from member.schema import TokenSchema
 from order.api import router as order_router, subside_router, file_router
 from placement.api import router as placement_router
@@ -19,9 +21,9 @@ from product.api import display_line_router as display_line_router
 from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
-    FORMAT_NOT_SUPPORTED, WRONG_PARAMETER
+    FORMAT_NOT_SUPPORTED, WRONG_PARAMETER, WRONG_TOKEN, WRONG_USER_INFO
 from util.util import ORJSONParser
-
+from util.permission import is_valid_token
 # models & schema
 
 api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
@@ -128,7 +130,15 @@ def member_logout(request):
 def member_login(request, token_info: TokenSchema = Form(...), email: str = Form(...), password: str = Form(...)):
     user = authenticate(request, email=email, password=password)
     if user is None:
-        raise AccessDeniedException
+        raise WrongUserInfoException
+    try:
+        RemoteToken.objects.get(
+            user=user,
+            access_token=is_valid_token(token_info.access_token),
+            refresh_token=is_valid_token(token_info.refresh_token),
+        )
+    except Exception as e:
+        raise WrongTokenException
     login(request, user)
 
 
@@ -160,3 +170,13 @@ def format_not_supported_exception_handler(request, exec):
 def wrong_parameter_exception_handler(request, exec):
     return api.create_response(request, data={'code': WRONG_PARAMETER['code'],
                                               'desc': WRONG_PARAMETER['desc']})
+
+@api.exception_handler(exc_class=WrongTokenException)
+def wrong_token_exception_handler(request, exec):
+    return api.create_response(request, data={'code': WRONG_TOKEN['code'],
+                                              'desc': WRONG_TOKEN['desc']})
+
+@api.exception_handler(exc_class=WrongUserInfoException)
+def wrong_user_info_exception_handler(request, exec):
+    return api.create_response(request, data={'code': WRONG_USER_INFO['code'],
+                                              'desc': WRONG_USER_INFO['desc']})

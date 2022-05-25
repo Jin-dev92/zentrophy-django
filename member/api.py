@@ -12,7 +12,7 @@ from member.models import User, PaymentMethod, Card, RemoteToken
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
     MemberReAssignSchema
 from util.params import prepare_for_query
-from util.permission import has_permission, get_access_token
+from util.permission import has_permission, is_valid_token
 
 router = Router()
 payment_method_router = Router()
@@ -51,7 +51,11 @@ def create_user(request, payload: MemberInsertSchema = Form(...)):
         member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
         token_info_params = payload.dict().get('token_info')
         user_queryset = User.objects.create_user(**member_params)
-        token_queryset = RemoteToken.objects.create(**token_info_params, user=member_params)
+        token_queryset = RemoteToken.objects.create(
+            user=user_queryset,
+            access_token=is_valid_token(token_info_params['access_token']),
+            refresh_token=is_valid_token(token_info_params['refresh_token']),
+        )
     except Exception as e:
         raise e
 
@@ -62,8 +66,7 @@ def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
     email: str = payload.dict()['email']
     password: str = payload.dict()['password']
     if request.user == get_object_or_404(User, id=id):
-        queryset = User.objects.filter(id=id).update(**payload.dict(),
-                                                     access_token=get_access_token(email=email, password=password))
+        queryset = User.objects.filter(id=id).update(**payload.dict())
     else:
         raise UserNotAccessDeniedException
     return queryset

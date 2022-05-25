@@ -42,3 +42,11 @@ WRONG_PARAMETER = {
     'code': 4000006,
     'desc': "잘못된 파라미터 입니다. 데이터를 확인하세요"
 }
+WRONG_TOKEN = {
+    'code': 4010001,
+    'desc': "잘못된 토큰 입니다. 데이터를 확인하세요"
+}
+WRONG_USER_INFO = {
+    'code': 4010002,
+    'desc': "아이디 혹은 비밀번호가 틀립니다."
+}
