@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 
 # class CardCompany(models.TextChoices):
@@ -17,3 +17,7 @@ from enum import Enum
 class MemberSort(Enum):
     RECENT = 'recent'
     LATER = 'later'
+
+
+class RemoteTokenType(IntEnum):
+    BEARER = 0

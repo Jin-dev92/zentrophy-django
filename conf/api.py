@@ -1,6 +1,8 @@
 # package
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+
 from ninja import NinjaAPI, Form
 from ninja.security import django_auth
 
@@ -14,6 +16,7 @@ from history.api import after_service_router as after_service_router, refund_rou
 from member.api import router as member_router, payment_method_router
 from member.models import RemoteToken
 from member.schema import TokenSchema
+from member.constant import RemoteTokenType
 from order.api import router as order_router, subside_router, file_router
 from placement.api import router as placement_router
 from post.api import faq_router, notice_router, faq_category_router
@@ -22,8 +25,10 @@ from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
     FORMAT_NOT_SUPPORTED, WRONG_PARAMETER, WRONG_TOKEN, WRONG_USER_INFO
-from util.util import ORJSONParser
 from util.permission import is_valid_token
+from util.util import ORJSONParser
+
+
 # models & schema
 
 api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
@@ -132,13 +137,15 @@ def member_login(request, token_info: TokenSchema = Form(...), email: str = Form
     if user is None:
         raise WrongUserInfoException
     try:
-        RemoteToken.objects.get(
-            user=user,
-            access_token=is_valid_token(token_info.access_token),
-            refresh_token=is_valid_token(token_info.refresh_token),
-        )
+        if user.remotetoken.refresh_token and user.remotetoken.access_token:
+            get_object_or_404(RemoteToken,
+                              user=user,
+                              access_token=is_valid_token(token_info.access_token),
+                              refresh_token=is_valid_token(token_info.refresh_token),
+                              )
     except Exception as e:
-        raise WrongTokenException
+        RemoteToken.objects.create(access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token), token_type=RemoteTokenType)
+
     login(request, user)
 
 

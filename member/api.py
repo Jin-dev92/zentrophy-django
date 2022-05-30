@@ -30,7 +30,7 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
     #     params = {id: request.user.id}  # 위한 코드
     return User.objects.filter(**params).prefetch_related(
         Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
-        Prefetch('paymentmethod_set', to_attr="payment_method")
+        Prefetch('paymentmethod_set', to_attr="payment_method"),
     ).order_by(field_name)
 
 
@@ -49,12 +49,14 @@ def get_member_by_id(request, id: int):
 def create_user(request, payload: MemberInsertSchema = Form(...)):
     try:
         member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
-        token_info_params = payload.dict().get('token_info')
+        # token_info_params = payload.dict().get('token_info')
         user_queryset = User.objects.create_user(**member_params)
         token_queryset = RemoteToken.objects.create(
             user=user_queryset,
-            access_token=is_valid_token(token_info_params['access_token']),
-            refresh_token=is_valid_token(token_info_params['refresh_token']),
+            access_token=None,
+            refresh_token=None,
+            # access_token=is_valid_token(token_info_params['access_token']),
+            # refresh_token=is_valid_token(token_info_params['refresh_token']),
         )
     except Exception as e:
         raise e
@@ -64,13 +66,13 @@ def create_user(request, payload: MemberInsertSchema = Form(...)):
 @router.put("/", description="회원 수정", auth=None)
 def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
     member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
-    token_info : dict = payload.dict().get('token_info')
+    # token_info : dict = payload.dict().get('token_info')
     target = get_object_or_404(User, id=id)
     if request.user == target:
         user_queryset = User.objects.filter(id=id).update(**member_params)
-        target.remotetoken.access_token = token_info.get('access_token')
-        target.remotetoken.refresh_token = token_info.get('refresh_token')
-        target.remotetoken.save(update_fields=['access_token', 'refresh_token'])
+        # target.remotetoken.access_token = token_info.get('access_token')
+        # target.remotetoken.refresh_token = token_info.get('refresh_token')
+        # target.remotetoken.save(update_fields=['access_token', 'refresh_token'])
     else:
         raise UserNotAccessDeniedException
 

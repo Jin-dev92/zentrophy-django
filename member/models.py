@@ -99,7 +99,7 @@ class Card(SoftDeleteModel):
 class RemoteToken(TimeStampModel):
     user = models.OneToOneField('member.User', on_delete=models.CASCADE, null=True)
     access_token = models.CharField(max_length=36, null=True)
-    token_type = models.CharField(max_length=100, default="Bearer")
+    token_type = models.CharField(max_length=100, null=True)
     refresh_token = models.CharField(max_length=36, null=True)
 
     def __str__(self):

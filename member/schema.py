@@ -2,12 +2,15 @@ from datetime import datetime, date
 from typing import List
 
 from ninja import Schema, Field
+
+from member.constant import RemoteTokenType
 from product.schema import VehicleListSchema
 
 
 class TokenSchema(Schema):
     access_token: str
     refresh_token: str
+    token_type: RemoteTokenType = RemoteTokenType.BEARER
 
 
 class MemberInsertSchema(Schema):
@@ -17,7 +20,7 @@ class MemberInsertSchema(Schema):
     address: str
     address_detail: str
     zipcode: str
-    token_info: TokenSchema
+    # token_info: TokenSchema
 
 
 class CardInsertSchema(Schema):
