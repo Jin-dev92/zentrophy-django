@@ -10,7 +10,7 @@ from product.schema import VehicleListSchema
 class TokenSchema(Schema):
     access_token: str
     refresh_token: str
-    token_type: RemoteTokenType = RemoteTokenType.BEARER
+    token_type: str = "Bearer"
 
 
 class MemberInsertSchema(Schema):

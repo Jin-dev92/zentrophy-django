@@ -144,7 +144,7 @@ def member_login(request, token_info: TokenSchema = Form(...), email: str = Form
                               refresh_token=is_valid_token(token_info.refresh_token),
                               )
     except Exception as e:
-        RemoteToken.objects.create(access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token), token_type=RemoteTokenType)
+        RemoteToken.objects.create(access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
 
     login(request, user)
 
