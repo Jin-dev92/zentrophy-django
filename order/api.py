@@ -12,6 +12,7 @@ from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
     OrderLocationInfo, CustomerInfo
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
+from product.models import ProductOptions, VehicleColor
 
 router = Router()
 subside_router = Router()
@@ -65,7 +66,8 @@ def create_order(request, payload: OrderCreateSchema):
             order_params['owner'] = request.user
             order_location_info_params = params['order_location_info']
             customer_info_params = params['customer_info']
-            order_queryset = Order.objects.create(**order_params)
+
+            order_queryset = Order.objects.create(**order_params)  # 주문 생성
             if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
                 order_queryset.extra_subside.add(
                     *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
@@ -76,14 +78,32 @@ def create_order(request, payload: OrderCreateSchema):
                             OrderedProductOptions(**ordered_po) for ordered_po in
                             params['ordered_product_options']]
                     )
+
                 )
+                for po in params['ordered_product_options']:    # 주문 생성 시 판매량, 재고량 조절
+                    po_target = get_object_or_404(ProductOptions, id=po.product_options_id)
+                    if po.amount > po_target.stock_count:
+                        raise Exception(str(po_target.stock_count))
+                    po_target.sale_count = po_target.sale_count + 1
+                    po_target.stock_count = po_target.stock_count + 1
+                    po_target.save(update_fields=['sale_count', 'stock_count'])
+
             if params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
                 order_queryset.ordered_vehicle_color.add(
                     *OrderedVehicleColor.objects.bulk_create(
                         objs=[OrderedVehicleColor(**ordered_vc) for ordered_vc in params['ordered_vehicle_color']])
                 )
+                for vc in params['ordered_vehicle_color']:  # 주문 생성시 판매량, 재고량 조절
+                    vc_target = get_object_or_404(VehicleColor, id=vc.vehicle_color_id)
+                    if po.amount > vc_target.stock_count:
+                        raise Exception(str(vc_target.stock_count))
+                    vc_target.sale_count = vc_target.sale_count + 1
+                    vc_target.stock_count = vc_target.stock_count + 1
+                    vc_target.save(update_fields=['sale_count', 'stock_count'])
+
             OrderLocationInfo.objects.create(**order_location_info_params, order=order_queryset)
             CustomerInfo.objects.create(**customer_info_params, order=order_queryset)
+
     except Exception:
         raise WrongParameterException
 
@@ -105,8 +125,8 @@ def modify_order(request, id: int):
 @login_required
 @router.delete('/', description="주문 삭제")
 def delete_order_list_by_id(request, id: int):
-    queryset = get_object_or_404(Order, id=id).soft_delete()
-    return queryset
+    target = get_object_or_404(Order, id=id)
+    queryset = target.soft_delete()
 
 
 @login_required
@@ -164,4 +184,3 @@ def upload_files(request, order_id: int, files: List[UploadedFile]):
 @file_router.delete('/', description="계획서 및 보조금 신청서 삭제")
 def delete_files(request, id: int):
     queryset = get_object_or_404(DocumentFile, id=id).delete()
-    return queryset
