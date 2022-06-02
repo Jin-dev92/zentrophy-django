@@ -53,8 +53,8 @@ class OrderListSchema(Schema):
 
 
 class OrderCreateSchema(Schema):
-    ordered_product_options: List[OrderedProductOptionsSchema] = None
-    ordered_vehicle_color: List[OrderedVehicleColorSchema] = None
+    ordered_product_options: List[OrderedProductOptionsSchema] = Field(default=None, description="주문할 상품 옵션 > 해당 사항 없으면 보내지 마세요")
+    ordered_vehicle_color: List[OrderedVehicleColorSchema] = Field(default=None, description="주문할 모터 사이클 색깔 > 해당 사항 없으면 보내지 마세요")
     customer_info: CustomerInfo = None
     order_location_info: OrderLocationInfo = None
     subside: bool = Field(default=False, description="기본 보조금 여부")
