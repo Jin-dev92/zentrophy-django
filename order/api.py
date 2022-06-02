@@ -54,8 +54,10 @@ def get_order_list_by_id(request, id: int):
 @transaction.atomic(using='default')
 @router.post('/', description="주문 생성")
 def create_order(request, payload: OrderCreateSchema):
-    if str(request.user) == 'AnonymousUser':  # @todo 디버그 모드 on 일때 에러 방지.
-        raise LoginRequiredException
+    print(request.user)
+    raise Exception("test")
+    # if str(request.user) == 'AnonymousUser':  # @todo 디버그 모드 on 일때 에러 방지.
+    #     raise LoginRequiredException
     try:
         with transaction.atomic():
             params = payload.dict()
