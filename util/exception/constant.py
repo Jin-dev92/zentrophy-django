@@ -14,7 +14,6 @@ WRONG_BUSINESS_NUMBER = '잘못된 사업자 번호 입니다.'
 WRONG_BIRTH_NUMBER = '잘못된 생년월일 입니다.'
 ACCESS_DENIED = '이메일 혹은 비밀번호가 틀립니다.'
 # product
-CANT_SALE_STOCK_COUNT_IS_ZERO = "재고량이 없어 판매할 수 없습니다."
 CANT_CHANGE_ORDER_STATE = "변경 하려는 주문 상태와 db 내 주문 상태가 같습니다."
 CANT_APPLY_PERIOD_PAYMENT = '정기 결제 에는 적용할 수 없습니다.'
 MUST_HAVE_SPLIT_WORD = "옵션 구분 문자를 섞어 주세요. 옵션 구분 문자는 {split}입니다. ex)상품명{split}옵션명".format(split=settings.OPTION_SPLIT)
@@ -41,6 +40,10 @@ FORMAT_NOT_SUPPORTED = {
 WRONG_PARAMETER = {
     'code': 4000006,
     'desc': "잘못된 파라미터 입니다. 데이터를 확인하세요"
+}
+NOT_ENOUGH_STOCK = {
+    'code': 4000007,
+    'desc': "재고량이 부족합니다."
 }
 WRONG_TOKEN = {
     'code': 4010001,

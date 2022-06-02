@@ -6,7 +6,7 @@ class UserNotAccessDeniedException(Exception):
     pass
 
 
-class NotEnoughProductsException(Exception):
+class NotEnoughStockException(Exception):
     pass
 
 

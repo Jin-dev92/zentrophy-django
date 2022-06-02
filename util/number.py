@@ -15,3 +15,11 @@ def generate_random_number(length: int = LICENSE_NUMBER_LENGTH):  # 2. A/S ì ‘ìˆ
         return registration_number
     else:
         generate_random_number()
+
+
+def check_invalid_product_params(params: list[dict]):
+    for param in params:
+        filtered_dict = {k: v for k, v in param.items() if not v <= 0}
+        if len(filtered_dict) == 0:
+            return False
+    return True

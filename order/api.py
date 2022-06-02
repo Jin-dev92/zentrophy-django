@@ -7,12 +7,14 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
 
-from conf.custom_exception import AlreadyExistsException, LoginRequiredException, WrongParameterException
+from conf.custom_exception import AlreadyExistsException, LoginRequiredException, WrongParameterException, \
+    NotEnoughStockException
 from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
     OrderLocationInfo, CustomerInfo
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
 from product.models import ProductOptions, VehicleColor
+from util.number import check_invalid_product_params
 
 router = Router()
 subside_router = Router()
@@ -73,7 +75,10 @@ def create_order(request, payload: OrderCreateSchema):
             if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
                 order_queryset.extra_subside.add(
                     *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
+
             if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
+                if not check_invalid_product_params(params['ordered_product_options']):     # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
+                    raise WrongParameterException
                 order_queryset.ordered_product_options.add(
                     *OrderedProductOptions.objects.bulk_create(
                         objs=[
@@ -83,31 +88,48 @@ def create_order(request, payload: OrderCreateSchema):
 
                 )
                 for po in params['ordered_product_options']:    # 주문 생성 시 판매량, 재고량 조절
-                    po_target = get_object_or_404(ProductOptions, id=po.product_options_id)
-                    if po.amount > po_target.stock_count:
-                        raise Exception(str(po_target.stock_count))
-                    po_target.sale_count = po_target.sale_count + 1
-                    po_target.stock_count = po_target.stock_count + 1
+                    po_target = get_object_or_404(ProductOptions, id=po.get('product_options_id'))
+                    if po.get('amount') > po_target.stock_count:
+                        raise NotEnoughStockException
+                    po_target.sale_count = po_target.sale_count + po.get('amount')
+                    po_target.stock_count = po_target.stock_count - po.get('amount')
                     po_target.save(update_fields=['sale_count', 'stock_count'])
-
-            if params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
+            elif params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
+                if not check_invalid_product_params(params['ordered_vehicle_color']): # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
+                    raise WrongParameterException
                 order_queryset.ordered_vehicle_color.add(
                     *OrderedVehicleColor.objects.bulk_create(
                         objs=[OrderedVehicleColor(**ordered_vc) for ordered_vc in params['ordered_vehicle_color']])
                 )
                 for vc in params['ordered_vehicle_color']:  # 주문 생성시 판매량, 재고량 조절
-                    vc_target = get_object_or_404(VehicleColor, id=vc.vehicle_color_id)
-                    if po.amount > vc_target.stock_count:
-                        raise Exception(str(vc_target.stock_count))
-                    vc_target.sale_count = vc_target.sale_count + 1
-                    vc_target.stock_count = vc_target.stock_count + 1
+                    vc_target = get_object_or_404(VehicleColor, id=vc.get('vehicle_color_id'))
+                    if vc.get('amount') > vc_target.stock_count:
+                        raise NotEnoughStockException
+                    vc_target.sale_count = vc_target.sale_count + vc.get('amount')
+                    vc_target.stock_count = vc_target.stock_count - vc.get('amount')
                     vc_target.save(update_fields=['sale_count', 'stock_count'])
+            else:
+                raise WrongParameterException
+            # if params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
+            #     if not check_invalid_product_params(params['ordered_vehicle_color']): # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
+            #         raise WrongParameterException
+            #     order_queryset.ordered_vehicle_color.add(
+            #         *OrderedVehicleColor.objects.bulk_create(
+            #             objs=[OrderedVehicleColor(**ordered_vc) for ordered_vc in params['ordered_vehicle_color']])
+            #     )
+            #     for vc in params['ordered_vehicle_color']:  # 주문 생성시 판매량, 재고량 조절
+            #         vc_target = get_object_or_404(VehicleColor, id=vc.get('vehicle_color_id'))
+            #         if vc.get('amount') > vc_target.stock_count:
+            #             raise NotEnoughStockException
+            #         vc_target.sale_count = vc_target.sale_count + vc.get('amount')
+            #         vc_target.stock_count = vc_target.stock_count - vc.get('amount')
+            #         vc_target.save(update_fields=['sale_count', 'stock_count'])
 
             OrderLocationInfo.objects.create(**order_location_info_params, order=order_queryset)
             CustomerInfo.objects.create(**customer_info_params, order=order_queryset)
 
-    except Exception:
-        raise WrongParameterException
+    except Exception as e:
+        raise e
 
 
 @login_required
