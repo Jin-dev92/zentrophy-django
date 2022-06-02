@@ -44,11 +44,13 @@ def get_order_list(request):
 @login_required
 @router.get('/{id}', description="주문 id로 검색", response=List[OrderListSchema])
 def get_order_list_by_id(request, id: int):
-    queryset = Order.objects.get_queryset(id=id).select_related('owner').prefetch_related(
+    queryset = Order.objects.get_queryset(id=id).prefetch_related(
         'extra_subside',
         'ordered_product_options',
         'ordered_vehicle_color',
-        Prefetch('documentfile_set', to_attr="files"))
+        Prefetch('customerinfo_set', to_attr="customer_info"),
+        Prefetch('orderlocationinfo_set', to_attr="order_location_info"),
+        Prefetch('documentfile_set', to_attr="files")).select_related('owner')
     return queryset
 
 
