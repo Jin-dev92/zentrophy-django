@@ -77,6 +77,7 @@ class CustomerInfo(TimeStampModel):
     birth = models.DateField(null=True)
     tel: str = models.CharField(max_length=20, null=True)
     email = models.EmailField(max_length=100)
+    is_business = models.BooleanField(default=False)
     is_apply_subside = models.BooleanField(default=False)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
 

@@ -12,6 +12,7 @@ class CustomerInfo(Schema):
     birth: date = None
     tel: str = None
     email: str = None
+    is_business: bool = False
     is_apply_subside: bool = False
 
 
