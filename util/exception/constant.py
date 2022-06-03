@@ -25,31 +25,39 @@ DISPLAY_LINE_DONT_EXCEEDED_SIZE = {
 # history
 REFUSE_MUST_HAVE_REASON = {
     'code': 4000002,
-    'desc': "Status가 {}인경우 반드시 거절 이유(reject_reason)가 포함 되어야 합니다.".format(RefundStatus.REFUSE)
+    'desc': "Status가 {}인경우 반드시 거절 이유(reject_reason)가 포함 되어야 합니다.".format(RefundStatus.REFUSE),
+    'status': 400
 }
 
 DB_UNIQUE_CONSTRAINT = {
     'code': 4000003,
-    'desc': "유니크 키 조건에 위배 되는 값 입니다."
+    'desc': "유니크 키 조건에 위배 되는 값 입니다.",
+    'status': 400
+
 }
 FORMAT_NOT_SUPPORTED = {
     'code': 4000005,
-    'desc': "지원 하지 않는 값 입니다. 데이터를 확인하세요"
+    'desc': "지원 하지 않는 값 입니다. 데이터를 확인하세요",
+    'status': 400
 }
 
 WRONG_PARAMETER = {
     'code': 4000006,
-    'desc': "잘못된 파라미터 입니다. 데이터를 확인하세요"
+    'desc': "잘못된 파라미터 입니다. 데이터를 확인하세요",
+    'status': 400
 }
 NOT_ENOUGH_STOCK = {
     'code': 4000007,
-    'desc': "재고량이 부족합니다."
+    'desc': "재고량이 부족합니다.",
+    'status': 400
 }
 WRONG_TOKEN = {
     'code': 4010001,
-    'desc': "잘못된 토큰 입니다. 데이터를 확인하세요"
+    'desc': "잘못된 토큰 입니다. 데이터를 확인하세요",
+    'status': 401
 }
 WRONG_USER_INFO = {
     'code': 4010002,
-    'desc': "아이디 혹은 비밀번호가 틀립니다."
+    'desc': "아이디 혹은 비밀번호가 틀립니다.",
+    'status': 401
 }

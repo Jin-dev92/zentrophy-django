@@ -12,15 +12,11 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import datetime
 import os
 from pathlib import Path
-
 from conf.contant import Env
 
-# ENV = Env.DEVELOPMENT
-ENV = Env.DEVELOPMENT
-
+ENV = Env.PRODUCTION
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
@@ -29,15 +25,13 @@ SECRET_KEY = 'django-insecure-plug1-6zblo)q^z1n2mjdiws96now4r!=l2@&0o$=82dxs3@^2
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = ENV is Env.DEVELOPMENT
-# DEBUG = False
 ALLOWED_URL_LIST = ['.pythonanywhere.com']
-# CORS_ORIGIN_WHITELIST = ['http://localhost:8080']
-CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ALLOW_CREDENTIALS = True
 
 if DEBUG:
     ALLOWED_HOSTS = ['*']
-    CORS_ORIGIN_ALLOW_ALL = True
 else:
     ALLOWED_HOSTS = [url for url in ALLOWED_URL_LIST]
     CORS_ORIGIN_WHITELIST = ['http://localhost:8080']

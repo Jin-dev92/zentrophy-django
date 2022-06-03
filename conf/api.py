@@ -152,43 +152,68 @@ def member_login(request, token_info: TokenSchema = Form(...), email: str = Form
 @api.exception_handler(exc_class=RefuseMustHaveReasonException)
 def refuse_must_have_reason_exception_handler(request, exec):
     return api.create_response(request,
-                               data={'code': REFUSE_MUST_HAVE_REASON['code'], 'desc': REFUSE_MUST_HAVE_REASON['desc']})
+                               data={'code': REFUSE_MUST_HAVE_REASON['code'], 'desc': REFUSE_MUST_HAVE_REASON['desc']},
+                               status=REFUSE_MUST_HAVE_REASON['status'])
 
 
 @api.exception_handler(exc_class=DisplayLineExceededSizeException)
 def refuse_must_have_reason_exception_handler(request, exec):
-    return api.create_response(request, data={'code': DISPLAY_LINE_DONT_EXCEEDED_SIZE['code'],
-                                              'desc': DISPLAY_LINE_DONT_EXCEEDED_SIZE['desc']})
+    return api.create_response(request,
+                               data={'code': DISPLAY_LINE_DONT_EXCEEDED_SIZE['code'],
+                                     'desc': DISPLAY_LINE_DONT_EXCEEDED_SIZE['desc']},
+                               status=DISPLAY_LINE_DONT_EXCEEDED_SIZE['status']
+                               )
 
 
 @api.exception_handler(exc_class=LoginRequiredException)
 def login_required_exception_handler(request, exec):
-    return api.create_response(request, data={'code': LOGIN_REQUIRED['code'],
-                                              'desc': LOGIN_REQUIRED['desc']})
+    return api.create_response(request,
+                               data={'code': LOGIN_REQUIRED['code'],
+                                     'desc': LOGIN_REQUIRED['desc']},
+                               status=LOGIN_REQUIRED['status']
+                               )
 
 
 @api.exception_handler(exc_class=FormatNotSupportedException)
 def format_not_supported_exception_handler(request, exec):
-    return api.create_response(request, data={'code': FORMAT_NOT_SUPPORTED['code'],
-                                              'desc': FORMAT_NOT_SUPPORTED['desc']})
+    return api.create_response(request,
+                               data={'code': FORMAT_NOT_SUPPORTED['code'],
+                                     'desc': FORMAT_NOT_SUPPORTED['desc']},
+                               status=FORMAT_NOT_SUPPORTED['status']
+                               )
 
 
 @api.exception_handler(exc_class=WrongParameterException)
 def wrong_parameter_exception_handler(request, exec):
-    return api.create_response(request, data={'code': WRONG_PARAMETER['code'],
-                                              'desc': WRONG_PARAMETER['desc']})
+    return api.create_response(request,
+                               data={'code': WRONG_PARAMETER['code'],
+                                     'desc': WRONG_PARAMETER['desc']},
+                               status=WRONG_PARAMETER['status']
+                               )
+
 
 @api.exception_handler(exc_class=WrongTokenException)
 def wrong_token_exception_handler(request, exec):
-    return api.create_response(request, data={'code': WRONG_TOKEN['code'],
-                                              'desc': WRONG_TOKEN['desc']})
+    return api.create_response(request,
+                               data={'code': WRONG_TOKEN['code'],
+                                     'desc': WRONG_TOKEN['desc']},
+                               status=WRONG_TOKEN['status']
+                               )
+
 
 @api.exception_handler(exc_class=WrongUserInfoException)
 def wrong_user_info_exception_handler(request, exec):
-    return api.create_response(request, data={'code': WRONG_USER_INFO['code'],
-                                              'desc': WRONG_USER_INFO['desc']})
+    return api.create_response(request,
+                               data={'code': WRONG_USER_INFO['code'],
+                                     'desc': WRONG_USER_INFO['desc']},
+                               status=WRONG_USER_INFO['status']
+                               )
+
 
 @api.exception_handler(exc_class=NotEnoughStockException)
 def wrong_user_info_exception_handler(request, exec):
-    return api.create_response(request, data={'code': NOT_ENOUGH_STOCK['code'],
-                                              'desc': NOT_ENOUGH_STOCK['desc']})
+    return api.create_response(request,
+                               data={'code': NOT_ENOUGH_STOCK['code'],
+                                     'desc': NOT_ENOUGH_STOCK['desc']},
+                               status=NOT_ENOUGH_STOCK['status']
+                               )
