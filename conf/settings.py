@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 from conf.contant import Env
 
-ENV = Env.PRODUCTION
+ENV = Env.DEVELOPMENT
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production

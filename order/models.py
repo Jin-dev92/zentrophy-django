@@ -88,3 +88,7 @@ class OrderLocationInfo(TimeStampModel):
     address_3 = models.CharField(max_length=100, null=True)
     detail = models.CharField(max_length=100, null=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
+
+
+class DocumentFormat(TimeStampModel, SoftDeleteModel):
+    file = models.FileField(upload_to="order/%Y/%M")

@@ -1,8 +1,10 @@
 from typing import List
 
 from django.contrib.auth.decorators import login_required
+from django.core.files.storage import FileSystemStorage
 from django.db import transaction
 from django.db.models import Prefetch
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
@@ -11,8 +13,9 @@ from conf.custom_exception import AlreadyExistsException, LoginRequiredException
     NotEnoughStockException
 from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
-    OrderLocationInfo, CustomerInfo
-from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema
+    OrderLocationInfo, CustomerInfo, DocumentFormat
+from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
+    DocumentFormatListSchema
 from product.models import ProductOptions, VehicleColor
 from util.number import check_invalid_product_params
 
@@ -208,3 +211,34 @@ def upload_files(request, order_id: int, files: List[UploadedFile]):
 @file_router.delete('/', description="계획서 및 보조금 신청서 삭제")
 def delete_files(request, id: int):
     queryset = get_object_or_404(DocumentFile, id=id).delete()
+
+
+# @login_required
+# @file_router.get('/format', description="보조금 신청서 포맷 다운 로드")
+# def download_format_files(request, id: int):
+#     target = get_object_or_404(DocumentFormat, id=id)
+#     fs = FileSystemStorage(target.file.path)
+#     response = FileResponse(fs.open(target.file.path))
+#     response['Content-Disposition'] = f'attachment; filename={target.file.name}'
+#     print(request)
+    # return response
+
+
+@login_required
+@file_router.get('/format', description="보조금 신청서 포맷 리스트", response=List[DocumentFormatListSchema])
+def get_format_list(request):
+    queryset = DocumentFormat.objects.get_queryset()
+    return queryset
+
+
+@login_required
+@file_router.post('/format', description="보조금 신청서 포맷 업로드")
+def upload_format_files(request, file: UploadedFile):
+    queryset = DocumentFormat.objects.create(file=file)
+
+
+@login_required
+@file_router.delete('/format', description="보조금 신청서 포맷 삭제")
+def delete_format_files(request, id: int):
+    target = get_object_or_404(DocumentFormat, id=id)
+    queryset = target.soft_delete()

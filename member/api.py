@@ -63,16 +63,13 @@ def create_user(request, payload: MemberInsertSchema = Form(...)):
 
 
 @login_required
-@router.put("/", description="회원 수정", auth=None)
+@router.put("/", description="회원 수정")
 def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
     member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
     # token_info : dict = payload.dict().get('token_info')
     target = get_object_or_404(User, id=id)
     if request.user == target:
         user_queryset = User.objects.filter(id=id).update(**member_params)
-        # target.remotetoken.access_token = token_info.get('access_token')
-        # target.remotetoken.refresh_token = token_info.get('refresh_token')
-        # target.remotetoken.save(update_fields=['access_token', 'refresh_token'])
     else:
         raise UserNotAccessDeniedException
 

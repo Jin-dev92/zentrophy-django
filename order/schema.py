@@ -87,3 +87,8 @@ class SubsideListSchema(Schema):
 class SubsideInsertSchema(Schema):
     amount: int = 0
     extra: List[ExtraSubsideInsertSchema] = None
+
+
+class DocumentFormatListSchema(Schema):
+    id: int
+    file: str = None
