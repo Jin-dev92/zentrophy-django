@@ -21,5 +21,7 @@ def check_invalid_product_params(params: list[dict]):
     for param in params:
         filtered_dict = {k: v for k, v in param.items() if not v <= 0}
         if len(filtered_dict) == 0:
+            print("check_invalid_product_params")
+            print(filtered_dict)
             return False
     return True

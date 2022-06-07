@@ -35,6 +35,8 @@ class ProductOptionsListSchema(Schema):
                              title="옵션 이름")  # 옵션 이름
     stock_count: int = Field(default=0,
                              title="재고 수량")  # 재고 수량
+    sale_count: int = Field(default=0,
+                             title="판매량")  # 재고 수량
     option_description: str = Field(default=None,
                                     title="옵션 설명")  # 옵션 설명
     is_apply: bool = Field(default=False,

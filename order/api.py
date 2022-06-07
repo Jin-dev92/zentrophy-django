@@ -78,10 +78,11 @@ def create_order(request, payload: OrderCreateSchema):
             if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
                 order_queryset.extra_subside.add(
                     *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
-
             if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
                 if not check_invalid_product_params(params['ordered_product_options']):     # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
                     raise WrongParameterException
+                print("product")
+                print(params['ordered_product_options'])
                 order_queryset.ordered_product_options.add(
                     *OrderedProductOptions.objects.bulk_create(
                         objs=[
@@ -112,6 +113,7 @@ def create_order(request, payload: OrderCreateSchema):
                     vc_target.stock_count = vc_target.stock_count - vc.get('amount')
                     vc_target.save(update_fields=['sale_count', 'stock_count'])
             else:
+                print("else")
                 raise WrongParameterException
             # if params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
             #     if not check_invalid_product_params(params['ordered_vehicle_color']): # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
