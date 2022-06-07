@@ -4,7 +4,8 @@ from history.constant import RefundStatus
 # common error message
 LOGIN_REQUIRED = {
     'code': 4010000,
-    'desc': '로그인이 필요합니다.'
+    'desc': '로그인이 필요합니다.',
+    'status': 401
 }
 USER_NOT_ACCESS_DENIED = '일반 유저는 접근 할 수 없습니다.'
 DB_ERROR = 'DB ORM Error'
