@@ -131,23 +131,23 @@ def member_logout(request):
     logout(request)
 
 
-@api.post("/login", description="로그인", auth=None, response=str)
+@api.post("/login", description="로그인", auth=None)
 def member_login(request, token_info: TokenSchema = Form(...), email: str = Form(...), password: str = Form(...)):
     user = authenticate(request, email=email, password=password, access_token=token_info.access_token, refresh_token=token_info.refresh_token)
     if user is None:
         raise WrongUserInfoException
     try:
         if user.remotetoken.refresh_token and user.remotetoken.access_token:
-            get_object_or_404(RemoteToken,
+            queryset = get_object_or_404(RemoteToken,
                               user=user,
                               access_token=is_valid_token(token_info.access_token),
                               refresh_token=is_valid_token(token_info.refresh_token),
                               )
+
     except Exception as e:
         RemoteToken.objects.create(access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
 
     login(request, user)
-    return str(user)
 
 
 @api.exception_handler(exc_class=RefuseMustHaveReasonException)

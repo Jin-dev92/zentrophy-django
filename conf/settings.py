@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-plug1-6zblo)q^z1n2mjdiws96now4r!=l2@&0o$=82dxs3@^2
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = ENV is Env.DEVELOPMENT
-ALLOWED_URL_LIST = ['.pythonanywhere.com']
+MAIN_URL = ''  # 젠트로피 도메인
+ALLOWED_URL_LIST = ['.pythonanywhere.com', MAIN_URL]
 
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ALLOW_CREDENTIALS = True
