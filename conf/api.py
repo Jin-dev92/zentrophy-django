@@ -134,6 +134,8 @@ def member_logout(request):
 @api.post("/login", description="로그인", auth=None)
 def member_login(request, token_info: TokenSchema = Form(...), email: str = Form(...), password: str = Form(...)):
     user = authenticate(request, email=email, password=password)
+    print("@@@@@@@@ user @@@@@@@@@")
+    print(user)
     if user is None or (user and str(user) == 'AnonymousUser'):
         raise WrongUserInfoException
     try:
@@ -145,11 +147,12 @@ def member_login(request, token_info: TokenSchema = Form(...), email: str = Form
                               )
 
     except Exception as e:
-        RemoteToken.objects.create(access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
-        print("@@@@@@@@@@@@@@@@@")
-        print(e)
+        RemoteToken.objects.create(user=user, access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
 
+    print("@@@@@@@ login user @@@@@")
+    print(user)
     login(request, user)
+
 
 
 @api.exception_handler(exc_class=RefuseMustHaveReasonException)
