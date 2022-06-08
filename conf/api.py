@@ -1,6 +1,7 @@
 # package
-from django.contrib.auth import authenticate, login, logout, HASH_SESSION_KEY
+from django.contrib.auth import login, logout, HASH_SESSION_KEY, authenticate
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
 from ninja import NinjaAPI, Form
@@ -31,8 +32,8 @@ from util.util import ORJSONParser
 
 # models & schema
 
-# api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
-api = NinjaAPI(parser=ORJSONParser(), csrf=True, auth=django_auth)
+api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
+# api = NinjaAPI(parser=ORJSONParser(), csrf=True, auth=django_auth)
 API_LIST = [
     {
         'prefix': "/member/",
@@ -139,9 +140,11 @@ def member_logout(request):
     # return
 
 
-@api.post("/login", description="로그인", auth=None, response=str)
+@api.post("/login", description="로그인", auth=None)
 def member_login(request, token_info: TokenSchema = Form(...), email: str = Form(...), password: str = Form(...)):
+    # response = HttpResponse()
     user = authenticate(request, email=email, password=password)
+    print(user)
     if user is None:
         raise WrongUserInfoException
 
@@ -157,7 +160,10 @@ def member_login(request, token_info: TokenSchema = Form(...), email: str = Form
         RemoteToken.objects.create(user=user, access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
 
     login(request, user)
-    return request.session[HASH_SESSION_KEY]
+    # response['session_id'] = request.session[HASH_SESSION_KEY]
+    # print(request.session[HASH_SESSION_KEY])
+    # print(response)
+    # return request.session[HASH_SESSION_KEY]
 
 
 @api.exception_handler(exc_class=RefuseMustHaveReasonException)
