@@ -1,5 +1,5 @@
 # package
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, HASH_SESSION_KEY
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 
@@ -131,11 +131,16 @@ def member_logout(request):
     logout(request)
 
 
-@api.post("/login", description="로그인", auth=None)
+# @login_required
+# @api.get('/test', description="테스트용")
+# def test(request):
+#     print(request.session["_auth_user_hash"])
+    # return
+
+
+@api.post("/login", description="로그인", auth=None, response=str)
 def member_login(request, token_info: TokenSchema = Form(...), email: str = Form(...), password: str = Form(...)):
     user = authenticate(request, email=email, password=password)
-    print("@@@@@@@@ user @@@@@@@@@")
-    print(user)
     if user is None or (user and str(user) == 'AnonymousUser'):
         raise WrongUserInfoException
     try:
@@ -147,11 +152,8 @@ def member_login(request, token_info: TokenSchema = Form(...), email: str = Form
                               )
 
     except Exception as e:
-        RemoteToken.objects.create(user=user, access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
-
-    print("@@@@@@@ login user @@@@@")
-    print(user)
-    login(request, user)
+        RemoteToken.objects.update_or_create(user=user, access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
+    return request.session[HASH_SESSION_KEY]
 
 
 
