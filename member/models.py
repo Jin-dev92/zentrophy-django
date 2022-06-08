@@ -104,7 +104,7 @@ class RemoteToken(TimeStampModel):
     refresh_token = models.CharField(max_length=36, null=True)
 
     def __str__(self):
-        return self.access_token
+        return str(self.access_token)
 
     # def format(self):
     #     if len(self.access_token) != 36 or len(self.refresh_token) != 36:

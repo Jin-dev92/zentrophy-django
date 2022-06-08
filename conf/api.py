@@ -146,6 +146,8 @@ def member_login(request, token_info: TokenSchema = Form(...), email: str = Form
 
     except Exception as e:
         RemoteToken.objects.create(access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
+        print("@@@@@@@@@@@@@@@@@")
+        print(e)
 
     login(request, user)
 
