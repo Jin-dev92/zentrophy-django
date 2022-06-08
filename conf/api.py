@@ -134,7 +134,7 @@ def member_logout(request):
 @api.post("/login", description="로그인", auth=None)
 def member_login(request, token_info: TokenSchema = Form(...), email: str = Form(...), password: str = Form(...)):
     user = authenticate(request, email=email, password=password)
-    if user is None:
+    if user is None or (user and str(user) == 'AnonymousUser'):
         raise WrongUserInfoException
     try:
         if user.remotetoken.refresh_token and user.remotetoken.access_token:
