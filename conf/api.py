@@ -1,15 +1,14 @@
 # package
-from django.contrib.auth import login, logout, HASH_SESSION_KEY, authenticate
+import django
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
 from ninja import NinjaAPI, Form
-from ninja.security import django_auth, SessionAuth
+from ninja.security import django_auth
 
 # util
 import member
-from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
     LoginRequiredException, FormatNotSupportedException, WrongParameterException, AccessDeniedException, \
     WrongUserInfoException, WrongTokenException, NotEnoughStockException
@@ -18,7 +17,6 @@ from history.api import after_service_router as after_service_router, refund_rou
 from member.api import router as member_router, payment_method_router
 from member.models import RemoteToken
 from member.schema import TokenSchema
-from member.constant import RemoteTokenType
 from order.api import router as order_router, subside_router, file_router
 from placement.api import router as placement_router
 from post.api import faq_router, notice_router, faq_category_router
@@ -33,8 +31,8 @@ from util.util import ORJSONParser
 
 # models & schema
 
-api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
-# api = NinjaAPI(parser=ORJSONParser(), csrf=True, auth=django_auth)
+# api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
+api = NinjaAPI(parser=ORJSONParser(), auth=django.contrib.auth)
 API_LIST = [
     {
         'prefix': "/member/",
@@ -150,7 +148,6 @@ def member_login(request, token_info: TokenSchema = Form(...), email: str = Form
         RemoteToken.objects.create(user=user, access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
     except Exception as e:
         raise e
-
     login(request, user)    # 로그인
 
 

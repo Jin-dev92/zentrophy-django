@@ -33,7 +33,7 @@ CSRF_COOKIE_SECURE = True
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ALLOW_CREDENTIALS = True
 # CSRF_TRUSTED_ORIGINS = ['http://*.pythonanywhere.com', 'http://*.127.0.0.1','http://localhost']
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'https://*.pythonanywhere.com']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'https://*.pythonanywhere.com', 'http://127.0.0.1:8000']
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
