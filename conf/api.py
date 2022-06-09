@@ -8,6 +8,7 @@ from ninja import NinjaAPI, Form
 from ninja.security import django_auth, SessionAuth
 
 # util
+import member
 from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
     LoginRequiredException, FormatNotSupportedException, WrongParameterException, AccessDeniedException, \
@@ -133,32 +134,24 @@ def member_logout(request):
     logout(request)
 
 
-# @login_required
-# @api.get('/test', description="테스트용")
-# def test(request):
-#     print(request.session["_auth_user_hash"])
-    # return
-
-
 @api.post("/login", description="로그인", auth=None)
 def member_login(request, token_info: TokenSchema = Form(...), email: str = Form(...), password: str = Form(...)):
     user = authenticate(request, email=email, password=password)
     if user is None:
         raise WrongUserInfoException
-
     try:
         if user.remotetoken.refresh_token and user.remotetoken.access_token:
-            queryset = get_object_or_404(RemoteToken,
-                              user=user,
-                              access_token=is_valid_token(token_info.access_token),
-                              refresh_token=is_valid_token(token_info.refresh_token),
-                              )
+            target = get_object_or_404(RemoteToken, user=user)
+            target.access_token = token_info.access_token
+            target.refresh_token = token_info.refresh_token
+            target.save(update_fields=['access_token', 'refresh_token'])
 
-    except Exception as e: # user가 remote token을 보유하고 있지 않을 때,
+    except member.models.User.remotetoken.RelatedObjectDoesNotExist:  # user가 remote token을 보유하고 있지 않을 때,
         RemoteToken.objects.create(user=user, access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
+    except Exception as e:
+        raise e
 
-    login(request, user)
-    print(request.session[HASH_SESSION_KEY])
+    login(request, user)    # 로그인
 
 
 @api.exception_handler(exc_class=RefuseMustHaveReasonException)
