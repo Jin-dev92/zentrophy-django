@@ -1,13 +1,16 @@
 # package
-import django
+from datetime import datetime
+
+import jwt
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 
-from ninja import NinjaAPI, Form
-from ninja.security import django_auth
-
+from ninja import NinjaAPI, Form, Schema
 # util
+from ninja.security import HttpBearer
+from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
+
 import member
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
     LoginRequiredException, FormatNotSupportedException, WrongParameterException, AccessDeniedException, \
@@ -15,7 +18,7 @@ from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExce
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
 from member.api import router as member_router, payment_method_router
-from member.models import RemoteToken
+from member.models import RemoteToken, User
 from member.schema import TokenSchema
 from order.api import router as order_router, subside_router, file_router
 from placement.api import router as placement_router
@@ -25,14 +28,28 @@ from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
     FORMAT_NOT_SUPPORTED, WRONG_PARAMETER, WRONG_TOKEN, WRONG_USER_INFO, NOT_ENOUGH_STOCK
-from util.permission import is_valid_token
+from util.permission import is_valid_token, get_jwt_token
 from util.util import ORJSONParser
 
 
 # models & schema
 
 # api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
-api = NinjaAPI(parser=ORJSONParser())
+class AuthBearer(HttpBearer):
+    def authenticate(self, request, token):
+        print(request)
+        print(token)
+        decoded: dict = jwt.decode(token, SECRET_KEY, algorithms=JWT_ENCRYPTION_ALG)
+        user = User.objects.filter(id=decoded.get('id')).first()
+        return user
+
+
+class LoginResponse(Schema):
+    token: str
+
+
+api = NinjaAPI(parser=ORJSONParser(), auth=AuthBearer())
+
 API_LIST = [
     {
         'prefix': "/member/",
@@ -132,7 +149,12 @@ def member_logout(request):
     logout(request)
 
 
-@api.post("/login", description="로그인", auth=None)
+@api.get("/test")
+def test(request):
+    print("user")
+
+
+@api.post("/login", description="로그인", auth=None, response=LoginResponse)
 def member_login(request, token_info: TokenSchema = Form(...), email: str = Form(...), password: str = Form(...)):
     user = authenticate(request, email=email, password=password)
     if user is None:
@@ -148,7 +170,10 @@ def member_login(request, token_info: TokenSchema = Form(...), email: str = Form
         RemoteToken.objects.create(user=user, access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
     except Exception as e:
         raise e
+
     login(request, user)    # 로그인
+    return get_jwt_token(user.id)
+
 
 
 @api.exception_handler(exc_class=RefuseMustHaveReasonException)
