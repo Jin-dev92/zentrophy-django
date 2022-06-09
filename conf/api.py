@@ -32,7 +32,7 @@ from util.util import ORJSONParser
 # models & schema
 
 # api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
-api = NinjaAPI(parser=ORJSONParser(), auth=django.contrib.auth)
+api = NinjaAPI(parser=ORJSONParser())
 API_LIST = [
     {
         'prefix': "/member/",
