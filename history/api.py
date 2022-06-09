@@ -36,7 +36,6 @@ def get_after_service_list(request, status: AfterServiceStatus = None, is_create
 
 @login_required
 @after_service_router.get('/{id}', description="a/s get by id",
-                          auth=None,
                           response=AfterServiceListSchema)
 def get_after_service_by_id(request, id: int):
     queryset = AfterService.objects.get_queryset(id=id, user=request.user).select_related('place', 'vehicle', 'user')
