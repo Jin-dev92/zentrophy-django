@@ -22,16 +22,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-plug1-6zblo)q^z1n2mjdiws96now4r!=l2@&0o$=82dxs3@^2'
-# CSRF_COOKIE_SECURE = True
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = ENV is Env.DEVELOPMENT
 # MAIN_URL = ''  # 젠트로피 도메인
 # ALLOWED_URL_LIST = ['.pythonanywhere.com', MAIN_URL]
 ALLOWED_URL_LIST = ['.pythonanywhere.com']
 
+CSRF_COOKIE_SECURE = True
+# CSRF_COOKIE_HTTPONLY = True
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ALLOW_CREDENTIALS = True
-
+# CSRF_TRUSTED_ORIGINS = ['http://*.pythonanywhere.com', 'http://*.127.0.0.1','http://localhost']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'https://*.pythonanywhere.com']
 if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
@@ -77,7 +79,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
