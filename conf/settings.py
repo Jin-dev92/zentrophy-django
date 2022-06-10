@@ -38,7 +38,7 @@ if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
     ALLOWED_HOSTS = [url for url in ALLOWED_URL_LIST]
-    CORS_ORIGIN_WHITELIST = ['http://localhost:8080']
+    CORS_ORIGIN_WHITELIST = ['http://localhost:8000', 'http://localhost:3000']
 
 # 2.5MB - 2621440
 # 5MB - 5242880

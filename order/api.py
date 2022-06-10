@@ -25,7 +25,7 @@ file_router = Router()
 upload_exceed_count = 5
 
 
-@login_required
+# @login_required
 @router.get('/', response=List[OrderListSchema], description="주문 조건 검색")
 def get_order_list(request):
     if str(request.user) == 'AnonymousUser':  # @todo 디버그 모드 on 일때 에러 방지.
@@ -44,7 +44,7 @@ def get_order_list(request):
     return queryset
 
 
-@login_required
+# @login_required
 @router.get('/{id}', description="주문 id로 검색", response=List[OrderListSchema])
 def get_order_list_by_id(request, id: int):
     queryset = Order.objects.get_queryset(id=id).prefetch_related(
@@ -57,7 +57,7 @@ def get_order_list_by_id(request, id: int):
     return queryset
 
 
-@login_required
+# @login_required
 @transaction.atomic(using='default')
 @router.post('/', description="주문 생성")
 def create_order(request, payload: OrderCreateSchema):
@@ -137,7 +137,7 @@ def create_order(request, payload: OrderCreateSchema):
         raise e
 
 
-@login_required
+# @login_required
 @router.put('/', description="주문 상태 수정, OrderListSchema - state 주석 참조")
 def change_order_state(request, id: int, state: OrderState):
     target = get_object_or_404(Order, id=id)
@@ -145,20 +145,20 @@ def change_order_state(request, id: int, state: OrderState):
     target.save(update_fields=['state'])
 
 
-@login_required
+# @login_required
 @router.put('/', description="주문 내역 수정")
 def modify_order(request, id: int):
     pass
 
 
-@login_required
+# @login_required
 @router.delete('/', description="주문 삭제")
 def delete_order_list_by_id(request, id: int):
     target = get_object_or_404(Order, id=id)
     queryset = target.soft_delete()
 
 
-@login_required
+# @login_required
 @subside_router.get('/', response=List[SubsideListSchema])
 def get_list_subside(request):
     queryset = Subside.objects.get_queryset().prefetch_related(
@@ -167,7 +167,7 @@ def get_list_subside(request):
     return queryset
 
 
-@login_required
+# @login_required
 @transaction.atomic(using='default')
 @subside_router.post('/')
 def create_subside(request, payload: SubsideInsertSchema):
@@ -187,7 +187,7 @@ def create_subside(request, payload: SubsideInsertSchema):
     return True
 
 
-@login_required
+# @login_required
 @subside_router.put('/')
 def modify_extra_subside(request, payload: SubsideInsertSchema = None):
     for extra_subside in ExtraSubside.objects.get_queryset():
@@ -201,7 +201,7 @@ def modify_extra_subside(request, payload: SubsideInsertSchema = None):
     return True
 
 
-@login_required
+# @login_required
 @file_router.post('/', description="계획서 및 보조금 신청서 업로드")
 def upload_files(request, order_id: int, files: List[UploadedFile]):
     order = get_object_or_404(Order, id=order_id)
@@ -209,7 +209,7 @@ def upload_files(request, order_id: int, files: List[UploadedFile]):
         objs=[DocumentFile(order=order, file=file) for file in files], batch_size=upload_exceed_count)
 
 
-@login_required
+# @login_required
 @file_router.delete('/', description="계획서 및 보조금 신청서 삭제")
 def delete_files(request, id: int):
     queryset = get_object_or_404(DocumentFile, id=id).delete()
