@@ -1,20 +1,18 @@
 # package
-from datetime import datetime
 
 import jwt
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
-
 from ninja import NinjaAPI, Form, Schema
 # util
 from ninja.security import HttpBearer
-from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
 
 import member
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
-    LoginRequiredException, FormatNotSupportedException, WrongParameterException, AccessDeniedException, \
-    WrongUserInfoException, WrongTokenException, NotEnoughStockException
+    LoginRequiredException, FormatNotSupportedException, WrongParameterException, WrongUserInfoException, \
+    WrongTokenException, NotEnoughStockException
+from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
 from member.api import router as member_router, payment_method_router
@@ -32,8 +30,6 @@ from util.permission import is_valid_token, get_jwt_token
 from util.util import ORJSONParser
 
 
-# models & schema
-
 # api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
 class AuthBearer(HttpBearer):
     def authenticate(self, request, token):
@@ -41,6 +37,8 @@ class AuthBearer(HttpBearer):
         print(token)
         decoded: dict = jwt.decode(token, SECRET_KEY, algorithms=JWT_ENCRYPTION_ALG)
         user = User.objects.filter(id=decoded.get('id')).first()
+        print("user")
+        print(user)
         return user
 
 
@@ -140,18 +138,14 @@ API_LIST = [
 
 # 라우팅 설정
 for item in API_LIST:
-    api.add_router(prefix=item['prefix'], router=item['router'], tags=item['tags'])
+    api.add_router(prefix=item['prefix'], router=item['router'], tags=item['tags']
+                   , auth=AuthBearer())
 
 
 @login_required
 @api.get('/logout', description="로그 아웃")
 def member_logout(request):
     logout(request)
-
-
-@api.get("/test")
-def test(request):
-    print("user")
 
 
 @api.post("/login", description="로그인", auth=None, response=LoginResponse)
