@@ -24,7 +24,7 @@ upload_exceed_count = 5
 
 
 # @login_required
-@router.get('/', response=List[OrderListSchema], description="주문 조건 검색")
+@router.get('/', response=List[OrderListSchema], description="주문 검색")
 def get_order_list(request):
     if str(request.auth) == 'AnonymousUser':  # @todo 디버그 모드 on 일때 에러 방지.
         raise LoginRequiredException
@@ -39,7 +39,7 @@ def get_order_list(request):
         Prefetch(lookup='orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
         Prefetch(lookup='customerinfo_set', to_attr="customer_info"),
         Prefetch(lookup='orderlocationinfo_set', to_attr="order_location_info"),
-        Prefetch(lookup='documentfile_set', to_attr="files")
+        Prefetch(lookup='documentfile_set', to_attr="files"),
     )
     return queryset
 
@@ -74,8 +74,6 @@ def create_order(request, payload: OrderCreateSchema):
             order_params['owner'] = request.auth
             order_location_info_params = params['order_location_info']
             customer_info_params = params['customer_info']
-            print(order_location_info_params)
-            print(customer_info_params)
             order_queryset = Order.objects.create(**order_params)  # 주문 생성
             if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
                 order_queryset.extra_subside.add(

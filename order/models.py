@@ -39,10 +39,6 @@ class Order(TimeStampModel, SoftDeleteModel):
     owner = models.ForeignKey('member.User',
                               on_delete=models.CASCADE,
                               null=True)
-    # ordered_product_options = models.ManyToManyField('order.OrderedProductOptions')
-    # ordered_vehicle_color = models.ManyToManyField('order.OrderedVehicleColor')
-    # customer_info = models.JSONField(default=dict)
-    # order_location_info = models.JSONField(default=dict)
     subside = models.BooleanField(default=False)
     extra_subside = models.ManyToManyField(ExtraSubside)
     is_visited = models.BooleanField(default=False)
@@ -75,10 +71,10 @@ class OrderedVehicleColor(TimeStampModel):
 
 
 class CustomerInfo(TimeStampModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey('order.Order', on_delete=models.CASCADE)
     name = models.CharField(max_length=100, null=True)
     birth = models.DateField(null=True)
-    tel: str = models.CharField(max_length=20, null=True)
+    tel = models.CharField(max_length=20, null=True)
     email = models.EmailField(max_length=100)
     is_business = models.BooleanField(default=False)
     is_apply_subside = models.BooleanField(default=False)
@@ -88,7 +84,7 @@ class CustomerInfo(TimeStampModel):
 
 
 class OrderLocationInfo(TimeStampModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
+    order = models.ForeignKey('order.Order', on_delete=models.CASCADE, null=True)
     address_1 = models.CharField(max_length=100, null=True)
     address_2 = models.CharField(max_length=100, null=True)
     address_3 = models.CharField(max_length=100, null=True)
