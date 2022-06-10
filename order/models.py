@@ -44,6 +44,8 @@ class Order(TimeStampModel, SoftDeleteModel):
     is_visited = models.BooleanField(default=False)
     total = models.IntegerField(default=0)
     state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
+    customer_info = models.OneToOneField('order.CustomerInfo', on_delete=models.CASCADE, null=True)
+    order_location_info = models.OneToOneField('order.OrderLocationInfo', on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return str(self.id)
@@ -71,7 +73,7 @@ class OrderedVehicleColor(TimeStampModel):
 
 
 class CustomerInfo(TimeStampModel):
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True)
+    # order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=100, null=True)
     birth = models.DateField(null=True)
     tel = models.CharField(max_length=20, null=True)
@@ -84,7 +86,7 @@ class CustomerInfo(TimeStampModel):
 
 
 class OrderLocationInfo(TimeStampModel):
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True)
+    # order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True)
     address_1 = models.CharField(max_length=100, null=True)
     address_2 = models.CharField(max_length=100, null=True)
     address_3 = models.CharField(max_length=100, null=True)

@@ -34,14 +34,14 @@ def get_order_list(request):
         target = Order.objects.get_queryset(owner=request.auth)
 
     queryset = target.prefetch_related(
-        # 'customer_info',
-        # 'order_location_info',
+        'customer_info',
+        'order_location_info',
         Prefetch(lookup='orderedproductoptions_set', to_attr="ordered_product_options"),
         Prefetch(lookup='orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
         # Prefetch(lookup='customerinfo_set', to_attr="customer_info"),
         # Prefetch(lookup='orderlocationinfo_set', to_attr="order_location_info"),
         Prefetch(lookup='documentfile_set', to_attr="files"),
-    ).select_related('customerinfo', 'orderlocationinfo')
+    )
     return queryset
 
 
@@ -77,7 +77,9 @@ def create_order(request, payload: OrderCreateSchema):
             order_params['owner'] = request.auth
             order_location_info_params = params['order_location_info']
             customer_info_params = params['customer_info']
-            order_queryset = Order.objects.create(**order_params)  # 주문 생성
+            customer_object = CustomerInfo.objects.create(**customer_info_params)
+            locaiton_object = OrderLocationInfo.objects.create(**order_location_info_params)
+            order_queryset = Order.objects.create(**order_params, customer_info=customer_object, order_location_info=locaiton_object)  # 주문 생성
             if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
                 order_queryset.extra_subside.add(
                     *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
@@ -110,9 +112,6 @@ def create_order(request, payload: OrderCreateSchema):
                     vc_target.save(update_fields=['sale_count', 'stock_count'])
             else:
                 raise WrongParameterException
-
-            OrderLocationInfo.objects.create(**order_location_info_params, order=order_queryset)
-            CustomerInfo.objects.create(**customer_info_params, order=order_queryset)
 
     except Exception as e:
         raise e
