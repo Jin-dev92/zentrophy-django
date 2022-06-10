@@ -1,10 +1,8 @@
 from typing import List
 
 from django.contrib.auth.decorators import login_required
-from django.core.files.storage import FileSystemStorage
 from django.db import transaction
 from django.db.models import Prefetch
-from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
@@ -34,14 +32,15 @@ def get_order_list(request):
         target = Order.objects.get_queryset()
     else:
         target = Order.objects.get_queryset(owner=request.auth)
+
     queryset = target.prefetch_related(
         'extra_subside',
-        Prefetch('customerinfo_set', to_attr="customer_info"),
-        Prefetch('orderedproductoptions_set', to_attr="ordered_product_options"),
-        Prefetch('orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
-        Prefetch('orderlocationinfo_set', to_attr="order_location_info"),
-        Prefetch('documentfile_set', to_attr="files")
-    ).select_related('owner')
+        Prefetch(lookup='orderedproductoptions_set', to_attr="ordered_product_options"),
+        Prefetch(lookup='orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
+        Prefetch(lookup='customerinfo_set', to_attr="customer_info"),
+        Prefetch(lookup='orderlocationinfo_set', to_attr="order_location_info"),
+        Prefetch(lookup='documentfile_set', to_attr="files")
+    )
     return queryset
 
 
@@ -59,14 +58,10 @@ def get_order_list_by_id(request, id: int):
     return queryset
 
 
-# @login_required
+@login_required
 @transaction.atomic(using='default')
 @router.post('/', description="주문 생성")
 def create_order(request, payload: OrderCreateSchema):
-    print()
-    # print(request)
-    # print(request.auth)
-    # print(request.auth)
     if str(request.auth) == 'AnonymousUser':
         raise LoginRequiredException
     try:
@@ -79,7 +74,8 @@ def create_order(request, payload: OrderCreateSchema):
             order_params['owner'] = request.auth
             order_location_info_params = params['order_location_info']
             customer_info_params = params['customer_info']
-
+            print(order_location_info_params)
+            print(customer_info_params)
             order_queryset = Order.objects.create(**order_params)  # 주문 생성
             if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
                 order_queryset.extra_subside.add(
@@ -92,8 +88,6 @@ def create_order(request, payload: OrderCreateSchema):
                             OrderedProductOptions(**ordered_po, order=order_queryset) for ordered_po in
                             params['ordered_product_options']]
                     )
-                # order_queryset.ordered_product_options.add(
-                # )
                 for po in params['ordered_product_options']:    # 주문 생성 시 판매량, 재고량 조절
                     po_target = get_object_or_404(ProductOptions, id=po.get('product_options_id'))
                     if po.get('amount') > po_target.stock_count:
@@ -106,8 +100,6 @@ def create_order(request, payload: OrderCreateSchema):
                     raise WrongParameterException
                 OrderedVehicleColor.objects.bulk_create(
                     objs=[OrderedVehicleColor(**ordered_vc, order=order_queryset) for ordered_vc in params['ordered_vehicle_color']])
-                # id_list = [color.id for color in color_list]
-                # order_queryset.ordered_vehicle_color.add(*OrderedVehicleColor.objects.in_bulk(id_list=id_list))
                 for vc in params['ordered_vehicle_color']:  # 주문 생성시 판매량, 재고량 조절
                     vc_target = get_object_or_404(VehicleColor, id=vc.get('vehicle_color_id'))
                     if vc.get('amount') > vc_target.stock_count:
@@ -118,20 +110,6 @@ def create_order(request, payload: OrderCreateSchema):
             else:
                 print("else")
                 raise WrongParameterException
-            # if params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
-            #     if not check_invalid_product_params(params['ordered_vehicle_color']): # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
-            #         raise WrongParameterException
-            #     order_queryset.ordered_vehicle_color.add(
-            #         *OrderedVehicleColor.objects.bulk_create(
-            #             objs=[OrderedVehicleColor(**ordered_vc) for ordered_vc in params['ordered_vehicle_color']])
-            #     )
-            #     for vc in params['ordered_vehicle_color']:  # 주문 생성시 판매량, 재고량 조절
-            #         vc_target = get_object_or_404(VehicleColor, id=vc.get('vehicle_color_id'))
-            #         if vc.get('amount') > vc_target.stock_count:
-            #             raise NotEnoughStockException
-            #         vc_target.sale_count = vc_target.sale_count + vc.get('amount')
-            #         vc_target.stock_count = vc_target.stock_count - vc.get('amount')
-            #         vc_target.save(update_fields=['sale_count', 'stock_count'])
 
             OrderLocationInfo.objects.create(**order_location_info_params, order=order_queryset)
             CustomerInfo.objects.create(**customer_info_params, order=order_queryset)

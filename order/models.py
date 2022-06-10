@@ -75,21 +75,27 @@ class OrderedVehicleColor(TimeStampModel):
 
 
 class CustomerInfo(TimeStampModel):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, null=True)
     birth = models.DateField(null=True)
     tel: str = models.CharField(max_length=20, null=True)
     email = models.EmailField(max_length=100)
     is_business = models.BooleanField(default=False)
     is_apply_subside = models.BooleanField(default=False)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.name)
 
 
 class OrderLocationInfo(TimeStampModel):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
     address_1 = models.CharField(max_length=100, null=True)
     address_2 = models.CharField(max_length=100, null=True)
     address_3 = models.CharField(max_length=100, null=True)
     detail = models.CharField(max_length=100, null=True)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.address_1) + str(self.address_2)
 
 
 class DocumentFormat(TimeStampModel, SoftDeleteModel):

@@ -30,15 +30,10 @@ from util.permission import is_valid_token, get_jwt_token
 from util.util import ORJSONParser
 
 
-# api = NinjaAPI(parser=ORJSONParser(), csrf=not settings.DEBUG, auth=None if settings.DEBUG else django_auth)
 class AuthBearer(HttpBearer):
     def authenticate(self, request, token):
-        print(request)
-        print(token)
         decoded: dict = jwt.decode(token, SECRET_KEY, algorithms=JWT_ENCRYPTION_ALG)
         user = User.objects.filter(id=decoded.get('id')).first()
-        print("user")
-        print(user)
         return user
 
 
@@ -46,7 +41,7 @@ class LoginResponse(Schema):
     token: str
 
 
-api = NinjaAPI(parser=ORJSONParser(), auth=AuthBearer())
+api = NinjaAPI(parser=ORJSONParser(), auth=AuthBearer(), csrf=False)
 
 API_LIST = [
     {

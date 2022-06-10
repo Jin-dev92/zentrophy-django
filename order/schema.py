@@ -7,7 +7,7 @@ from member.schema import MemberListSchema
 from order.constant import OrderState
 
 
-class CustomerInfo(Schema):
+class CustomerInfoSchema(Schema):
     name: str = None
     birth: date = None
     tel: str = None
@@ -16,7 +16,7 @@ class CustomerInfo(Schema):
     is_apply_subside: bool = False
 
 
-class OrderLocationInfo(Schema):
+class OrderLocationInfoSchema(Schema):
     address_1: str = None
     address_2: str = None
     address_3: str = None
@@ -38,8 +38,8 @@ class OrderListSchema(Schema):
     owner: MemberListSchema = None
     ordered_product_options: List[OrderedProductOptionsSchema] = None
     ordered_vehicle_color: List[OrderedVehicleColorSchema] = None
-    customer_info: CustomerInfo = None
-    order_location_info: OrderLocationInfo = None
+    customer_info: CustomerInfoSchema = None
+    order_location_info: OrderLocationInfoSchema = None
     subside: int = Field(default=0, title="기본 보조금")
     # extra_subside: list = Field(default=[], title="추가 보조금")
     is_visited: bool = Field(default=False, title="방문 구매 여부")
@@ -55,8 +55,8 @@ class OrderListSchema(Schema):
 class OrderCreateSchema(Schema):
     ordered_product_options: List[OrderedProductOptionsSchema] = Field(default=None, description="주문할 상품 옵션 > 해당 사항 없으면 보내지 마세요")
     ordered_vehicle_color: List[OrderedVehicleColorSchema] = Field(default=None, description="주문할 모터 사이클 색깔 > 해당 사항 없으면 보내지 마세요")
-    customer_info: CustomerInfo = None
-    order_location_info: OrderLocationInfo = None
+    customer_info: CustomerInfoSchema = None
+    order_location_info: OrderLocationInfoSchema = None
     subside: bool = Field(default=False, description="기본 보조금 여부")
     extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")
     total: int = 0
