@@ -40,7 +40,8 @@ def get_order_list(request):
         Prefetch('orderedproductoptions_set', to_attr="ordered_product_options"),
         Prefetch('orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
         Prefetch('orderlocationinfo_set', to_attr="order_location_info"),
-        Prefetch('documentfile_set', to_attr="files")).select_related('owner')
+        Prefetch('documentfile_set', to_attr="files")
+    ).select_related('owner')
     return queryset
 
 
@@ -49,11 +50,12 @@ def get_order_list(request):
 def get_order_list_by_id(request, id: int):
     queryset = Order.objects.get_queryset(id=id).prefetch_related(
         'extra_subside',
-        'ordered_product_options',
-        'ordered_vehicle_color',
         Prefetch('customerinfo_set', to_attr="customer_info"),
+        Prefetch('orderedproductoptions_set', to_attr="ordered_product_options"),
+        Prefetch('orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
         Prefetch('orderlocationinfo_set', to_attr="order_location_info"),
-        Prefetch('documentfile_set', to_attr="files")).select_related('owner')
+        Prefetch('documentfile_set', to_attr="files")
+    ).select_related('owner')
     return queryset
 
 
