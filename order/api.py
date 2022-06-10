@@ -36,9 +36,9 @@ def get_order_list(request):
         target = Order.objects.get_queryset(owner=request.auth)
     queryset = target.prefetch_related(
         'extra_subside',
-        'ordered_product_options',
-        'ordered_vehicle_color',
         Prefetch('customerinfo_set', to_attr="customer_info"),
+        Prefetch('orderedproductoptions_set', to_attr="ordered_product_options"),
+        Prefetch('orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
         Prefetch('orderlocationinfo_set', to_attr="order_location_info"),
         Prefetch('documentfile_set', to_attr="files")).select_related('owner')
     return queryset
