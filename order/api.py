@@ -61,6 +61,9 @@ def get_order_list_by_id(request, id: int):
 @transaction.atomic(using='default')
 @router.post('/', description="주문 생성")
 def create_order(request, payload: OrderCreateSchema):
+    print(request)
+    print(request.user)
+    print(request.auth)
     if str(request.user) == 'AnonymousUser':
         raise LoginRequiredException
     try:
