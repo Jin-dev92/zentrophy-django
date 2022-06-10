@@ -71,11 +71,11 @@ class OrderedVehicleColor(TimeStampModel):
 
 
 class CustomerInfo(TimeStampModel):
-    order = models.ForeignKey('order.Order', on_delete=models.CASCADE)
+    order = models.ForeignKey('order.Order', on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=100, null=True)
     birth = models.DateField(null=True)
     tel = models.CharField(max_length=20, null=True)
-    email = models.EmailField(max_length=100)
+    email = models.EmailField(max_length=100, null=True)
     is_business = models.BooleanField(default=False)
     is_apply_subside = models.BooleanField(default=False)
 

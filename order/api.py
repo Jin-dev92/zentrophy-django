@@ -23,7 +23,7 @@ file_router = Router()
 upload_exceed_count = 5
 
 
-# @login_required
+@login_required
 @router.get('/', response=List[OrderListSchema], description="주문 검색")
 def get_order_list(request):
     if str(request.auth) == 'AnonymousUser':  # @todo 디버그 모드 on 일때 에러 방지.
@@ -34,7 +34,6 @@ def get_order_list(request):
         target = Order.objects.get_queryset(owner=request.auth)
 
     queryset = target.prefetch_related(
-        'extra_subside',
         Prefetch(lookup='orderedproductoptions_set', to_attr="ordered_product_options"),
         Prefetch(lookup='orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
         Prefetch(lookup='customerinfo_set', to_attr="customer_info"),
@@ -54,7 +53,7 @@ def get_order_list_by_id(request, id: int):
         Prefetch('orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
         Prefetch('orderlocationinfo_set', to_attr="order_location_info"),
         Prefetch('documentfile_set', to_attr="files")
-    ).select_related('owner')
+    )
     return queryset
 
 
@@ -106,7 +105,6 @@ def create_order(request, payload: OrderCreateSchema):
                     vc_target.stock_count = vc_target.stock_count - vc.get('amount')
                     vc_target.save(update_fields=['sale_count', 'stock_count'])
             else:
-                print("else")
                 raise WrongParameterException
 
             OrderLocationInfo.objects.create(**order_location_info_params, order=order_queryset)

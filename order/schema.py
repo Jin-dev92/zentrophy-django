@@ -41,7 +41,6 @@ class OrderListSchema(Schema):
     customer_info: CustomerInfoSchema = None
     order_location_info: OrderLocationInfoSchema = None
     subside: int = Field(default=0, title="기본 보조금")
-    # extra_subside: list = Field(default=[], title="추가 보조금")
     is_visited: bool = Field(default=False, title="방문 구매 여부")
     total: int = 0
     state: OrderState = Field(default=OrderState.ACCEPT_ORDER,
