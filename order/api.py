@@ -9,7 +9,6 @@ from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
 
-from conf.api import AuthBearer
 from conf.custom_exception import AlreadyExistsException, LoginRequiredException, WrongParameterException, \
     NotEnoughStockException
 from order.constant import OrderState
@@ -60,7 +59,7 @@ def get_order_list_by_id(request, id: int):
 
 # @login_required
 @transaction.atomic(using='default')
-@router.post('/', description="주문 생성", auth=AuthBearer())
+@router.post('/', description="주문 생성")
 def create_order(request, payload: OrderCreateSchema):
     if str(request.user) == 'AnonymousUser':
         raise LoginRequiredException
