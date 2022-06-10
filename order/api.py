@@ -85,16 +85,13 @@ def create_order(request, payload: OrderCreateSchema):
             if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
                 if not check_invalid_product_params(params['ordered_product_options']):     # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
                     raise WrongParameterException
-                print("product")
-                print(params['ordered_product_options'])
-                order_queryset.ordered_product_options.add(
-                    *OrderedProductOptions.objects.bulk_create(
+                OrderedProductOptions.objects.bulk_create(
                         objs=[
-                            OrderedProductOptions(**ordered_po) for ordered_po in
+                            OrderedProductOptions(**ordered_po, order=order_queryset) for ordered_po in
                             params['ordered_product_options']]
                     )
-
-                )
+                # order_queryset.ordered_product_options.add(
+                # )
                 for po in params['ordered_product_options']:    # 주문 생성 시 판매량, 재고량 조절
                     po_target = get_object_or_404(ProductOptions, id=po.get('product_options_id'))
                     if po.get('amount') > po_target.stock_count:
@@ -105,9 +102,10 @@ def create_order(request, payload: OrderCreateSchema):
             elif params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
                 if not check_invalid_product_params(params['ordered_vehicle_color']): # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
                     raise WrongParameterException
-                color_list = OrderedVehicleColor.objects.bulk_create(objs=[OrderedVehicleColor(**ordered_vc) for ordered_vc in params['ordered_vehicle_color']])
-                id_list = [color.id for color in color_list]
-                order_queryset.ordered_vehicle_color.add(*OrderedVehicleColor.objects.in_bulk(id_list=id_list))
+                OrderedVehicleColor.objects.bulk_create(
+                    objs=[OrderedVehicleColor(**ordered_vc, order=order_queryset) for ordered_vc in params['ordered_vehicle_color']])
+                # id_list = [color.id for color in color_list]
+                # order_queryset.ordered_vehicle_color.add(*OrderedVehicleColor.objects.in_bulk(id_list=id_list))
                 for vc in params['ordered_vehicle_color']:  # 주문 생성시 판매량, 재고량 조절
                     vc_target = get_object_or_404(VehicleColor, id=vc.get('vehicle_color_id'))
                     if vc.get('amount') > vc_target.stock_count:

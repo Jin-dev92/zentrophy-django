@@ -39,8 +39,8 @@ class Order(TimeStampModel, SoftDeleteModel):
     owner = models.ForeignKey('member.User',
                               on_delete=models.CASCADE,
                               null=True)
-    ordered_product_options = models.ManyToManyField('order.OrderedProductOptions')
-    ordered_vehicle_color = models.ManyToManyField('order.OrderedVehicleColor')
+    # ordered_product_options = models.ManyToManyField('order.OrderedProductOptions')
+    # ordered_vehicle_color = models.ManyToManyField('order.OrderedVehicleColor')
     # customer_info = models.JSONField(default=dict)
     # order_location_info = models.JSONField(default=dict)
     subside = models.BooleanField(default=False)
@@ -57,7 +57,8 @@ class Order(TimeStampModel, SoftDeleteModel):
 
 
 class OrderedProductOptions(TimeStampModel):
-    product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
+    product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE, null=True)
     amount = models.IntegerField(default=0)
 
     def __str__(self):
@@ -65,7 +66,8 @@ class OrderedProductOptions(TimeStampModel):
 
 
 class OrderedVehicleColor(TimeStampModel):
-    vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
+    vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.CASCADE, null=True)
     amount = models.IntegerField(default=0)
 
     def __str__(self):
