@@ -61,6 +61,7 @@ def get_order_list_by_id(request, id: int):
 @transaction.atomic(using='default')
 @router.post('/', description="주문 생성")
 def create_order(request, payload: OrderCreateSchema):
+    print()
     # print(request)
     # print(request.auth)
     # print(request.auth)

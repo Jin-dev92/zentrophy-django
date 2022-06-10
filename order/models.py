@@ -7,8 +7,8 @@ from util.models import TimeStampModel, SoftDeleteModel
 
 class OrderDetail(SoftDeleteModel):
     order = models.ForeignKey('order.Order', on_delete=models.CASCADE)
-    product_options = models.ForeignKey(ProductOptions, on_delete=models.SET_NULL, null=True, default=None)
-    vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.SET_NULL, null=True, default=None)
+    product_options = models.ForeignKey(ProductOptions, on_delete=models.SET_NULL, null=True)
+    vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.SET_NULL, null=True)
     amount = models.IntegerField(default=0)
 
 
