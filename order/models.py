@@ -65,7 +65,7 @@ class OrderedProductOptions(TimeStampModel):
 
 
 class OrderedVehicleColor(TimeStampModel):
-    vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.CASCADE, null=True)
+    vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.CASCADE)
     amount = models.IntegerField(default=0)
 
     def __str__(self):
