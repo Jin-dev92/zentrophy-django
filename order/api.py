@@ -38,8 +38,6 @@ def get_order_list(request):
         'order_location_info',
         Prefetch(lookup='orderedproductoptions_set', to_attr="ordered_product_options"),
         Prefetch(lookup='orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
-        # Prefetch(lookup='customerinfo_set', to_attr="customer_info"),
-        # Prefetch(lookup='orderlocationinfo_set', to_attr="order_location_info"),
         Prefetch(lookup='documentfile_set', to_attr="files"),
     )
     return queryset
@@ -49,14 +47,11 @@ def get_order_list(request):
 @router.get('/{id}', description="주문 id로 검색", response=List[OrderListSchema])
 def get_order_list_by_id(request, id: int):
     queryset = Order.objects.get_queryset(id=id).prefetch_related(
-        # 'extra_subside',
         'customer_info',
         'order_location_info',
-        # Prefetch('customerinfo_set', to_attr="customer_info"),
-        Prefetch('orderedproductoptions_set', to_attr="ordered_product_options"),
-        Prefetch('orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
-        # Prefetch('orderlocationinfo_set', to_attr="order_location_info"),
-        Prefetch('documentfile_set', to_attr="files")
+        Prefetch(lookup='orderedproductoptions_set', to_attr="ordered_product_options"),
+        Prefetch(lookup='orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
+        Prefetch(lookup='documentfile_set', to_attr="files"),
     )
     return queryset
 
