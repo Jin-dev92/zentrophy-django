@@ -27,7 +27,7 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
     if sort == MemberSort.RECENT:
         field_name = '-date_joined'
     # if not has_permission(request):  # 어드민이 아니면
-    #     params = {id: request.user.id}  # 위한 코드
+    #     params = {id: request.auth.id}  # 위한 코드
     return User.objects.filter(**params).prefetch_related(
         Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
         Prefetch('paymentmethod_set', to_attr="payment_method"),
@@ -68,7 +68,7 @@ def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
     member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
     # token_info : dict = payload.dict().get('token_info')
     target = get_object_or_404(User, id=id)
-    if request.user == target:
+    if request.auth == target:
         user_queryset = User.objects.filter(id=id).update(**member_params)
     else:
         raise UserNotAccessDeniedException
@@ -77,7 +77,7 @@ def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
 @router.delete("/", description="회원 삭제")
 def delete_user(request, id: int):
     member = get_object_or_404(User, id=id)
-    if request.user == member or has_permission(request):
+    if request.auth == member or has_permission(request):
         queryset = member.delete()
         return queryset
 
@@ -96,7 +96,7 @@ def forgot_pwd(request, payload: MemberReAssignSchema = Form(...)):
 # @login_required
 @payment_method_router.get('/', description="결제 수단 리스트 가져오기", response=List[PaymentMethodListSchema])
 def get_payment_method(request):
-    queryset = PaymentMethod.objects.get_queryset(owner=request.user).select_related('card').order_by('favorite')
+    queryset = PaymentMethod.objects.get_queryset(owner=request.auth).select_related('card').order_by('favorite')
     return queryset
 
 
@@ -114,7 +114,7 @@ def create_payment_method(request, id: int = None, payload: PaymentMethodInsertS
                 id=id,
                 defaults={
                     'name': params['name'],
-                    'owner': request.user,
+                    'owner': request.auth,
                     'card': card_queryset
                 }
             )
@@ -125,4 +125,4 @@ def create_payment_method(request, id: int = None, payload: PaymentMethodInsertS
 
 @payment_method_router.delete('/')
 def delete_payment_method(request, id: int):
-    get_object_or_404(PaymentMethod, owner=request.user, id=id).soft_delete()
+    get_object_or_404(PaymentMethod, owner=request.auth, id=id).soft_delete()

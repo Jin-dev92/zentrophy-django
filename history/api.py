@@ -38,27 +38,27 @@ def get_after_service_list(request, status: AfterServiceStatus = None, is_create
 @after_service_router.get('/{id}', description="a/s get by id",
                           response=AfterServiceListSchema)
 def get_after_service_by_id(request, id: int):
-    queryset = AfterService.objects.get_queryset(id=id, user=request.user).select_related('place', 'vehicle', 'user')
+    queryset = AfterService.objects.get_queryset(id=id, user=request.auth).select_related('place', 'vehicle', 'user')
     return queryset
 
 
 @login_required
 @after_service_router.post("/", description="a/s 내역 생성 / 수정")
 def create_after_service_history(request, payload: AfterServiceInsertSchema):
-    if not request.user.is_authenticated:
+    if not request.auth.is_authenticated:
         raise LoginRequiredException
     params = payload.dict()
     except_params = {k: v for k, v in params.items() if k in {'place_id', 'owned_vehicle_id'}}
     place = Placement.objects.get_queryset(id=params.get('place_id'))
-    owned_vehicle = MemberOwnedVehicles.objects.get_queryset(owner=request.user, id=params['owned_vehicle_id'])
-    AfterService.objects.update_or_create(user=request.user, place=place.first(), owned_vehicle=owned_vehicle.first(),
+    owned_vehicle = MemberOwnedVehicles.objects.get_queryset(owner=request.auth, id=params['owned_vehicle_id'])
+    AfterService.objects.update_or_create(user=request.auth, place=place.first(), owned_vehicle=owned_vehicle.first(),
                                           defaults=except_params)
 
 
 # @login_required
 # @after_service_router.put("/", description="a/s 상태 수정")
 # def modify_after_service(request, id: int, payload: AfterServiceInsertSchema):
-#     obj = get_object_or_404(AfterService, id=id, user=request.user)
+#     obj = get_object_or_404(AfterService, id=id, user=request.auth)
 #     queryset = obj.objects.update(**payload.dict())
 #     obj.save()
 #     return queryset
@@ -66,7 +66,7 @@ def create_after_service_history(request, payload: AfterServiceInsertSchema):
 
 @after_service_router.delete("/", description="a/s 상태 삭제")
 def delete_after_service(request, id: int):
-    obj = get_object_or_404(AfterService, id=id, user=request.user)
+    obj = get_object_or_404(AfterService, id=id, user=request.auth)
     obj.soft_delete()
 
 
@@ -138,8 +138,8 @@ def delete_warranty(request, id: int):
 @login_required
 @cart_router.get('/', description="장바구니 목록 확인", response={200: List[CartListSchema]})
 def get_cart_list(request):
-    print(request.user)
-    queryset = Cart.objects.filter(owner=request.user).select_related('product_options')
+    print(request.auth)
+    queryset = Cart.objects.filter(owner=request.auth).select_related('product_options')
     return queryset
 
 
@@ -150,7 +150,7 @@ def create_cart(request, payload: CartCreateSchema):
     amount = payload.dict()['amount']
     queryset = Cart.objects.create(
         product_options=get_object_or_404(ProductOptions, id=product_options_id),
-        owner=request.user,
+        owner=request.auth,
         amount=amount
     )
 

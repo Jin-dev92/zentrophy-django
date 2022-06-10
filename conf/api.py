@@ -191,7 +191,7 @@ def login_required_exception_handler(request, exec):
     return api.create_response(request,
                                data={'code': LOGIN_REQUIRED['code'],
                                      'desc': LOGIN_REQUIRED['desc'],
-                                     'data': str(request.user) + "////" + "@todo 테스트 용 코드임 꼭 지울 것"
+                                     'data': str(request.auth) + "////" + "@todo 테스트 용 코드임 꼭 지울 것"
                                      },
                                status=LOGIN_REQUIRED['status']
                                )

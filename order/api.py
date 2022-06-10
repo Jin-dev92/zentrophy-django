@@ -28,12 +28,12 @@ upload_exceed_count = 5
 # @login_required
 @router.get('/', response=List[OrderListSchema], description="주문 조건 검색")
 def get_order_list(request):
-    if str(request.user) == 'AnonymousUser':  # @todo 디버그 모드 on 일때 에러 방지.
+    if str(request.auth) == 'AnonymousUser':  # @todo 디버그 모드 on 일때 에러 방지.
         raise LoginRequiredException
-    if request.user.is_staff:
+    if request.auth.is_staff:
         target = Order.objects.get_queryset()
     else:
-        target = Order.objects.get_queryset(owner=request.user)
+        target = Order.objects.get_queryset(owner=request.auth)
     queryset = target.prefetch_related(
         'extra_subside',
         'ordered_product_options',
@@ -61,10 +61,10 @@ def get_order_list_by_id(request, id: int):
 @transaction.atomic(using='default')
 @router.post('/', description="주문 생성")
 def create_order(request, payload: OrderCreateSchema):
-    print(request)
-    print(request.user)
-    print(request.auth)
-    if str(request.user) == 'AnonymousUser':
+    # print(request)
+    # print(request.auth)
+    # print(request.auth)
+    if str(request.auth) == 'AnonymousUser':
         raise LoginRequiredException
     try:
         with transaction.atomic():
@@ -73,7 +73,7 @@ def create_order(request, payload: OrderCreateSchema):
                             k not in {'ordered_product_options', 'ordered_vehicle_color', 'extra_subside',
                                       'customer_info',
                                       'order_location_info'}}
-            order_params['owner'] = request.user
+            order_params['owner'] = request.auth
             order_location_info_params = params['order_location_info']
             customer_info_params = params['customer_info']
 
