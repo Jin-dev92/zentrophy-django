@@ -102,8 +102,8 @@ def create_order(request, payload: OrderCreateSchema):
                     product_image = ProductImage.objects.filter(product=po_target.product)
                     if len(product_image) > 0:
                         po_list[index].image_path = product_image[0].origin_image.name
-                        # po_list[index].save(update_fields=['image_path'])
-                        po_list[index].save()
+                        po_list[index].save(update_fields=['image_path'])
+                        # po_list[index].save()
 
             elif params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
                 if not check_invalid_product_params(params['ordered_vehicle_color']): # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
@@ -116,8 +116,7 @@ def create_order(request, payload: OrderCreateSchema):
                         raise NotEnoughStockException
                     vc_target.sale_count = vc_target.sale_count + vc.get('amount')
                     vc_target.stock_count = vc_target.stock_count - vc.get('amount')
-                    # vc_target.save(update_fields=['sale_count', 'stock_count'])
-                    vc_target.save()
+                    vc_target.save(update_fields=['sale_count', 'stock_count'])
 
                     vehicle_color_image = VehicleImage.objects.filter(vehicle_color=vc_target)
                     if len(vehicle_color_image) > 0:
