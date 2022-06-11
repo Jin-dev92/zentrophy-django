@@ -30,7 +30,7 @@ class OrderedProductOptionsListSchema(Schema):
 
 
 class OrderedVehicleColorListSchema(Schema):
-    vehicle_color_id: int = None
+    # vehicle_color_id: int = None
     vehicle_color: VehicleColorListSchema = None
     amount: int = None
 
