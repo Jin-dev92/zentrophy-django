@@ -8,7 +8,7 @@ from ninja import Router
 from ninja.files import UploadedFile
 
 from conf.custom_exception import AlreadyExistsException, LoginRequiredException, WrongParameterException, \
-    NotEnoughStockException
+    NotEnoughStockException, UserNotAccessDeniedException
 from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
     OrderLocationInfo, CustomerInfo, DocumentFormat
@@ -136,10 +136,10 @@ def change_order_state(request, id: int, state: OrderState):
     target.save(update_fields=['state'])
 
 
-@login_required
-@router.put('/', description="주문 내역 수정")
-def modify_order(request, id: int):
-    pass
+# @login_required
+# @router.put('/', description="주문 내역 수정")
+# def modify_order(request, id: int):
+#     pass
 
 
 @login_required
@@ -178,8 +178,8 @@ def create_subside(request, payload: SubsideInsertSchema):
     return True
 
 
-# @login_required
-@subside_router.put('/')
+@login_required
+@subside_router.put('/', description="기본 보조금 수정")
 def modify_extra_subside(request, payload: SubsideInsertSchema = None):
     for extra_subside in ExtraSubside.objects.get_queryset():
         extra_subside.soft_delete()
@@ -192,7 +192,7 @@ def modify_extra_subside(request, payload: SubsideInsertSchema = None):
     return True
 
 
-# @login_required
+@login_required
 @file_router.post('/', description="계획서 및 보조금 신청서 업로드")
 def upload_files(request, order_id: int, files: List[UploadedFile]):
     order = get_object_or_404(Order, id=order_id)
@@ -200,7 +200,7 @@ def upload_files(request, order_id: int, files: List[UploadedFile]):
         objs=[DocumentFile(order=order, file=file) for file in files], batch_size=upload_exceed_count)
 
 
-# @login_required
+@login_required
 @file_router.delete('/', description="계획서 및 보조금 신청서 삭제")
 def delete_files(request, id: int):
     queryset = get_object_or_404(DocumentFile, id=id).delete()
@@ -227,11 +227,15 @@ def get_format_list(request):
 @login_required
 @file_router.post('/format', description="보조금 신청서 포맷 업로드")
 def upload_format_files(request, file: UploadedFile):
+    if not request.auth.is_staff:
+        raise UserNotAccessDeniedException
     queryset = DocumentFormat.objects.create(file=file)
 
 
 @login_required
 @file_router.delete('/format', description="보조금 신청서 포맷 삭제")
 def delete_format_files(request, id: int):
+    if not request.auth.is_staff:
+        raise UserNotAccessDeniedException
     target = get_object_or_404(DocumentFormat, id=id)
     queryset = target.soft_delete()
