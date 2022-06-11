@@ -1,7 +1,7 @@
 from django.db import models
 
 from order.constant import OrderState
-from product.models import ProductOptions, VehicleColor
+from product.models import ProductOptions, VehicleColor, ProductImage, VehicleImage
 from util.models import TimeStampModel, SoftDeleteModel
 
 
@@ -57,6 +57,7 @@ class Order(TimeStampModel, SoftDeleteModel):
 class OrderedProductOptions(TimeStampModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
     product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE, null=True)
+    image_path = models.CharField(max_length=2000, null=True)
     amount = models.IntegerField(default=0)
 
     def __str__(self):
@@ -66,6 +67,7 @@ class OrderedProductOptions(TimeStampModel):
 class OrderedVehicleColor(TimeStampModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
     vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.CASCADE, null=True)
+    image_path = models.CharField(max_length=2000, null=True)
     amount = models.IntegerField(default=0)
 
     def __str__(self):
@@ -73,7 +75,6 @@ class OrderedVehicleColor(TimeStampModel):
 
 
 class CustomerInfo(TimeStampModel):
-    # order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=100, null=True)
     birth = models.DateField(null=True)
     tel = models.CharField(max_length=20, null=True)
@@ -86,7 +87,6 @@ class CustomerInfo(TimeStampModel):
 
 
 class OrderLocationInfo(TimeStampModel):
-    # order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True)
     address_1 = models.CharField(max_length=100, null=True)
     address_2 = models.CharField(max_length=100, null=True)
     address_3 = models.CharField(max_length=100, null=True)

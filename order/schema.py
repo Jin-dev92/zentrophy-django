@@ -23,12 +23,24 @@ class OrderLocationInfoSchema(Schema):
     detail: str = None
 
 
-class OrderedProductOptionsSchema(Schema):
+class OrderedProductOptionsListSchema(Schema):
+    product_options_id: int = None
+    image_path: str = None
+    amount: int = None
+
+
+class OrderedVehicleColorListSchema(Schema):
+    vehicle_color_id: int = None
+    image_path: str = None
+    amount: int = None
+
+
+class OrderedProductOptionsCreateSchema(Schema):
     product_options_id: int = None
     amount: int = None
 
 
-class OrderedVehicleColorSchema(Schema):
+class OrderedVehicleColorCreateSchema(Schema):
     vehicle_color_id: int = None
     amount: int = None
 
@@ -36,8 +48,8 @@ class OrderedVehicleColorSchema(Schema):
 class OrderListSchema(Schema):
     id: int
     owner: MemberListSchema = None
-    ordered_product_options: List[OrderedProductOptionsSchema] = None
-    ordered_vehicle_color: List[OrderedVehicleColorSchema] = None
+    ordered_product_options: List[OrderedProductOptionsListSchema] = None
+    ordered_vehicle_color: List[OrderedVehicleColorListSchema] = None
     customer_info: CustomerInfoSchema = None
     order_location_info: OrderLocationInfoSchema = None
     subside: int = Field(default=0, title="기본 보조금")
@@ -52,8 +64,8 @@ class OrderListSchema(Schema):
 
 
 class OrderCreateSchema(Schema):
-    ordered_product_options: List[OrderedProductOptionsSchema] = Field(default=None, description="주문할 상품 옵션 > 해당 사항 없으면 보내지 마세요")
-    ordered_vehicle_color: List[OrderedVehicleColorSchema] = Field(default=None, description="주문할 모터 사이클 색깔 > 해당 사항 없으면 보내지 마세요")
+    ordered_product_options: List[OrderedProductOptionsCreateSchema] = Field(default=None, description="주문할 상품 옵션 > 해당 사항 없으면 보내지 마세요")
+    ordered_vehicle_color: List[OrderedVehicleColorCreateSchema] = Field(default=None, description="주문할 모터 사이클 색깔 > 해당 사항 없으면 보내지 마세요")
     customer_info: CustomerInfoSchema = None
     order_location_info: OrderLocationInfoSchema = None
     subside: bool = Field(default=False, description="기본 보조금 여부")

@@ -14,7 +14,7 @@ from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProd
     OrderLocationInfo, CustomerInfo, DocumentFormat
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema
-from product.models import ProductOptions, VehicleColor
+from product.models import ProductOptions, VehicleColor, VehicleImage, ProductImage
 from util.number import check_invalid_product_params
 
 router = Router()
@@ -32,7 +32,6 @@ def get_order_list(request):
         target = Order.objects.get_queryset()
     else:
         target = Order.objects.get_queryset(owner=request.auth)
-
     queryset = target.prefetch_related(
         'customer_info',
         'order_location_info',
@@ -53,6 +52,7 @@ def get_order_list_by_id(request, id: int):
         Prefetch(lookup='orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
         Prefetch(lookup='documentfile_set', to_attr="files"),
     )
+    print(queryset.values())
     return queryset
 
 
@@ -73,38 +73,50 @@ def create_order(request, payload: OrderCreateSchema):
             order_location_info_params = params['order_location_info']
             customer_info_params = params['customer_info']
             customer_object = CustomerInfo.objects.create(**customer_info_params)
-            locaiton_object = OrderLocationInfo.objects.create(**order_location_info_params)
-            order_queryset = Order.objects.create(**order_params, customer_info=customer_object, order_location_info=locaiton_object)  # 주문 생성
+            location_object = OrderLocationInfo.objects.create(**order_location_info_params)
+            order_queryset = Order.objects.create(**order_params, customer_info=customer_object, order_location_info=location_object)  # 주문 생성
             if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
                 order_queryset.extra_subside.add(
                     *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
             if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
                 if not check_invalid_product_params(params['ordered_product_options']):     # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
                     raise WrongParameterException
-                OrderedProductOptions.objects.bulk_create(
+                po_list = OrderedProductOptions.objects.bulk_create(
                         objs=[
-                            OrderedProductOptions(**ordered_po, order=order_queryset) for ordered_po in
-                            params['ordered_product_options']]
+                            OrderedProductOptions(**ordered_po,
+                                                  order=order_queryset)
+                                                  # image=VehicleImage.objects.)
+                            for ordered_po in params['ordered_product_options']]
                     )
-                for po in params['ordered_product_options']:    # 주문 생성 시 판매량, 재고량 조절
+                for index, po in enumerate(params['ordered_product_options']):    # 주문 생성 시 판매량, 재고량 조절
                     po_target = get_object_or_404(ProductOptions, id=po.get('product_options_id'))
                     if po.get('amount') > po_target.stock_count:
                         raise NotEnoughStockException
                     po_target.sale_count = po_target.sale_count + po.get('amount')
                     po_target.stock_count = po_target.stock_count - po.get('amount')
                     po_target.save(update_fields=['sale_count', 'stock_count'])
+                    product_image = ProductImage.objects.filter(product=po_target.product)
+                    if len(product_image) > 0:
+                        po_list[index].image_path = product_image[0].origin_image.name
+                        po_list[index].save(update_fields=['image_path'])
+
             elif params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
                 if not check_invalid_product_params(params['ordered_vehicle_color']): # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
                     raise WrongParameterException
-                OrderedVehicleColor.objects.bulk_create(
+                vc_list = OrderedVehicleColor.objects.bulk_create(
                     objs=[OrderedVehicleColor(**ordered_vc, order=order_queryset) for ordered_vc in params['ordered_vehicle_color']])
-                for vc in params['ordered_vehicle_color']:  # 주문 생성시 판매량, 재고량 조절
+                for index, vc in enumerate(params['ordered_vehicle_color']):  # 주문 생성시 판매량, 재고량 조절
                     vc_target = get_object_or_404(VehicleColor, id=vc.get('vehicle_color_id'))
                     if vc.get('amount') > vc_target.stock_count:
                         raise NotEnoughStockException
                     vc_target.sale_count = vc_target.sale_count + vc.get('amount')
                     vc_target.stock_count = vc_target.stock_count - vc.get('amount')
                     vc_target.save(update_fields=['sale_count', 'stock_count'])
+
+                    vehicle_color_image = VehicleImage.objects.filter(vehicle_color=vc_target)
+                    if len(vehicle_color_image) > 0:
+                        vc_list[index].image_path = vehicle_color_image[0].origin_image.name
+                        vc_list[index].save(update_fields=['image_path'])
             else:
                 raise WrongParameterException
 
