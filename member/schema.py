@@ -17,10 +17,19 @@ class MemberInsertSchema(Schema):
     username: str
     email: str
     password: str
+    phone_number: str
     address: str
     address_detail: str
     zipcode: str
     # token_info: TokenSchema
+
+
+class MemberModifySchema(Schema):
+    username: str
+    password: str
+    address: str
+    address_detail: str
+    zipcode: str
 
 
 class CardInsertSchema(Schema):
@@ -32,6 +41,7 @@ class CardInsertSchema(Schema):
 
 class PaymentMethodListSchema(Schema):
     id: int
+    name: str
     card: CardInsertSchema = None
     favorite: bool = False
 

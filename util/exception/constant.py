@@ -62,3 +62,9 @@ WRONG_USER_INFO = {
     'desc': "아이디 혹은 비밀번호가 틀립니다.",
     'status': 401
 }
+
+USER_NOT_ACCESS_DENIED = {
+    'code': 4010003,
+    'desc': "일반 유저는 접근 할 수 없습니다.",
+    'status': 401
+}

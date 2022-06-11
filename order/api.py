@@ -42,17 +42,21 @@ def get_order_list(request):
     return queryset
 
 
-# @login_required
+@login_required
 @router.get('/{id}', description="주문 id로 검색", response=List[OrderListSchema])
 def get_order_list_by_id(request, id: int):
-    queryset = Order.objects.get_queryset(id=id).prefetch_related(
+    if request.auth.is_staff:
+        target = Order.objects.get_queryset()
+    else:
+        target = Order.objects.get_queryset(id=id, owner=request.auth)
+
+    queryset = target.prefetch_related(
         'customer_info',
         'order_location_info',
         Prefetch(lookup='orderedproductoptions_set', to_attr="ordered_product_options"),
         Prefetch(lookup='orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
         Prefetch(lookup='documentfile_set', to_attr="files"),
     )
-    print(queryset.values())
     return queryset
 
 
@@ -124,7 +128,7 @@ def create_order(request, payload: OrderCreateSchema):
         raise e
 
 
-# @login_required
+@login_required
 @router.put('/', description="주문 상태 수정, OrderListSchema - state 주석 참조")
 def change_order_state(request, id: int, state: OrderState):
     target = get_object_or_404(Order, id=id)
@@ -132,13 +136,13 @@ def change_order_state(request, id: int, state: OrderState):
     target.save(update_fields=['state'])
 
 
-# @login_required
+@login_required
 @router.put('/', description="주문 내역 수정")
 def modify_order(request, id: int):
     pass
 
 
-# @login_required
+@login_required
 @router.delete('/', description="주문 삭제")
 def delete_order_list_by_id(request, id: int):
     target = get_object_or_404(Order, id=id)

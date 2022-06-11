@@ -9,8 +9,8 @@ from util.models import TimeStampModel, SoftDeleteModel
 
 class Refund(TimeStampModel, SoftDeleteModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    reject_reason = models.CharField(max_length=200, blank=True)
-    refund_location = models.CharField(max_length=200, blank=True)
+    reject_reason = models.CharField(max_length=200, null=True)
+    refund_location = models.CharField(max_length=200, null=True)
     method = models.PositiveSmallIntegerField(default=RefundMethod.RECALL_REQUEST)
     status = models.PositiveSmallIntegerField(default=RefundStatus.WAITING)
 

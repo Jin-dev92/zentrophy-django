@@ -10,7 +10,7 @@ from conf.custom_exception import UserNotAccessDeniedException
 from member.constant import MemberSort
 from member.models import User, PaymentMethod, Card, RemoteToken
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
-    MemberReAssignSchema
+    MemberReAssignSchema, MemberModifySchema
 from util.params import prepare_for_query
 from util.permission import has_permission, is_valid_token
 
@@ -20,14 +20,14 @@ payment_method_router = Router()
 
 @login_required
 @router.get("/", description="회원 목록", response=List[MemberListSchema])
-def get_list_member(request, id: Optional[int] = None, email: Optional[str] = None, username: Optional[str] = None,
+def get_list_member(request, email: Optional[str] = None, username: Optional[str] = None,
                     sort: MemberSort = None):
+    if not request.auth.is_staff:
+        raise UserNotAccessDeniedException
     params = prepare_for_query(request=request, exceptions=['sort'])
     field_name = 'date_joined'
     if sort == MemberSort.RECENT:
         field_name = '-date_joined'
-    # if not has_permission(request):  # 어드민이 아니면
-    #     params = {id: request.auth.id}  # 위한 코드
     return User.objects.filter(**params).prefetch_related(
         Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
         Prefetch('paymentmethod_set', to_attr="payment_method"),
@@ -37,7 +37,12 @@ def get_list_member(request, id: Optional[int] = None, email: Optional[str] = No
 @login_required
 @router.get('/{id}', description="id로 회원 찾기", response=List[MemberListSchema])
 def get_member_by_id(request, id: int):
-    queryset = User.objects.filter(id=id).prefetch_related(
+    if request.auth.is_staff:
+        target = User.objects.filter(id=id)
+    else:
+        target = User.objects.filter(id=request.auth.id)
+
+    queryset = target.prefetch_related(
         Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
         Prefetch('paymentmethod_set', to_attr="payment_method")
     )
@@ -64,9 +69,8 @@ def create_user(request, payload: MemberInsertSchema = Form(...)):
 
 @login_required
 @router.put("/", description="회원 수정")
-def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
+def modify_user(request, id: int, payload: MemberModifySchema = Form(...)):
     member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
-    # token_info : dict = payload.dict().get('token_info')
     target = get_object_or_404(User, id=id)
     if request.auth == target:
         user_queryset = User.objects.filter(id=id).update(**member_params)
@@ -76,18 +80,19 @@ def modify_user(request, id: int, payload: MemberInsertSchema = Form(...)):
 
 @router.delete("/", description="회원 삭제")
 def delete_user(request, id: int):
+    if not request.auth.is_staff and request.auth.id != id:
+        raise UserNotAccessDeniedException
+
     member = get_object_or_404(User, id=id)
-    if request.auth == member or has_permission(request):
-        queryset = member.delete()
-        return queryset
+    queryset = member.delete()
 
 
-@router.get('/forgot', description="아이디 찾기", response=str)
+@router.post('/forgot/id', description="아이디 찾기", response=str)
 def forgot_id(request, username: str = Form(...), phone_number: str = Form(...)):
     return get_object_or_404(User, username=username, phone_number=phone_number).email
 
 
-@router.post('/forgot', description="비밀번호 재생성")
+@router.post('/forgot/pwd', description="비밀번호 재생성")
 def forgot_pwd(request, payload: MemberReAssignSchema = Form(...)):
     user = get_object_or_404(User, username=payload.dict()['username'], email=payload.dict()['email'])
     user.set_password(payload.dict()['password'])
@@ -102,8 +107,8 @@ def get_payment_method(request):
 
 @login_required
 @transaction.atomic(using='default')
-@payment_method_router.post('/', description="결제 수단 생성")
-def create_payment_method(request, id: int = None, payload: PaymentMethodInsertSchema = Form(...)):
+@payment_method_router.post('/', description="결제 수단 생성 / 수정")
+def update_or_create_payment_method(request, id: int = None, payload: PaymentMethodInsertSchema = Form(...)):
     try:
         with transaction.atomic():
             params = payload.dict()
