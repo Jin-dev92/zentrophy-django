@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
-from conf.custom_exception import RefuseMustHaveReasonException, LoginRequiredException
+from conf.custom_exception import RefuseMustHaveReasonException, LoginRequiredException, UserNotAccessDeniedException
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
 from history.models import AfterService, Refund, Warranty, Cart
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, CartListSchema, \
@@ -15,6 +15,7 @@ from member.models import MemberOwnedVehicles
 from order.models import Order
 from placement.models import Placement
 from product.models import ProductOptions
+from util.number import generate_random_number
 from util.params import prepare_for_query
 
 refund_router = Router()
@@ -30,7 +31,11 @@ cart_router = Router()
 def get_after_service_list(request, status: AfterServiceStatus = None, is_created__gte: date = None,
                            is_created__lte: date = None):
     params = prepare_for_query(request=request)
-    queryset = AfterService.objects.get_queryset(**params).select_related('place', 'owned_vehicle', 'user')
+    if not request.auth.is_staff:
+        target = AfterService.objects.get_queryset(**params, user=request.auth)
+    else:
+        target = AfterService.objects.get_queryset(**params)
+    queryset = target.select_related('place', 'user')
     return queryset
 
 
@@ -38,7 +43,11 @@ def get_after_service_list(request, status: AfterServiceStatus = None, is_create
 @after_service_router.get('/{id}', description="a/s get by id",
                           response=AfterServiceListSchema)
 def get_after_service_by_id(request, id: int):
-    queryset = AfterService.objects.get_queryset(id=id, user=request.auth).select_related('place', 'vehicle', 'user')
+    if not request.auth.is_staff:
+        target = AfterService.objects.get_queryset(id=id, user=request.auth)
+    else:
+        target = AfterService.objects.get_queryset(id=id)
+    queryset = target.select_related('place', 'user')
     return queryset
 
 
@@ -48,25 +57,28 @@ def create_after_service_history(request, payload: AfterServiceInsertSchema):
     if not request.auth.is_authenticated:
         raise LoginRequiredException
     params = payload.dict()
-    except_params = {k: v for k, v in params.items() if k in {'place_id', 'owned_vehicle_id'}}
+    except_params = {k: v for k, v in params.items() if k in {'place_id'}}
+    except_params['registration_number'] = generate_random_number()
     place = Placement.objects.get_queryset(id=params.get('place_id'))
-    owned_vehicle = MemberOwnedVehicles.objects.get_queryset(owner=request.auth, id=params['owned_vehicle_id'])
-    AfterService.objects.update_or_create(user=request.auth, place=place.first(), owned_vehicle=owned_vehicle.first(),
+    AfterService.objects.update_or_create(user=request.auth, place=place.first(),
                                           defaults=except_params)
 
-
-# @login_required
-# @after_service_router.put("/", description="a/s 상태 수정")
-# def modify_after_service(request, id: int, payload: AfterServiceInsertSchema):
-#     obj = get_object_or_404(AfterService, id=id, user=request.auth)
-#     queryset = obj.objects.update(**payload.dict())
-#     obj.save()
-#     return queryset
+@login_required
+@after_service_router.put("/", description="a/s 상태 수정")
+def modify_after_service(request, id: int, status: AfterServiceStatus = AfterServiceStatus.APPLY_WAITING):
+    if not request.auth.is_staff:
+        raise UserNotAccessDeniedException
+    target = get_object_or_404(AfterService, id=id, user=request.auth)
+    target.status = status
+    target.save(update_fields=['status'])
 
 
 @after_service_router.delete("/", description="a/s 상태 삭제")
 def delete_after_service(request, id: int):
-    obj = get_object_or_404(AfterService, id=id, user=request.auth)
+    if not request.auth.is_staff:
+        obj = get_object_or_404(AfterService, id=id, user=request.auth)
+    else:
+        obj = get_object_or_404(AfterService, id=id)
     obj.soft_delete()
 
 

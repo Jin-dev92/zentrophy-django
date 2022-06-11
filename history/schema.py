@@ -12,8 +12,7 @@ from product.schema import VehicleListSchema
 
 class AfterServiceInsertSchema(Schema):
     place_id: int
-    owned_vehicle_id: int
-    registration_number: str = None
+    vehicle_license: str = None
     reservation_date: datetime = None
     detail: str = None
     category: AfterServiceCategory = Field(
@@ -25,10 +24,10 @@ class AfterServiceInsertSchema(Schema):
 class AfterServiceListSchema(Schema):
     user: MemberListSchema = None
     place: PlacementListSchema = None
-    owned_vehicle: VehicleListSchema = None
+    # owned_vehicle: VehicleListSchema = None
     registration_number: str = None
     status: AfterServiceStatus = AfterServiceStatus.APPLY_WAITING
-    reservation_date: datetime
+    reservation_date: datetime = None
     detail: str = None
     category: AfterServiceCategory = AfterServiceCategory.ETC
 
