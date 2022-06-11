@@ -67,6 +67,7 @@ class OrderedProductOptions(TimeStampModel):
 class OrderedVehicleColor(TimeStampModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
     vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.CASCADE, null=True)
+
     # image_path = models.CharField(max_length=2000, null=True)
     amount = models.IntegerField(default=0)
 

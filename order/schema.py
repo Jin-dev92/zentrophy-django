@@ -5,6 +5,7 @@ from ninja import Schema, Field
 
 from member.schema import MemberListSchema
 from order.constant import OrderState
+from product.schema import VehicleColorListSchema
 
 
 class CustomerInfoSchema(Schema):
@@ -25,13 +26,12 @@ class OrderLocationInfoSchema(Schema):
 
 class OrderedProductOptionsListSchema(Schema):
     product_options_id: int = None
-    image_path: str = None
     amount: int = None
 
 
 class OrderedVehicleColorListSchema(Schema):
     vehicle_color_id: int = None
-    image_path: str = None
+    vehicle_color: VehicleColorListSchema = None
     amount: int = None
 
 

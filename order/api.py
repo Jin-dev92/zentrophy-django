@@ -35,8 +35,12 @@ def get_order_list(request):
     queryset = target.prefetch_related(
         'customer_info',
         'order_location_info',
-        Prefetch(lookup='orderedproductoptions_set', to_attr="ordered_product_options"),
-        Prefetch(lookup='orderedvehiclecolor_set', to_attr="ordered_vehicle_color"),
+        Prefetch(lookup='orderedproductoptions_set',
+                 to_attr="ordered_product_options"),
+        Prefetch(lookup='orderedvehiclecolor_set',
+                 queryset=OrderedVehicleColor.objects.select_related('vehicle_color')
+                 .prefetch_related(Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image')),
+                 to_attr="ordered_vehicle_color"),
         Prefetch(lookup='documentfile_set', to_attr="files"),
     )
     return queryset
