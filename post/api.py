@@ -30,24 +30,22 @@ def get_faq_list_by_id(request, id: int):
 
 @transaction.atomic(using='default')
 @faq_router.post("/", description="FAQ 생성 / 수정")
-def create_faq(request, payload: FAQInsertSchema, id: int = None):
+def update_or_create_faq(request, payload: FAQInsertSchema, id: int = None):
+    params = payload.dict()
+    # faq_params = {k: v for k, v in params.items() if not k in {'category_id'}}
+    # category_id = params.get('category_id')
+    # faq_params[''] = category_id
     try:
         with transaction.atomic():
-            obj = FAQ.objects.update_or_create(id=id, defaults=payload.dict())
+            obj = FAQ.objects.update_or_create(id=id, defaults=params)
 
     except Exception as e:
-        print(e)
         raise DataBaseORMException
 
 
 @faq_router.delete("/", description="FAQ 삭제")
 def delete_faq(request, id: int):
     queryset = get_object_or_404(FAQ, id=id).soft_delete()
-    # return ResponseDefaultHeader(
-    #     code=Response.status_code,
-    #     message="FAQ가 삭제되었습니다",
-    #     data=queryset
-    # )
 
 
 @notice_router.get('/', description="공지사항 리스트", response=List[NoticeListSchema], auth=None)
@@ -80,8 +78,8 @@ def get_faq_category_list(request):
     return FAQCategory.objects.all()
 
 
-@faq_category_router.post('/', description='FAQ 카테고리 생성')
-def create_faq_category(request, category_name: str):
+@faq_category_router.post('/', description='FAQ 카테고리 생성 / 수정')
+def update_or_create_faq_category(request, category_name: str):
     try:
         queryset = FAQCategory.objects.create(category_name=category_name)
     except IntegrityError:

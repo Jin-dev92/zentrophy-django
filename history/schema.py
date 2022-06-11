@@ -72,7 +72,7 @@ class WarrantyInsertSchema(Schema):
 
 class CartListSchema(Schema):
     id: int
-    product_options: str
+    product_options: str = None
     amount: int
 
 

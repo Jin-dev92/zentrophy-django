@@ -6,7 +6,7 @@ from util.models import TimeStampModel, SoftDeleteModel
 
 class Post(TimeStampModel, SoftDeleteModel):
     title = models.CharField(max_length=200)
-    content = models.TextField(blank=True)
+    content = models.TextField(null=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
 
     class Meta:
