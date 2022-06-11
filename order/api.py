@@ -14,7 +14,7 @@ from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProd
     OrderLocationInfo, CustomerInfo, DocumentFormat
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema
-from product.models import ProductOptions, VehicleColor, VehicleImage, ProductImage
+from product.models import ProductOptions, VehicleColor, VehicleImage, ProductImage, Product
 from util.number import check_invalid_product_params
 
 router = Router()
@@ -36,6 +36,7 @@ def get_order_list(request):
         'customer_info',
         'order_location_info',
         Prefetch(lookup='orderedproductoptions_set',
+                 queryset=OrderedProductOptions.objects.select_related('product_options'),
                  to_attr="ordered_product_options"),
         Prefetch(lookup='orderedvehiclecolor_set',
                  queryset=OrderedVehicleColor.objects.select_related('vehicle_color')
@@ -58,6 +59,7 @@ def get_order_list_by_id(request, id: int):
         'customer_info',
         'order_location_info',
         Prefetch(lookup='orderedproductoptions_set',
+                 queryset=OrderedProductOptions.objects.select_related('product_options'),
                  to_attr="ordered_product_options"),
         Prefetch(lookup='orderedvehiclecolor_set',
                  queryset=OrderedVehicleColor.objects.select_related('vehicle_color')
