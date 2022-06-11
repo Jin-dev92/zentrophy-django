@@ -46,6 +46,11 @@ class OrderedVehicleColorCreateSchema(Schema):
     amount: int = None
 
 
+class DocumentFileListSchema(Schema):
+    id: int
+    file: str = None
+
+
 class OrderListSchema(Schema):
     id: int
     owner: MemberListSchema = None
@@ -59,7 +64,7 @@ class OrderListSchema(Schema):
     state: OrderState = Field(default=OrderState.ACCEPT_ORDER,
                               title="주문 상태",
                               description="0: 주문 수락, 1: 서류 검토중, 2: 결제 대기중, 3: 배달 준비중, 4: 배달 완료, 5: 주문 취소")
-    files: List[str] = Field(default=None, title="첨부 파일")
+    files: List[DocumentFileListSchema] = Field(default=None, title="첨부 파일")
     is_created: datetime
     is_updated: datetime
 

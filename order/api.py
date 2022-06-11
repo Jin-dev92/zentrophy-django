@@ -32,6 +32,7 @@ def get_order_list(request):
         target = Order.objects.get_queryset()
     else:
         target = Order.objects.get_queryset(owner=request.auth)
+
     queryset = target.prefetch_related(
         'customer_info',
         'order_location_info',
