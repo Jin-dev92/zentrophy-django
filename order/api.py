@@ -99,10 +99,10 @@ def create_order(request, payload: OrderCreateSchema):
                     po_target.sale_count = po_target.sale_count + po.get('amount')
                     po_target.stock_count = po_target.stock_count - po.get('amount')
                     po_target.save(update_fields=['sale_count', 'stock_count'])
-                    product_image = ProductImage.objects.filter(product=po_target.product)
-                    if len(product_image) > 0:
-                        po_list[index].image_path = product_image[0].origin_image.name
-                        po_list[index].save(update_fields=['image_path'])
+                    # product_image = ProductImage.objects.filter(product=po_target.product)
+                    # if len(product_image) > 0:
+                    #     po_list[index].image_path = product_image[0].origin_image.name
+                    #     po_list[index].save(update_fields=['image_path'])
                         # po_list[index].save()
 
             elif params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
@@ -118,10 +118,10 @@ def create_order(request, payload: OrderCreateSchema):
                     vc_target.stock_count = vc_target.stock_count - vc.get('amount')
                     vc_target.save(update_fields=['sale_count', 'stock_count'])
 
-                    vehicle_color_image = VehicleImage.objects.filter(vehicle_color=vc_target)
-                    if len(vehicle_color_image) > 0:
-                        vc_list[index].image_path = vehicle_color_image[0].origin_image.name
-                        vc_list[index].save(update_fields=['image_path'])
+                    # vehicle_color_image = VehicleImage.objects.filter(vehicle_color=vc_target)
+                    # if len(vehicle_color_image) > 0:
+                    #     vc_list[index].image_path = vehicle_color_image[0].origin_image.name
+                    #     vc_list[index].save(update_fields=['image_path'])
             else:
                 raise WrongParameterException
 

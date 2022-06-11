@@ -57,7 +57,7 @@ class Order(TimeStampModel, SoftDeleteModel):
 class OrderedProductOptions(TimeStampModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
     product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE, null=True)
-    image_path = models.CharField(max_length=2000, null=True)
+    # image_path = models.CharField(max_length=2000, null=True)
     amount = models.IntegerField(default=0)
 
     def __str__(self):
@@ -67,7 +67,7 @@ class OrderedProductOptions(TimeStampModel):
 class OrderedVehicleColor(TimeStampModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
     vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.CASCADE, null=True)
-    image_path = models.CharField(max_length=2000, null=True)
+    # image_path = models.CharField(max_length=2000, null=True)
     amount = models.IntegerField(default=0)
 
     def __str__(self):
