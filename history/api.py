@@ -81,8 +81,8 @@ def get_refund_list(request, method: RefundMethod = None, status: RefundStatus =
 
 
 @login_required
-@refund_router.get("/{id}", description="환불 내역 pk로 조회")
-def get_refund_by_id(id: int):
+@refund_router.get("/{id}", description="환불 내역 pk로 조회", response=List[RefundListSchema])
+def get_refund_by_id(request, id: int):
     queryset = Refund.objects.get_queryset(id=id)
     return queryset
 
