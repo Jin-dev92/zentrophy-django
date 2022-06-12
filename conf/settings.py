@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-plug1-6zblo)q^z1n2mjdiws96now4r!=l2@&0o$=82dxs3@^2
 DEBUG = ENV is Env.DEVELOPMENT
 # MAIN_URL = ''  # 젠트로피 도메인
 # ALLOWED_URL_LIST = ['.pythonanywhere.com', MAIN_URL]
-ALLOWED_URL_LIST = ['.pythonanywhere.com']
+ALLOWED_URL_LIST = ['.pythonanywhere.com', 'https://api.iamport.kr/*']
 
 # CSRF_COOKIE_SECURE = True
 # CSRF_COOKIE_HTTPONLY = True
@@ -38,7 +38,7 @@ if DEBUG:
     ALLOWED_HOSTS = ['*']
 else:
     ALLOWED_HOSTS = [url for url in ALLOWED_URL_LIST]
-    CORS_ORIGIN_WHITELIST = ['http://localhost:8000', 'http://localhost:3000']
+    CORS_ORIGIN_WHITELIST = ['http://localhost:8000', 'http://localhost:3000', 'https://api.iamport.kr/*']
 
 # 2.5MB - 2621440
 # 5MB - 5242880
