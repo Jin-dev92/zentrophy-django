@@ -7,7 +7,6 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
-# from iamport import Iamport
 import requests
 
 from conf.custom_exception import AlreadyExistsException, LoginRequiredException, WrongParameterException, \
@@ -18,7 +17,7 @@ from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProd
     OrderLocationInfo, CustomerInfo, DocumentFormat
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema, SubscriptionsCreateSchema
-from product.models import ProductOptions, VehicleColor, VehicleImage, ProductImage, Product
+from product.models import ProductOptions, VehicleColor
 from util.number import check_invalid_product_params
 
 
