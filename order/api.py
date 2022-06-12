@@ -1,5 +1,6 @@
 from typing import List
 
+from asgiref.sync import sync_to_async
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Prefetch
@@ -9,17 +10,20 @@ from ninja.files import UploadedFile
 
 from conf.custom_exception import AlreadyExistsException, LoginRequiredException, WrongParameterException, \
     NotEnoughStockException, UserNotAccessDeniedException
+from order.async_function import get_payments_token, get_billing
 from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
     OrderLocationInfo, CustomerInfo, DocumentFormat
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
-    DocumentFormatListSchema
+    DocumentFormatListSchema, SubscriptionsCreateSchema
 from product.models import ProductOptions, VehicleColor, VehicleImage, ProductImage, Product
 from util.number import check_invalid_product_params
 
 router = Router()
 subside_router = Router()
 file_router = Router()
+subscription_router = Router()
+
 upload_exceed_count = 5
 
 
@@ -240,3 +244,15 @@ def delete_format_files(request, id: int):
         raise UserNotAccessDeniedException
     target = get_object_or_404(DocumentFormat, id=id)
     queryset = target.soft_delete()
+
+
+@login_required
+@sync_to_async
+@subscription_router.post('/issue_billing', description="나이츠 페이먼츠 정기 결제")
+def create_subscription(request, payload: SubscriptionsCreateSchema):
+    access_token =  get_payments_token()
+    result =  get_billing(access_token=access_token, data=payload.dict())
+    # return {
+    #             'code': result['data']['code'],
+    #             'message': result['data']['message']
+    #         }

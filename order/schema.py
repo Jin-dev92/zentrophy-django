@@ -109,3 +109,18 @@ class SubsideInsertSchema(Schema):
 class DocumentFormatListSchema(Schema):
     id: int
     file: str = None
+
+
+class Subscriptions(Schema):
+    card_number: str
+    expiry: str = Field(description="카드 유효기간")
+    birth: date
+    pwd_2digit: str = Field(description="카드 비밀번호 앞 두자리")
+
+
+class SubscriptionsCreateSchema(Subscriptions):
+    # card_number: str
+    # expiry: str = Field(description="카드 유효기간")
+    # birth: date
+    # pwd_2digit: str = Field(description="카드 비밀번호 앞 두자리")
+    customer_uid: str

@@ -173,3 +173,5 @@ ADMIN_GROUP_NAME = 'super_user'
 CUSTOMER_GROUP_NAME = None
 MAX_DISPLAY_LINE_COUNT = 2
 JWT_ENCRYPTION_ALG = 'HS256'
+
+# NICE_PAYMENTS_TOKEN_URL = 'https://api.iamport.kr/users/getToken'
