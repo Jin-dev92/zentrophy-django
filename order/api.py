@@ -7,10 +7,12 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
+# from iamport import Iamport
+import requests
 
 from conf.custom_exception import AlreadyExistsException, LoginRequiredException, WrongParameterException, \
     NotEnoughStockException, UserNotAccessDeniedException
-from order.async_function import get_payments_token, get_billing
+from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO
 from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
     OrderLocationInfo, CustomerInfo, DocumentFormat
@@ -18,6 +20,7 @@ from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, 
     DocumentFormatListSchema, SubscriptionsCreateSchema
 from product.models import ProductOptions, VehicleColor, VehicleImage, ProductImage, Product
 from util.number import check_invalid_product_params
+
 
 router = Router()
 subside_router = Router()
@@ -250,9 +253,24 @@ def delete_format_files(request, id: int):
 @sync_to_async
 @subscription_router.post('/issue_billing', description="나이츠 페이먼츠 정기 결제")
 def create_subscription(request, payload: SubscriptionsCreateSchema):
-    access_token =  get_payments_token()
-    result =  get_billing(access_token=access_token, data=payload.dict())
-    # return {
-    #             'code': result['data']['code'],
-    #             'message': result['data']['message']
-    #         }
+    # iamport = Iamport(
+    #     imp_key='imp_apikey',
+    #     imp_secret=( # 테스트 용 시크릿 키
+    #         'ekKoeW8RyKuT0zgaZsUtXXTLQ4AhPFW3ZGseDA6b'
+    #         'kA5lamv9OqDMnxyeB9wqOsuO9W3Mx9YSJ4dTqJ3f'
+    #     )
+    # )
+    try:
+        token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'])
+        token_response_json = token_response.json()
+        if int(token_response_json['code']) == 0:
+            access_token = token_response_json['response'].get('access_token')
+            issue_billing_response = requests.post(
+                url=ISSUE_BILLING_INFO['url'],
+                headers={'Authorization': access_token},
+                json=payload.json())
+            if issue_billing_response.json()['code'] != 0:
+                print(issue_billing_response.json())
+                return issue_billing_response.json()
+    except Exception as e:
+        raise e

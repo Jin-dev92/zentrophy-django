@@ -175,3 +175,18 @@ MAX_DISPLAY_LINE_COUNT = 2
 JWT_ENCRYPTION_ALG = 'HS256'
 
 # NICE_PAYMENTS_TOKEN_URL = 'https://api.iamport.kr/users/getToken'
+GET_TOKEN_INFO = {
+    'url': "https://api.iamport.kr/users/getToken",
+    'headers': {
+        "Content-Type": "application/json"
+    },
+    'data': {
+        "imp_key": "imp_apikey",
+        "imp_secret": "ekKoeW8RyKuT0zgaZsUtXXTLQ4AhPFW3ZGseDA6bkA5lamv9OqDMnxyeB9wqOsuO9W3Mx9YSJ4dTqJ3f"
+    }
+}
+
+ISSUE_BILLING_INFO = {
+    'url': ' https://api.iamport.kr/subscribe/customers/',
+}
+

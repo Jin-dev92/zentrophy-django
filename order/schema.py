@@ -119,8 +119,5 @@ class Subscriptions(Schema):
 
 
 class SubscriptionsCreateSchema(Subscriptions):
-    # card_number: str
-    # expiry: str = Field(description="카드 유효기간")
-    # birth: date
-    # pwd_2digit: str = Field(description="카드 비밀번호 앞 두자리")
     customer_uid: str
+
