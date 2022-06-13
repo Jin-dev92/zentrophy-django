@@ -114,10 +114,16 @@ class DocumentFormatListSchema(Schema):
 class Subscriptions(Schema):
     card_number: str
     expiry: str = Field(description="카드 유효기간")
-    birth: date
+    birth: str
     pwd_2digit: str = Field(description="카드 비밀번호 앞 두자리")
 
 
 class SubscriptionsCreateSchema(Subscriptions):
     customer_uid: str
 
+
+class RequestPaymentSubscriptionsSchema(Schema):
+    customer_uid: str
+    merchant_uid: str
+    amount: int
+    name: str
