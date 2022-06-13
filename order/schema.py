@@ -26,7 +26,7 @@ class OrderLocationInfoSchema(Schema):
 
 class OrderedProductOptionsListSchema(Schema):
     product_options: ProductOptionsListSchema = None
-    product_image: List[ProductImageListSchema] = None
+    product_image: str = None
     amount: int = None
 
 

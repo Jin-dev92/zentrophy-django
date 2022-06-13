@@ -5,6 +5,7 @@ from asgiref.sync import sync_to_async
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Prefetch
+from django.db.models import F
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
@@ -45,7 +46,8 @@ def get_order_list(request):
         'customer_info',
         'order_location_info',
         Prefetch(lookup='orderedproductoptions_set',
-                 queryset=OrderedProductOptions.objects.select_related('product_options'),
+                 queryset=OrderedProductOptions.objects.select_related('product_options')
+                 .annotate(product_image=F('product_options__product__productimage__origin_image')),
                  to_attr="ordered_product_options"),
         Prefetch(lookup='orderedvehiclecolor_set',
                  queryset=OrderedVehicleColor.objects.select_related('vehicle_color')

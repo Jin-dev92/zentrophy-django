@@ -158,17 +158,16 @@ def get_cart_list(request):
     return queryset
 
 
-@login_required
-@cart_router.get('/test', description="장바구니 목록 확인", response=List[CartListSchema])
-def get_cart_list_test(request):
-    from django.db.models import F
-    queryset = Cart.objects.filter(owner=request.auth)\
-        .select_related('product_options__product')\
-        .annotate(
-        product_image=F("product_options__product__productimage__origin_image")
-    )
-
-    return queryset
+# @login_required
+# @cart_router.get('/test', description="장바구니 목록 확인", response=List[CartListSchema])
+# def get_cart_list_test(request):
+#     from django.db.models import F
+#     queryset = Cart.objects.filter(owner=request.auth)\
+#         .select_related('product_options__product')\
+#         .annotate(
+#         product_image=F("product_options__product__productimage__origin_image")
+#     )
+#     return queryset
 
 
 @login_required
