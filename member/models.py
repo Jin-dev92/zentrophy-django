@@ -94,7 +94,7 @@ class Card(SoftDeleteModel):
             raise FormatNotSupportedException
         if self.is_business and len(self.personal_number) != 10:
             raise FormatNotSupportedException
-        if self.is_business and len(self.personal_number) != 8:
+        if self.is_business and len(self.personal_number) != 6:
             raise FormatNotSupportedException
         if len(self.pwd_2digit) != 2:
             raise FormatNotSupportedException
