@@ -80,6 +80,7 @@ class Card(SoftDeleteModel):
     cvc = models.CharField(max_length=4, null=True)
     pwd_2digit = models.CharField(max_length=2, null=True)
     personal_number = models.CharField(max_length=10, null=True)
+    is_business = models.BooleanField(default=False)
 
     def __str__(self):
         return self.card_number
@@ -91,6 +92,13 @@ class Card(SoftDeleteModel):
             raise FormatNotSupportedException
         if len(self.cvc) != 3:
             raise FormatNotSupportedException
+        if self.is_business and len(self.personal_number) != 10:
+            raise FormatNotSupportedException
+        if self.is_business and len(self.personal_number) != 8:
+            raise FormatNotSupportedException
+        if len(self.pwd_2digit) != 2:
+            raise FormatNotSupportedException
+
         validate_month = int(self.validate_date[0:2])
         validate_year = int(settings.YEAR_TWO_DIGIT + self.validate_date[2:4])
         if validate_month < 1 or validate_month > 12:

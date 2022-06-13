@@ -39,6 +39,7 @@ class CardInsertSchema(Schema):
     cvc: str
     pwd_2digit: str
     personal_number: str
+    is_business: bool
 
 
 class PaymentMethodListSchema(Schema):
