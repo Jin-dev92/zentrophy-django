@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 
 from ninja import Field
 from ninja import Schema
@@ -7,7 +8,7 @@ from history.constant import RefundMethod, RefundStatus, AfterServiceCategory, A
 from member.schema import MemberListSchema
 from order.schema import OrderListSchema
 from placement.schema import PlacementListSchema
-from product.schema import VehicleListSchema
+from product.schema import VehicleListSchema, ProductOptionsListSchema, ProductImageListSchema
 
 
 class AfterServiceInsertSchema(Schema):
@@ -71,7 +72,8 @@ class WarrantyInsertSchema(Schema):
 
 class CartListSchema(Schema):
     id: int
-    product_options: str = None
+    product_options: ProductOptionsListSchema = None
+    product_image: str = None
     amount: int
 
 

@@ -25,7 +25,8 @@ class ProductDisplayInsertSchema(Schema):
 
 class ProductImageListSchema(Schema):
     id: int
-    origin_image: str
+    product_id: int = None
+    origin_image: str = None
 
 
 class ProductOptionsListSchema(Schema):

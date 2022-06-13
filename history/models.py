@@ -33,7 +33,7 @@ class Warranty(TimeStampModel, SoftDeleteModel):
 
 
 class Cart(TimeStampModel):
-    product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE, null=True)
+    product_options = models.OneToOneField(ProductOptions, on_delete=models.CASCADE, null=True)
     owner = models.ForeignKey('member.User', on_delete=models.CASCADE, null=True)
     amount = models.IntegerField(default=0)
 

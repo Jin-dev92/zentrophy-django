@@ -32,15 +32,13 @@ def get_faq_list_by_id(request, id: int):
 @faq_router.post("/", description="FAQ 생성 / 수정")
 def update_or_create_faq(request, payload: FAQInsertSchema, id: int = None):
     params = payload.dict()
-    # faq_params = {k: v for k, v in params.items() if not k in {'category_id'}}
-    # category_id = params.get('category_id')
-    # faq_params[''] = category_id
     try:
         with transaction.atomic():
             obj = FAQ.objects.update_or_create(id=id, defaults=params)
 
     except Exception as e:
-        raise DataBaseORMException
+        raise e
+        # raise DataBaseORMException
 
 
 @faq_router.delete("/", description="FAQ 삭제")

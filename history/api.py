@@ -4,6 +4,7 @@ from typing import List
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from ninja import Router
+from django.db.models import F
 
 from conf.custom_exception import RefuseMustHaveReasonException, LoginRequiredException, UserNotAccessDeniedException
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
@@ -11,10 +12,9 @@ from history.models import AfterService, Refund, Warranty, Cart
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, CartListSchema, \
     CartCreateSchema, AfterServiceListSchema, RefundListSchema, \
     WarrantyListSchema
-from member.models import MemberOwnedVehicles
 from order.models import Order
 from placement.models import Placement
-from product.models import ProductOptions
+from product.models import ProductOptions, Product
 from util.number import generate_random_number
 from util.params import prepare_for_query
 
@@ -148,10 +148,26 @@ def delete_warranty(request, id: int):
 
 
 @login_required
-@cart_router.get('/', description="장바구니 목록 확인", response={200: List[CartListSchema]})
+@cart_router.get('/', description="장바구니 목록 확인", response=List[CartListSchema])
 def get_cart_list(request):
-    print(request.auth)
-    queryset = Cart.objects.filter(owner=request.auth).select_related('product_options')
+    queryset = Cart.objects.filter(owner=request.auth) \
+        .select_related('product_options__product') \
+        .annotate(
+        product_image=F("product_options__product__productimage__origin_image")
+    )
+    return queryset
+
+
+@login_required
+@cart_router.get('/test', description="장바구니 목록 확인", response=List[CartListSchema])
+def get_cart_list_test(request):
+    from django.db.models import F
+    queryset = Cart.objects.filter(owner=request.auth)\
+        .select_related('product_options__product')\
+        .annotate(
+        product_image=F("product_options__product__productimage__origin_image")
+    )
+
     return queryset
 
 

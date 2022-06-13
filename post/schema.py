@@ -12,7 +12,7 @@ class FAQCategorySchema(Schema):
 
 
 class FAQInsertSchema(PostInsertSchema):
-    category_id: int
+    category_id: int = None
 
 
 class FAQListSchema(Schema):
