@@ -142,3 +142,8 @@ class Schedule(Schema):
 class RequestPaymentSubscriptionsScheduleSchema(Schema):
     customer_uid: str
     schedules: List[Schedule]
+
+
+class RequestIamportCallback(Schema):
+    imp_uid: str
+    merchant_uid: str

@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models import Prefetch
 from django.db.models import F
 from django.shortcuts import get_object_or_404
-from ninja import Router
+from ninja import Router, Form
 from ninja.files import UploadedFile
 import requests
 
@@ -19,7 +19,7 @@ from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProd
     OrderLocationInfo, CustomerInfo, DocumentFormat
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
-    RequestPaymentSubscriptionsScheduleSchema
+    RequestPaymentSubscriptionsScheduleSchema, RequestIamportCallback
 from product.models import ProductOptions, VehicleColor
 from util.number import check_invalid_product_params
 
@@ -314,6 +314,33 @@ def request_payment_schedule_subscription(request, payload: RequestPaymentSubscr
                 timeout=5
             )
             return request_payment_schedule_response.json()
+        else:
+            return token_response_json
+    except Exception as e:
+        raise e
+
+
+@login_required
+@sync_to_async
+@subscription_router.get('/iamport_callback/schedule')
+def iamport_callback(request, imp_uid: str, merchant_uid: str):
+    try:
+        token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'], timeout=5)
+        token_response_json = token_response.json()
+        if int(token_response_json['code']) == 0:
+            access_token = token_response_json['response'].get('access_token')
+            # imp_uid 로 아임포트 서버에서 결제 정보 조회
+            payment_response = requests.post(
+                url='https://api.iamport.kr/payments/' + imp_uid,
+                headers={'Authorization': access_token}
+            )
+            payment_response_json = payment_response.json()
+            if payment_response_json['code'] == 0:
+                status = payment_response_json['data']['response']['status']
+                if status == 'paid':
+                    # DB에 저장하기.
+                    print("정기 결제에 관한 것 디비에 쌓아줘야함.")
+            return payment_response_json
         else:
             return token_response_json
     except Exception as e:
