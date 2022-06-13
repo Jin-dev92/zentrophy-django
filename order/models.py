@@ -88,7 +88,7 @@ class CustomerInfo(TimeStampModel):
 
 
 class OrderLocationInfo(TimeStampModel):
-    address_1 = models.CharField(max_length=100, null=True)
+    address_1 = models.CharField(max_length=100, null=True, help_text="우편 번호")
     address_2 = models.CharField(max_length=100, null=True)
     address_3 = models.CharField(max_length=100, null=True)
     detail = models.CharField(max_length=100, null=True)
@@ -99,3 +99,9 @@ class OrderLocationInfo(TimeStampModel):
 
 class DocumentFormat(TimeStampModel, SoftDeleteModel):
     file = models.FileField(upload_to="order/%Y/%M")
+
+
+class Subscriptions(TimeStampModel, SoftDeleteModel):
+    merchant_uid = models.CharField(max_length=200, null=True, help_text="주문 번호")
+    imp_uid = models.CharField(max_length=200, null=True, help_text="결제 번호", unique=True)
+    response_raw = models.JSONField(null=True, help_text="api 응답 원문")

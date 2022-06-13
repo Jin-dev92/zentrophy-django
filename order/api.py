@@ -16,7 +16,7 @@ from conf.custom_exception import AlreadyExistsException, LoginRequiredException
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
-    OrderLocationInfo, CustomerInfo, DocumentFormat
+    OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
     RequestPaymentSubscriptionsScheduleSchema, RequestIamportCallback
@@ -339,7 +339,13 @@ def iamport_callback(request, imp_uid: str, merchant_uid: str):
                 status = payment_response_json['data']['response']['status']
                 if status == 'paid':
                     # DB에 저장하기.
-                    print("정기 결제에 관한 것 디비에 쌓아줘야함.")
+                    Subscriptions.objects.update_or_create(
+                        imp_uid=imp_uid,
+                        defaults={
+                            'imp_uid': imp_uid,
+                            'merchant_uid': merchant_uid,
+                            'response_raw': payment_response_json
+                        })
             return payment_response_json
         else:
             return token_response_json
