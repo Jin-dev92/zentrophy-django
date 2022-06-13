@@ -190,3 +190,6 @@ ISSUE_BILLING_INFO = {
     'url': ' https://api.iamport.kr/subscribe/customers/',
 }
 
+REQUEST_PAYMENT = {
+    'url': 'https://api.iamport.kr/subscribe/payments/again'
+}

@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 
 from asgiref.sync import sync_to_async
@@ -11,12 +12,13 @@ import requests
 
 from conf.custom_exception import AlreadyExistsException, LoginRequiredException, WrongParameterException, \
     NotEnoughStockException, UserNotAccessDeniedException
-from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO
+from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
     OrderLocationInfo, CustomerInfo, DocumentFormat
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
-    DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema
+    DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
+    RequestPaymentSubscriptionsScheduleSchema
 from product.models import ProductOptions, VehicleColor
 from util.number import check_invalid_product_params
 
@@ -275,19 +277,41 @@ def create_subscription(request, payload: SubscriptionsCreateSchema):
 @login_required
 @sync_to_async
 @subscription_router.post('/payment')
-def request_pay_subscription(request, payload: RequestPaymentSubscriptionsSchema):
+def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSchema):
     try:
         token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'], timeout=5)
         token_response_json = token_response.json()
         if int(token_response_json['code']) == 0:
             access_token = token_response_json['response'].get('access_token')
             request_payment_response = requests.post(
-                url='https://api.iamport.kr/subscribe/payments/again',
+                url=REQUEST_PAYMENT['url'],
                 headers={'Authorization': access_token},
                 json=payload.json(),
                 timeout=5
             )
             return request_payment_response.json()
+        else:
+            return token_response_json
+    except Exception as e:
+        raise e
+
+
+@login_required
+@sync_to_async
+@subscription_router.post('/payment/schedule')
+def request_payment_schedule_subscription(request, payload: RequestPaymentSubscriptionsScheduleSchema):
+    try:
+        token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'], timeout=5)
+        token_response_json = token_response.json()
+        if int(token_response_json['code']) == 0:
+            access_token = token_response_json['response'].get('access_token')
+            request_payment_schedule_response = requests.post(
+                url='https://api.iamport.kr/subscribe/payments/schedule',
+                headers={'Authorization': access_token},
+                json=payload.json(),
+                timeout=5
+            )
+            return request_payment_schedule_response.json()
         else:
             return token_response_json
     except Exception as e:

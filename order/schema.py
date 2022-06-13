@@ -127,3 +127,18 @@ class RequestPaymentSubscriptionsSchema(Schema):
     merchant_uid: str
     amount: int
     name: str
+
+
+class Schedule(Schema):
+    merchant_uid: str
+    schedule_at: int = Field(description="결제 시도 시각, 타임스탬프로 보내기")
+    amount: int
+    name: str
+    buyer_name: str
+    buyer_tel: str
+    buyer_email: str
+
+
+class RequestPaymentSubscriptionsScheduleSchema(Schema):
+    customer_uid: str
+    schedules: List[Schedule]
