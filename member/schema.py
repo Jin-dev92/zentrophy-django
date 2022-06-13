@@ -37,6 +37,8 @@ class CardInsertSchema(Schema):
     user_name: str
     validate_date: str
     cvc: str
+    pwd_2digit: str
+    personal_number: str
 
 
 class PaymentMethodListSchema(Schema):

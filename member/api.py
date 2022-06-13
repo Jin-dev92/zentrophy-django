@@ -109,6 +109,7 @@ def get_payment_method(request):
 @transaction.atomic(using='default')
 @payment_method_router.post('/', description="결제 수단 생성 / 수정")
 def update_or_create_payment_method(request, id: int = None, payload: PaymentMethodInsertSchema = Form(...)):
+    # user = request.auth
     try:
         with transaction.atomic():
             params = payload.dict()

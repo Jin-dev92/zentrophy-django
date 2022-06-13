@@ -69,7 +69,7 @@ class MemberOwnedVehicles(TimeStampModel, SoftDeleteModel):
 class PaymentMethod(TimeStampModel, SoftDeleteModel):
     name = models.CharField(max_length=100)  # 결제 수단 별명
     owner = models.ForeignKey('member.User', on_delete=models.CASCADE)
-    card = models.ForeignKey('member.Card', on_delete=models.CASCADE, null=True)
+    card = models.OneToOneField('member.Card', on_delete=models.CASCADE, null=True)
     favorite = models.BooleanField(default=False)
 
 
@@ -78,6 +78,8 @@ class Card(SoftDeleteModel):
     user_name = models.CharField(max_length=100, null=True)
     validate_date = models.CharField(max_length=4, null=True)
     cvc = models.CharField(max_length=4, null=True)
+    pwd_2digit = models.CharField(max_length=2, null=True)
+    personal_number = models.CharField(max_length=10, null=True)
 
     def __str__(self):
         return self.card_number
