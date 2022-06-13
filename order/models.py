@@ -105,3 +105,6 @@ class Subscriptions(TimeStampModel, SoftDeleteModel):
     merchant_uid = models.CharField(max_length=200, null=True, help_text="주문 번호")
     imp_uid = models.CharField(max_length=200, null=True, help_text="결제 번호", unique=True)
     response_raw = models.JSONField(null=True, help_text="api 응답 원문")
+
+    def __str__(self):
+        return self.imp_uid

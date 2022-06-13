@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from order.models import Order, DocumentFile, Subside, IntegratedFeePlan, ExtraSubside, CustomerInfo, OrderLocationInfo, \
-    OrderedProductOptions, OrderedVehicleColor
+    OrderedProductOptions, OrderedVehicleColor, Subscriptions
 
 admin.site.register(Order)
 admin.site.register(DocumentFile)
@@ -13,3 +13,4 @@ admin.site.register(CustomerInfo)
 admin.site.register(OrderLocationInfo)
 admin.site.register(OrderedProductOptions)
 admin.site.register(OrderedVehicleColor)
+admin.site.register(Subscriptions)

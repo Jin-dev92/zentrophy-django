@@ -334,7 +334,7 @@ def iamport_callback(request, imp_uid: str, merchant_uid: str):
                 headers={'Authorization': access_token}
             )
             payment_response_json = payment_response.json()
-            if payment_response_json['code'] == 0:
+            if payment_response_json['code'] == 0 and payment_response_json['data']:
                 status = payment_response_json['data']['response']['status']
                 if status == 'paid':
                     # DB에 저장하기.

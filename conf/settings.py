@@ -181,8 +181,8 @@ GET_TOKEN_INFO = {
         "Content-Type": "application/json"
     },
     'data': {
-        "imp_key": "imp_apikey",
-        "imp_secret": "ekKoeW8RyKuT0zgaZsUtXXTLQ4AhPFW3ZGseDA6bkA5lamv9OqDMnxyeB9wqOsuO9W3Mx9YSJ4dTqJ3f"
+        "imp_key": "0244250463245442",
+        "imp_secret": "Sgx2eRjh5IHkiIMZ14uCxUUITlUvPo3HFBJUs3byMSS4AE4CIyffs9XmuSRkgV2WxLQZP2yBVqGw5L8N"
     }
 }
 
