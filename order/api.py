@@ -273,7 +273,6 @@ def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSc
                         merchant_uid=payload.dict()['merchant_uid'],
                         customer_uid=payload.dict()['customer_uid'],
                     )
-                    pass
                 return request_payment_response.json()
             else:
                 return token_response_json
@@ -285,6 +284,7 @@ def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSc
 @sync_to_async
 @subscription_router.post('/payment/schedule')
 def request_payment_schedule_subscription(request, payload: RequestPaymentSubscriptionsScheduleSchema):
+    schedules = payload.dict()['schedules']
     try:
         with transaction.atomic():
             token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'], timeout=5)
@@ -297,6 +297,13 @@ def request_payment_schedule_subscription(request, payload: RequestPaymentSubscr
                     json=payload.json(),
                     timeout=5
                 )
+                # if int(request_payment_schedule_response['code']) == 0:  # 요청이 성공 했을 경우
+                #     # DB에 저장 한다.
+                #     Subscriptions.objects.create(
+                #         owner=request.auth,
+                #         merchant_uid=schedules['merchant_uid'],
+                #         customer_uid=payload.dict()['customer_uid'],
+                #     )
                 return request_payment_schedule_response.json()
             else:
                 return token_response_json
