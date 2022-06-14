@@ -47,7 +47,7 @@ def create_user(request, payload: MemberInsertSchema = Form(...)):
 
 @router.get('/{id}', description="id로 회원 찾기", response=List[MemberListSchema])
 def get_member_by_id(request, id: int):
-    if is_admin(request):
+    if is_admin(request.auth):
         target = User.objects.filter(id=id)
     elif request.auth.is_staff and not request.auth.is_active:
         raise AdminAccountInActiveException
@@ -64,7 +64,7 @@ def get_member_by_id(request, id: int):
 def modify_user(request, id: int, payload: MemberModifySchema = Form(...)):
     member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
     target = get_object_or_404(User, id=id)
-    if request.auth == target or is_admin(request):
+    if request.auth == target or is_admin(request.auth):
         user_queryset = User.objects.filter(id=id).update(**member_params)
     else:
         raise UserNotAccessDeniedException

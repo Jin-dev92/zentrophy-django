@@ -81,7 +81,7 @@ def delete_after_service(request, id: int):
                    )
 def get_refund_list(request, method: RefundMethod = None, status: RefundStatus = None):
     params = prepare_for_query(request=request)
-    if is_admin(request):
+    if is_admin(request.auth):
         qs = Refund.objects.get_queryset(**params).select_related('order').all()
     else:
         qs = Refund.objects.get_queryset(**params, order__owner=request.auth).select_related('order').all()
@@ -90,7 +90,7 @@ def get_refund_list(request, method: RefundMethod = None, status: RefundStatus =
 
 @refund_router.get("/{id}", description="환불 내역 id로 조회", response=List[RefundListSchema])
 def get_refund_list_by_id(request, id: int):
-    if is_admin(request):
+    if is_admin(request.auth):
         qs = Refund.objects.get_queryset(id=id).select_related('order').all()
     else:
         qs = Refund.objects.get_queryset(id=id, order__owner=request.auth).select_related('order').all()
@@ -119,9 +119,9 @@ def modify_refund(request, id: int, status: RefundStatus, reject_reason: str = N
 
 @refund_router.delete('/', description="환불 내역 삭제")
 def delete_refund(request, id: int):
-    # params = {'id': id, 'order__owner': request.auth} if is_admin(request) else {id: id}
+    # params = {'id': id, 'order__owner': request.auth} if is_admin(request.auth) else {id: id}
     # print(Refund.objects.filter(**params))
-    if is_admin(request):
+    if is_admin(request.auth):
         target = get_object_or_404(Refund, id=id)
     else:
         target = get_object_or_404(Refund, id=id, order__owner=request.auth)

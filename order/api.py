@@ -32,7 +32,7 @@ upload_exceed_count = 5
 
 @router.get('/', response=List[OrderListSchema], description="주문 검색")
 def get_order_list(request):
-    if is_admin(request):
+    if is_admin(request.auth):
         target = Order.objects.get_queryset()
     else:
         target = Order.objects.get_queryset(owner=request.auth)
@@ -55,7 +55,7 @@ def get_order_list(request):
 
 @router.get('/{id}', description="주문 id로 검색", response=List[OrderListSchema])
 def get_order_list_by_id(request, id: int):
-    if is_admin(request):
+    if is_admin(request.auth):
         target = Order.objects.get_queryset()
     else:
         target = Order.objects.get_queryset(id=id, owner=request.auth)
