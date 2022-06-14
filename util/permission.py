@@ -6,8 +6,7 @@ from conf.custom_exception import WrongTokenException
 from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
 
 
-def is_admin(request):  # 어드민 유저만 허용
-    user = request.auth
+def is_admin(user):  # 어드민 유저만 허용
     return user.is_staff and user.is_active
 
 

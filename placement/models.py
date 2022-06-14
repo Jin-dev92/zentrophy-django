@@ -5,7 +5,7 @@ from util.models import SoftDeleteModel
 
 
 class Placement(SoftDeleteModel):
-    remote_pk = models.IntegerField(default=0, unique=True)
+    remote_pk = models.IntegerField(unique=True)
     image = ImageField(upload_to="place/%Y/%M", null=True)
     is_activate = models.BooleanField(default=False)
 

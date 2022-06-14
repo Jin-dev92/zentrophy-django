@@ -10,7 +10,6 @@ from member.constant import MemberSort
 from member.models import User, PaymentMethod, Card, RemoteToken
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
     MemberReAssignSchema, MemberModifySchema
-from util.decorator import admin_permission
 from util.params import prepare_for_query
 from util.permission import is_admin
 

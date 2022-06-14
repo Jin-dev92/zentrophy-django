@@ -19,7 +19,6 @@ from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, 
     DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
     RequestPaymentSubscriptionsScheduleSchema
 from product.models import ProductOptions, VehicleColor
-from util.decorator import admin_permission
 from util.number import check_invalid_product_params
 from util.permission import is_admin
 
@@ -133,8 +132,9 @@ def create_order(request, payload: OrderCreateSchema):
 
 
 @router.put('/', description="주문 상태 수정, OrderListSchema - state 주석 참조")
-# @admin_permission
 def change_order_state(request, id: int, state: OrderState):
+    if not is_admin(request.auth):  # 어드민 접근 제한
+        raise UserNotAccessDeniedException
     target = get_object_or_404(Order, id=id)
     target.state = state
     target.save(update_fields=['state'])
@@ -162,8 +162,9 @@ def get_list_subside(request):
 
 @transaction.atomic(using='default')
 @subside_router.post('/')
-# @admin_permission
 def create_subside(request, payload: SubsideInsertSchema):
+    if not is_admin(request.auth):  # 어드민 접근 제한
+        raise UserNotAccessDeniedException
     subside_amount = len(Subside.objects.all())
     try:
         with transaction.atomic():
@@ -181,8 +182,9 @@ def create_subside(request, payload: SubsideInsertSchema):
 
 
 @subside_router.put('/', description="기본 보조금 수정")
-# @admin_permission
 def modify_extra_subside(request, payload: SubsideInsertSchema = None):
+    if not is_admin(request.auth):  # 어드민 접근 제한
+        raise UserNotAccessDeniedException
     for extra_subside in ExtraSubside.objects.get_queryset():
         extra_subside.soft_delete()
     if payload:
@@ -213,9 +215,8 @@ def get_format_list(request):
 
 
 @file_router.post('/format', description="보조금 신청서 포맷 업로드")
-# @admin_permission
 def upload_format_files(request, file: UploadedFile):
-    if not request.auth.is_staff:
+    if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     queryset = DocumentFormat.objects.create(file=file)
 
@@ -223,7 +224,7 @@ def upload_format_files(request, file: UploadedFile):
 @file_router.delete('/format', description="보조금 신청서 포맷 삭제")
 # @admin_permission
 def delete_format_files(request, id: int):
-    if not request.auth.is_staff:
+    if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     target = get_object_or_404(DocumentFormat, id=id)
     queryset = target.soft_delete()
