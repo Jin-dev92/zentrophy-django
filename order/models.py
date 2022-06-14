@@ -1,5 +1,6 @@
 from django.db import models
 
+from member.models import User
 from order.constant import OrderState
 from product.models import ProductOptions, VehicleColor, ProductImage, VehicleImage
 from util.models import TimeStampModel, SoftDeleteModel
@@ -102,7 +103,9 @@ class DocumentFormat(TimeStampModel, SoftDeleteModel):
 
 
 class Subscriptions(TimeStampModel, SoftDeleteModel):
+    owner = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     merchant_uid = models.CharField(max_length=200, null=True, help_text="주문 번호")
+    customer_uid = models.CharField(max_length=200, null=True, help_text="사용자 uid")
     imp_uid = models.CharField(max_length=200, null=True, help_text="결제 번호", unique=True)
     response_raw = models.JSONField(null=True, help_text="api 응답 원문")
 
