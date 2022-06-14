@@ -40,7 +40,7 @@ def get_placement_by_id(request, id: int):
 
 
 @router.delete("/", description="플레이스 삭제")
-@admin_permission
+# # @admin_permission
 def delete_placement(request, id: int):
     queryset = get_object_or_404(Placement, id=id).soft_delete()
     return queryset
@@ -49,7 +49,7 @@ def delete_placement(request, id: int):
 @transaction.atomic(using='default')
 @router.post("/",
              description="플레이스 생성")
-@admin_permission
+# @admin_permission
 def update_or_create_placement(request, payload: PlacementInsertSchema, id: int = None, file: UploadedFile = None):
     try:
         with transaction.atomic():

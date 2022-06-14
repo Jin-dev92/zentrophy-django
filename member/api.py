@@ -19,7 +19,7 @@ payment_method_router = Router()
 
 
 @router.get("/", description="회원 목록", response=List[MemberListSchema])
-@admin_permission
+# # @admin_permission
 def get_list_member(request, email: Optional[str] = None, username: Optional[str] = None,
                     sort: MemberSort = None):
     params = prepare_for_query(request=request, exceptions=['sort'])

@@ -60,7 +60,7 @@ def get_after_service_by_id(request, id: int):
 
 
 @after_service_router.put("/", description="a/s 상태 수정")
-@admin_permission
+# # @admin_permission
 def modify_after_service(request, id: int, status: AfterServiceStatus = AfterServiceStatus.APPLY_WAITING):
     target = get_object_or_404(AfterService, id=id, user=request.auth)
     target.status = status
@@ -106,7 +106,7 @@ def create_refund_history(request, payload: RefundInsertSchema):
 
 
 @refund_router.put("/", description="환불 상태 변경, status 가 3일 경우 reject_reason 필수")
-@admin_permission
+# # @admin_permission
 def modify_refund(request, id: int, status: RefundStatus, reject_reason: str = None):
     if status == RefundStatus.REFUSE and reject_reason is None:
         raise RefuseMustHaveReasonException
@@ -136,13 +136,13 @@ def get_warranty_list(request, is_warranty: bool = True):
 
 
 @warranty_router.post('/', description="보증 범위 객체 생성 / 수정")
-@admin_permission
+# # @admin_permission
 def create_or_update_warranty(request, payload: WarrantyInsertSchema, id: int = None):
     Warranty.objects.update_or_create(id=id, defaults=payload.dict())
 
 
 @warranty_router.delete('/', description="보증 범위 객체 삭제")
-@admin_permission
+# # @admin_permission
 def delete_warranty(request, id: int):
     qs = get_object_or_404(Warranty, id=id).soft_delete()
     return qs

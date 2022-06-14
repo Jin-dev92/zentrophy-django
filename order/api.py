@@ -133,7 +133,7 @@ def create_order(request, payload: OrderCreateSchema):
 
 
 @router.put('/', description="주문 상태 수정, OrderListSchema - state 주석 참조")
-@admin_permission
+# @admin_permission
 def change_order_state(request, id: int, state: OrderState):
     target = get_object_or_404(Order, id=id)
     target.state = state
@@ -162,7 +162,7 @@ def get_list_subside(request):
 
 @transaction.atomic(using='default')
 @subside_router.post('/')
-@admin_permission
+# @admin_permission
 def create_subside(request, payload: SubsideInsertSchema):
     subside_amount = len(Subside.objects.all())
     try:
@@ -181,7 +181,7 @@ def create_subside(request, payload: SubsideInsertSchema):
 
 
 @subside_router.put('/', description="기본 보조금 수정")
-@admin_permission
+# @admin_permission
 def modify_extra_subside(request, payload: SubsideInsertSchema = None):
     for extra_subside in ExtraSubside.objects.get_queryset():
         extra_subside.soft_delete()
@@ -213,7 +213,7 @@ def get_format_list(request):
 
 
 @file_router.post('/format', description="보조금 신청서 포맷 업로드")
-@admin_permission
+# @admin_permission
 def upload_format_files(request, file: UploadedFile):
     if not request.auth.is_staff:
         raise UserNotAccessDeniedException
@@ -221,7 +221,7 @@ def upload_format_files(request, file: UploadedFile):
 
 
 @file_router.delete('/format', description="보조금 신청서 포맷 삭제")
-@admin_permission
+# @admin_permission
 def delete_format_files(request, id: int):
     if not request.auth.is_staff:
         raise UserNotAccessDeniedException
