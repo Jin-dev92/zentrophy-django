@@ -27,7 +27,7 @@ def get_placement_list(request):
             response={200: List[PlacementListSchema]},
             auth=None
             )
-def get_placement_list_by_pk(request, remote_pk: int = None):
+def get_placement_list_by_pk(request, id: int = None):
     params = prepare_for_query(request)
     queryset = Placement.objects.get_queryset(**params)
     return queryset
