@@ -80,6 +80,11 @@ class OrderCreateSchema(Schema):
     is_visited: bool = Field(default=False, description="방문 구매 여부")
 
 
+# class OrderModifySchema(Schema):
+#     customer_info: CustomerInfoSchema = None
+#     order_location_info: OrderLocationInfoSchema = None
+#
+
 class ExtraSubsideListSchema(Schema):
     id: int
     name: str

@@ -77,8 +77,12 @@ def get_order_list_by_id(request, id: int):
 
 
 @transaction.atomic(using='default')
-@router.post('/', description="주문 생성")
-def create_order(request, payload: OrderCreateSchema):
+@router.post('/', description="주문 생성 / 수정")
+def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
+    if not is_admin(request.auth) and (id and id > -1):  # 일반 유저가 id 를 보냈을 경우에 예외 처리 해준다.
+        raise UserNotAccessDeniedException
+    # else:
+    #     raise Exception("asdasdsadsa")
     try:
         with transaction.atomic():
             params = payload.dict()
@@ -86,24 +90,42 @@ def create_order(request, payload: OrderCreateSchema):
                             k not in {'ordered_product_options', 'ordered_vehicle_color', 'extra_subside',
                                       'customer_info',
                                       'order_location_info'}}
-            order_params['owner'] = request.auth
             order_location_info_params = params['order_location_info']
             customer_info_params = params['customer_info']
-            customer_object = CustomerInfo.objects.create(**customer_info_params)
-            location_object = OrderLocationInfo.objects.create(**order_location_info_params)
-            order_queryset = Order.objects.create(**order_params, customer_info=customer_object, order_location_info=location_object)  # 주문 생성
-            if params.get('extra_subside') and len(params.get('extra_subside')) > 0:
-                order_queryset.extra_subside.add(
+            extra_subside_params: list = params.get('extra_subside')
+
+            if id and id > -1:
+                target = get_object_or_404(Order, id=id)
+                # 수정이면 갖고 있던 foreign_key 데이터를 삭제한다.
+                target.extra_subside.remove()
+                target.customer_info.delete()
+                target.order_location_info.delete()
+                target.orderedproductoptions_set.all().delete()
+                target.orderedvehiclecolor_set.all().delete()
+            else:
+                target = None
+            print(target)
+            customer_object = CustomerInfo.objects.update_or_create(order=target, defaults=customer_info_params)
+            location_object = OrderLocationInfo.objects.update_or_create(order=target, defaults=order_location_info_params)
+
+            order_params['owner'] = request.auth
+            order_params['customer_info'] = customer_object[0]
+            order_params['order_location_info'] = location_object[0]
+
+            order_queryset = Order.objects.update_or_create(id=id, defaults=order_params)  # 주문 생성
+
+            if extra_subside_params and len(extra_subside_params) > 0 and extra_subside_params.count(0) == 0:
+                order_queryset[0].extra_subside.add(
                     *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
             if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
                 if not check_invalid_product_params(params['ordered_product_options']):     # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
                     raise WrongParameterException
                 po_list = OrderedProductOptions.objects.bulk_create(
-                        objs=[
-                            OrderedProductOptions(**ordered_po,
-                                                  order=order_queryset)
-                            for ordered_po in params['ordered_product_options']]
-                    )
+                    objs=[
+                        OrderedProductOptions(**ordered_po,
+                                              order=order_queryset[0])
+                        for ordered_po in params['ordered_product_options']]
+                )
                 for index, po in enumerate(params['ordered_product_options']):    # 주문 생성 시 판매량, 재고량 조절
                     po_target = get_object_or_404(ProductOptions, id=po.get('product_options_id'))
                     if po.get('amount') > po_target.stock_count:
@@ -116,7 +138,7 @@ def create_order(request, payload: OrderCreateSchema):
                 if not check_invalid_product_params(params['ordered_vehicle_color']): # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
                     raise WrongParameterException
                 vc_list = OrderedVehicleColor.objects.bulk_create(
-                    objs=[OrderedVehicleColor(**ordered_vc, order=order_queryset) for ordered_vc in params['ordered_vehicle_color']])
+                    objs=[OrderedVehicleColor(**ordered_vc, order=order_queryset[0]) for ordered_vc in params['ordered_vehicle_color']])
                 for index, vc in enumerate(params['ordered_vehicle_color']):  # 주문 생성시 판매량, 재고량 조절
                     vc_target = get_object_or_404(VehicleColor, id=vc.get('vehicle_color_id'))
                     if vc.get('amount') > vc_target.stock_count:
@@ -140,10 +162,41 @@ def change_order_state(request, id: int, state: OrderState):
     target.save(update_fields=['state'])
 
 
-#
+# @transaction.atomic(using='default')
 # @router.put('/', description="주문 내역 수정")
-# def modify_order(request, id: int):
-#     pass
+# def modify_order(request, id: int, payload: OrderCreateSchema):
+#     if not is_admin(request.auth):  # 어드민 접근 제한
+#         raise UserNotAccessDeniedException
+#     params = payload.dict()
+#     order_params = {k: v for k, v in params.items() if
+#                     k not in {'ordered_product_options', 'ordered_vehicle_color', 'extra_subside',
+#                               'customer_info',
+#                               'order_location_info'}}
+#     customer_info = params['customer_info']
+#     order_location_info = params['order_location_info']
+#     ordered_product_options = params['ordered_product_options']
+#     ordered_vehicle_color = params['ordered_vehicle_color']
+#
+#     try:
+#         with transaction.atomic():
+#             target = get_object_or_404(Order, id=id)
+#             Order.objects.filter(id=id).update(**order_params)
+#             CustomerInfo.objects.filter(order=target).update(**customer_info)
+#             OrderLocationInfo.objects.filter(order=target).update(**order_location_info)
+#             if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
+#                 if not check_invalid_product_params(params['ordered_product_options']):
+#                     raise WrongParameterException
+#                 target.orderedproductoptions_set.all().delete()  # 수정 전 삭제
+#                 # 기획이 이상한거 같아서 홀딩
+#             elif params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
+#                 if not check_invalid_product_params(params['ordered_vehicle_color']):
+#                     raise WrongParameterException
+#                 target.orderedvehiclecolor_set.all().delete()  # 수정 전 삭제
+#             else:
+#                 raise WrongParameterException
+#     except Exception as e:
+#         print(e)
+
 
 
 @router.delete('/', description="주문 삭제")
