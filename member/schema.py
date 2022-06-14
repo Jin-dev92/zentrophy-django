@@ -64,7 +64,7 @@ class MemberListSchema(Schema):
     address: str
     address_detail: str
     zipcode: str
-    vehicles_list: List[MemberOwnedVehiclesListSchema] = []
+    # vehicles_list: List[MemberOwnedVehiclesListSchema] = []
     payment_method: List[PaymentMethodListSchema] = []
     date_joined: datetime = None
     last_login: datetime = None

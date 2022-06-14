@@ -1,7 +1,6 @@
 from typing import List
 
 from asgiref.sync import sync_to_async
-from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Prefetch
 from django.db.models import F
@@ -10,7 +9,7 @@ from ninja import Router
 from ninja.files import UploadedFile
 import requests
 
-from conf.custom_exception import AlreadyExistsException, LoginRequiredException, WrongParameterException, \
+from conf.custom_exception import AlreadyExistsException, WrongParameterException, \
     NotEnoughStockException, UserNotAccessDeniedException
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.constant import OrderState
@@ -20,8 +19,9 @@ from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, 
     DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
     RequestPaymentSubscriptionsScheduleSchema
 from product.models import ProductOptions, VehicleColor
+from util.decorator import admin_permission
 from util.number import check_invalid_product_params
-
+from util.permission import is_admin
 
 router = Router()
 subside_router = Router()
@@ -31,12 +31,9 @@ subscription_router = Router()
 upload_exceed_count = 5
 
 
-@login_required
 @router.get('/', response=List[OrderListSchema], description="주문 검색")
 def get_order_list(request):
-    if str(request.auth) == 'AnonymousUser':  # @todo 디버그 모드 on 일때 에러 방지.
-        raise LoginRequiredException
-    if request.auth.is_staff:
+    if is_admin(request):
         target = Order.objects.get_queryset()
     else:
         target = Order.objects.get_queryset(owner=request.auth)
@@ -57,10 +54,9 @@ def get_order_list(request):
     return queryset
 
 
-@login_required
 @router.get('/{id}', description="주문 id로 검색", response=List[OrderListSchema])
 def get_order_list_by_id(request, id: int):
-    if request.auth.is_staff:
+    if is_admin(request):
         target = Order.objects.get_queryset()
     else:
         target = Order.objects.get_queryset(id=id, owner=request.auth)
@@ -69,7 +65,8 @@ def get_order_list_by_id(request, id: int):
         'customer_info',
         'order_location_info',
         Prefetch(lookup='orderedproductoptions_set',
-                 queryset=OrderedProductOptions.objects.select_related('product_options'),
+                 queryset=OrderedProductOptions.objects.select_related('product_options')
+                 .annotate(product_image=F('product_options__product__productimage__origin_image')),
                  to_attr="ordered_product_options"),
         Prefetch(lookup='orderedvehiclecolor_set',
                  queryset=OrderedVehicleColor.objects.select_related('vehicle_color')
@@ -80,12 +77,9 @@ def get_order_list_by_id(request, id: int):
     return queryset
 
 
-@login_required
 @transaction.atomic(using='default')
 @router.post('/', description="주문 생성")
 def create_order(request, payload: OrderCreateSchema):
-    if str(request.auth) == 'AnonymousUser':
-        raise LoginRequiredException
     try:
         with transaction.atomic():
             params = payload.dict()
@@ -138,28 +132,26 @@ def create_order(request, payload: OrderCreateSchema):
         raise e
 
 
-@login_required
 @router.put('/', description="주문 상태 수정, OrderListSchema - state 주석 참조")
+@admin_permission
 def change_order_state(request, id: int, state: OrderState):
     target = get_object_or_404(Order, id=id)
     target.state = state
     target.save(update_fields=['state'])
 
 
-# @login_required
+#
 # @router.put('/', description="주문 내역 수정")
 # def modify_order(request, id: int):
 #     pass
 
 
-@login_required
 @router.delete('/', description="주문 삭제")
 def delete_order_list_by_id(request, id: int):
     target = get_object_or_404(Order, id=id)
     queryset = target.soft_delete()
 
 
-# @login_required
 @subside_router.get('/', response=List[SubsideListSchema])
 def get_list_subside(request):
     queryset = Subside.objects.get_queryset().prefetch_related(
@@ -168,9 +160,9 @@ def get_list_subside(request):
     return queryset
 
 
-# @login_required
 @transaction.atomic(using='default')
 @subside_router.post('/')
+@admin_permission
 def create_subside(request, payload: SubsideInsertSchema):
     subside_amount = len(Subside.objects.all())
     try:
@@ -188,8 +180,8 @@ def create_subside(request, payload: SubsideInsertSchema):
     return True
 
 
-@login_required
 @subside_router.put('/', description="기본 보조금 수정")
+@admin_permission
 def modify_extra_subside(request, payload: SubsideInsertSchema = None):
     for extra_subside in ExtraSubside.objects.get_queryset():
         extra_subside.soft_delete()
@@ -202,7 +194,6 @@ def modify_extra_subside(request, payload: SubsideInsertSchema = None):
     return True
 
 
-@login_required
 @file_router.post('/', description="계획서 및 보조금 신청서 업로드")
 def upload_files(request, order_id: int, files: List[UploadedFile]):
     order = get_object_or_404(Order, id=order_id)
@@ -210,40 +201,27 @@ def upload_files(request, order_id: int, files: List[UploadedFile]):
         objs=[DocumentFile(order=order, file=file) for file in files], batch_size=upload_exceed_count)
 
 
-@login_required
 @file_router.delete('/', description="계획서 및 보조금 신청서 삭제")
 def delete_files(request, id: int):
     queryset = get_object_or_404(DocumentFile, id=id).delete()
 
 
-# @login_required
-# @file_router.get('/format', description="보조금 신청서 포맷 다운 로드")
-# def download_format_files(request, id: int):
-#     target = get_object_or_404(DocumentFormat, id=id)
-#     fs = FileSystemStorage(target.file.path)
-#     response = FileResponse(fs.open(target.file.path))
-#     response['Content-Disposition'] = f'attachment; filename={target.file.name}'
-#     print(request)
-    # return response
-
-
-@login_required
 @file_router.get('/format', description="보조금 신청서 포맷 리스트", response=List[DocumentFormatListSchema])
 def get_format_list(request):
     queryset = DocumentFormat.objects.get_queryset()
     return queryset
 
 
-@login_required
 @file_router.post('/format', description="보조금 신청서 포맷 업로드")
+@admin_permission
 def upload_format_files(request, file: UploadedFile):
     if not request.auth.is_staff:
         raise UserNotAccessDeniedException
     queryset = DocumentFormat.objects.create(file=file)
 
 
-@login_required
 @file_router.delete('/format', description="보조금 신청서 포맷 삭제")
+@admin_permission
 def delete_format_files(request, id: int):
     if not request.auth.is_staff:
         raise UserNotAccessDeniedException
@@ -251,7 +229,6 @@ def delete_format_files(request, id: int):
     queryset = target.soft_delete()
 
 
-@login_required
 @sync_to_async
 @subscription_router.post('/issue_billing', description="나이츠 페이먼츠 정기 결제")
 def create_subscription(request, payload: SubscriptionsCreateSchema):
@@ -269,13 +246,10 @@ def create_subscription(request, payload: SubscriptionsCreateSchema):
                 timeout=5
             )
             return issue_billing_response.json()
-            # if issue_billing_response.json()['code'] != 0:
-            #     print(issue_billing_response.json())
     except Exception as e:
         raise e
 
 
-@login_required
 @sync_to_async
 @subscription_router.post('/payment')
 def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSchema):
@@ -297,7 +271,6 @@ def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSc
         raise e
 
 
-@login_required
 @sync_to_async
 @subscription_router.post('/payment/schedule')
 def request_payment_schedule_subscription(request, payload: RequestPaymentSubscriptionsScheduleSchema):
@@ -319,7 +292,6 @@ def request_payment_schedule_subscription(request, payload: RequestPaymentSubscr
         raise e
 
 
-@login_required
 @sync_to_async
 @subscription_router.get('/iamport_callback/schedule')
 def iamport_callback(request, imp_uid: str, merchant_uid: str):

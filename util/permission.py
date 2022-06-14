@@ -1,11 +1,12 @@
 import datetime
 
 import jwt
-from django.http import HttpRequest
+
 from conf.custom_exception import WrongTokenException
 from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
 
-def has_permission(request: HttpRequest):  # 어드민 유저만 허용
+
+def is_admin(request):  # 어드민 유저만 허용
     user = request.auth
     return user.is_staff and user.is_active
 

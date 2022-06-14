@@ -11,6 +11,7 @@ from product.models import Product, ProductDisplayLine, ProductOptions, ProductI
     VehicleImage
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
     VehicleListSchema, VehicleInsertSchema
+from util.decorator import admin_permission
 from util.params import prepare_for_query
 
 product_router = Router()
@@ -70,7 +71,8 @@ def get_product_list(request,
 
 @transaction.atomic(using='default')
 @product_router.post("/", description="상품 등록/수정 (수정 기능의 경우 id param 필수)", tags=["product"])
-def create_product(request, payload: ProductInsertSchema, id: int = None, files: List[UploadedFile] = File(...)):
+@admin_permission
+def update_or_create_product(request, payload: ProductInsertSchema, id: int = None, files: List[UploadedFile] = File(...)):
     product = {k: v for k, v in payload.dict().items() if k not in {'product_options', 'product_display_line_id'}}
     product_options: list = payload.dict()['product_options']
     product_display_line_id_list = payload.dict()['product_display_line_id']
@@ -103,6 +105,7 @@ def create_product(request, payload: ProductInsertSchema, id: int = None, files:
 
 
 @product_router.delete("/", description="상품 삭제", tags=["product"])
+@admin_permission
 def delete_product(request, id: int):
     qs = get_object_or_404(Product, id=id).soft_delete()
     return qs
@@ -120,11 +123,13 @@ def get_display_line(request):
 
 
 @display_line_router.post("/", description="상품 진열 라인 등록", tags=["product"])
+@admin_permission
 def create_display_line(request, payload: ProductDisplayInsertSchema):
     ProductDisplayLine.objects.create(**payload.dict())
 
 
 @display_line_router.put('/', description="상품 진열 라인 수정", tags=['product'])
+@admin_permission
 def modify_display_line(request, payload: ProductDisplayInsertSchema, id: int):
     obj = get_object_or_404(ProductDisplayLine, id=id)
     for k, v in payload.dict().items():
@@ -133,6 +138,7 @@ def modify_display_line(request, payload: ProductDisplayInsertSchema, id: int):
 
 
 @display_line_router.delete("/", tags=["product"])
+@admin_permission
 def delete_display_line_by_id(request, id: int):
     return get_object_or_404(ProductDisplayLine, id=id).soft_delete()
 
@@ -166,6 +172,7 @@ def get_vehicle_by_id(request, id: int):
 
 @transaction.atomic(using='default')
 @vehicle_router.post("/", description="모터 사이클 등록 / 수정")
+@admin_permission
 def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = None,
                              color_file_0: List[UploadedFile] = None,
                              color_file_1: List[UploadedFile] = None,
@@ -210,5 +217,6 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
 
 
 @vehicle_router.delete("/", description="모터사이클 삭제")
+@admin_permission
 def delete_vehicle(request, id: int):
     get_object_or_404(Vehicle, id=id).soft_delete()

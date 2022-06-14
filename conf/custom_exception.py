@@ -62,5 +62,7 @@ class FormatNotSupportedException(Exception):
     pass
 
 
+class AdminAccountInActiveException(Exception):
+    pass
 # class NotBase64Exception(Exception):
 #     pass

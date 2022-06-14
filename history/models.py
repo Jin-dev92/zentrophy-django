@@ -3,6 +3,7 @@ from django.db import models
 from conf.settings import LICENSE_NUMBER_LENGTH
 from history.constant import RefundStatus, AfterServiceStatus, RefundMethod, AfterServiceCategory
 from order.models import Order
+from placement.models import Placement
 from product.models import ProductOptions
 from util.models import TimeStampModel, SoftDeleteModel
 
@@ -17,7 +18,7 @@ class Refund(TimeStampModel, SoftDeleteModel):
 
 class AfterService(TimeStampModel, SoftDeleteModel):
     user = models.ForeignKey('member.User', on_delete=models.CASCADE, null=True)
-    place = models.ForeignKey('placement.Placement', on_delete=models.CASCADE)
+    place = models.ForeignKey(Placement, on_delete=models.CASCADE)
     vehicle_license = models.CharField(max_length=20, null=True)
     registration_number = models.CharField(max_length=LICENSE_NUMBER_LENGTH, unique=True)
     status = models.PositiveSmallIntegerField(default=AfterServiceStatus.APPLY_WAITING)

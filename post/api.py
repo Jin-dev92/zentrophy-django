@@ -9,6 +9,7 @@ from ninja import Router
 from conf.custom_exception import DataBaseORMException
 from post.models import FAQ, Notice, FAQCategory
 from post.schema import FAQInsertSchema, FAQListSchema, NoticeListSchema, NoticeInsertSchema, FAQCategorySchema
+from util.decorator import admin_permission
 from util.exception.constant import DB_UNIQUE_CONSTRAINT
 from util.params import prepare_for_query
 
@@ -30,6 +31,7 @@ def get_faq_list_by_id(request, id: int):
 
 @transaction.atomic(using='default')
 @faq_router.post("/", description="FAQ 생성 / 수정")
+@admin_permission
 def update_or_create_faq(request, payload: FAQInsertSchema, id: int = None):
     params = payload.dict()
     try:
@@ -38,10 +40,10 @@ def update_or_create_faq(request, payload: FAQInsertSchema, id: int = None):
 
     except Exception as e:
         raise e
-        # raise DataBaseORMException
 
 
 @faq_router.delete("/", description="FAQ 삭제")
+@admin_permission
 def delete_faq(request, id: int):
     queryset = get_object_or_404(FAQ, id=id).soft_delete()
 
@@ -55,6 +57,7 @@ def get_notice_list(request, id: int = None):
 
 @transaction.atomic(using='default')
 @notice_router.post('/', description="공지사항 리스트 생성/수정")
+@admin_permission
 def create_notice(request, payload: NoticeInsertSchema, id: int = None):
     try:
         with transaction.atomic():
@@ -67,6 +70,7 @@ def create_notice(request, payload: NoticeInsertSchema, id: int = None):
 
 
 @notice_router.delete("/", description="공지사항 삭제")
+@admin_permission
 def delete_notice(request, id: int):
     queryset = get_object_or_404(Notice, id=id).soft_delete()
 
@@ -77,6 +81,7 @@ def get_faq_category_list(request):
 
 
 @faq_category_router.post('/', description='FAQ 카테고리 생성 / 수정')
+@admin_permission
 def update_or_create_faq_category(request, category_name: str):
     try:
         queryset = FAQCategory.objects.create(category_name=category_name)
@@ -85,5 +90,6 @@ def update_or_create_faq_category(request, category_name: str):
 
 
 @faq_category_router.delete('/', description='FAQ 카테고리 삭제')
+@admin_permission
 def delete_faq_category(request, id: int):
     queryset = get_object_or_404(FAQCategory, id=id).soft_delete()

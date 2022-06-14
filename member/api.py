@@ -1,52 +1,34 @@
 from typing import List, Optional
 
-from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router, Form
 
-from conf.custom_exception import UserNotAccessDeniedException
+from conf.custom_exception import UserNotAccessDeniedException, AdminAccountInActiveException
 from member.constant import MemberSort
 from member.models import User, PaymentMethod, Card, RemoteToken
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
     MemberReAssignSchema, MemberModifySchema
+from util.decorator import admin_permission
 from util.params import prepare_for_query
-from util.permission import has_permission, is_valid_token
+from util.permission import is_admin
 
 router = Router()
 payment_method_router = Router()
 
 
-@login_required
 @router.get("/", description="회원 목록", response=List[MemberListSchema])
+@admin_permission
 def get_list_member(request, email: Optional[str] = None, username: Optional[str] = None,
                     sort: MemberSort = None):
-    if not request.auth.is_staff:
-        raise UserNotAccessDeniedException
     params = prepare_for_query(request=request, exceptions=['sort'])
     field_name = 'date_joined'
     if sort == MemberSort.RECENT:
         field_name = '-date_joined'
     return User.objects.filter(**params).prefetch_related(
-        Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
         Prefetch('paymentmethod_set', to_attr="payment_method"),
     ).order_by(field_name)
-
-
-@login_required
-@router.get('/{id}', description="id로 회원 찾기", response=List[MemberListSchema])
-def get_member_by_id(request, id: int):
-    if request.auth.is_staff:
-        target = User.objects.filter(id=id)
-    else:
-        target = User.objects.filter(id=request.auth.id)
-
-    queryset = target.prefetch_related(
-        Prefetch('memberownedvehicles_set', to_attr="vehicles_list"),
-        Prefetch('paymentmethod_set', to_attr="payment_method")
-    )
-    return queryset
 
 
 @transaction.atomic(using='default')
@@ -54,25 +36,36 @@ def get_member_by_id(request, id: int):
 def create_user(request, payload: MemberInsertSchema = Form(...)):
     try:
         member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
-        # token_info_params = payload.dict().get('token_info')
         user_queryset = User.objects.create_user(**member_params)
         token_queryset = RemoteToken.objects.create(
             user=user_queryset,
             access_token=None,
             refresh_token=None,
-            # access_token=is_valid_token(token_info_params['access_token']),
-            # refresh_token=is_valid_token(token_info_params['refresh_token']),
         )
     except Exception as e:
         raise e
 
 
-@login_required
+@router.get('/{id}', description="id로 회원 찾기", response=List[MemberListSchema])
+def get_member_by_id(request, id: int):
+    if is_admin(request):
+        target = User.objects.filter(id=id)
+    elif request.auth.is_staff and not request.auth.is_active:
+        raise AdminAccountInActiveException
+    else:
+        target = User.objects.filter(id=request.auth.id)
+
+    queryset = target.prefetch_related(
+        Prefetch('paymentmethod_set', to_attr="payment_method")
+    )
+    return queryset
+
+
 @router.put("/", description="회원 수정")
 def modify_user(request, id: int, payload: MemberModifySchema = Form(...)):
     member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
     target = get_object_or_404(User, id=id)
-    if request.auth == target:
+    if request.auth == target or is_admin(request):
         user_queryset = User.objects.filter(id=id).update(**member_params)
     else:
         raise UserNotAccessDeniedException
@@ -80,11 +73,11 @@ def modify_user(request, id: int, payload: MemberModifySchema = Form(...)):
 
 @router.delete("/", description="회원 삭제")
 def delete_user(request, id: int):
-    if not request.auth.is_staff and request.auth.id != id:
-        raise UserNotAccessDeniedException
-
     member = get_object_or_404(User, id=id)
-    queryset = member.delete()
+    if (request.auth.is_staff and request.auth.is_staff) or request.auth == member:
+        queryset = member.delete()
+    else:
+        raise UserNotAccessDeniedException
 
 
 @router.post('/forgot/id', description="아이디 찾기", response=str)
@@ -98,18 +91,15 @@ def forgot_pwd(request, payload: MemberReAssignSchema = Form(...)):
     user.set_password(payload.dict()['password'])
 
 
-# @login_required
 @payment_method_router.get('/', description="결제 수단 리스트 가져오기", response=List[PaymentMethodListSchema])
 def get_payment_method(request):
     queryset = PaymentMethod.objects.get_queryset(owner=request.auth).select_related('card').order_by('favorite')
     return queryset
 
 
-@login_required
 @transaction.atomic(using='default')
 @payment_method_router.post('/', description="결제 수단 생성 / 수정")
 def update_or_create_payment_method(request, id: int = None, payload: PaymentMethodInsertSchema = Form(...)):
-    # user = request.auth
     try:
         with transaction.atomic():
             params = payload.dict()
@@ -126,7 +116,6 @@ def update_or_create_payment_method(request, id: int = None, payload: PaymentMet
             )
     except Exception as e:
         raise e
-        # raise DataBaseORMException
 
 
 @payment_method_router.delete('/')
