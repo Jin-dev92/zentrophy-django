@@ -52,6 +52,13 @@ NOT_ENOUGH_STOCK = {
     'desc': "재고량이 부족합니다.",
     'status': 400
 }
+
+CANT_CHANGE_ORDER_STATE = {
+    'code': 4000008,
+    'desc': "주문 취소 상태의 주문은 상태를 다시 바꿀 수 없습니다.",
+    'status': 400
+}
+
 WRONG_TOKEN = {
     'code': 4010001,
     'desc': "잘못된 토큰 입니다. 데이터를 확인하세요",

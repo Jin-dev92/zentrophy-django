@@ -10,7 +10,7 @@ from ninja.files import UploadedFile
 import requests
 
 from conf.custom_exception import AlreadyExistsException, WrongParameterException, \
-    NotEnoughStockException, UserNotAccessDeniedException
+    NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
@@ -81,8 +81,6 @@ def get_order_list_by_id(request, id: int):
 def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
     if not is_admin(request.auth) and (id and id > -1):  # 일반 유저가 id 를 보냈을 경우에 예외 처리 해준다.
         raise UserNotAccessDeniedException
-    # else:
-    #     raise Exception("asdasdsadsa")
     try:
         with transaction.atomic():
             params = payload.dict()
@@ -94,7 +92,7 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
             customer_info_params = params['customer_info']
             extra_subside_params: list = params.get('extra_subside')
 
-            if id and id > -1:
+            if id and id > -1:  # 수정 로직 수행 전 데이터 세팅
                 target = get_object_or_404(Order, id=id)
                 # 수정이면 갖고 있던 foreign_key 데이터를 삭제한다.
                 target.extra_subside.remove()
@@ -103,9 +101,9 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
                 target.orderedproductoptions_set.all().delete()
                 target.orderedvehiclecolor_set.all().delete()
                 order_params['owner'] = target.owner
-            else:
-                order_params['owner'] = request.auth
+            else:   # 생성 로직 수행 전 데이터 세팅
                 target = None
+                order_params['owner'] = request.auth
             print(target)
             customer_object = CustomerInfo.objects.update_or_create(order=target, defaults=customer_info_params)
             location_object = OrderLocationInfo.objects.update_or_create(order=target, defaults=order_location_info_params)
@@ -118,7 +116,8 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
             if extra_subside_params and len(extra_subside_params) > 0 and extra_subside_params.count(0) == 0:
                 order_queryset[0].extra_subside.add(
                     *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
-            if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
+
+            if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:    #   주문한 상품이 존재할 경우
                 if not check_invalid_product_params(params['ordered_product_options']):     # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
                     raise WrongParameterException
                 po_list = OrderedProductOptions.objects.bulk_create(
@@ -127,7 +126,7 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
                                               order=order_queryset[0])
                         for ordered_po in params['ordered_product_options']]
                 )
-                for index, po in enumerate(params['ordered_product_options']):    # 주문 생성 시 판매량, 재고량 조절
+                for index, po in enumerate(params['ordered_product_options']):    # 상품 주문 생성 시 판매량, 재고량 조절
                     po_target = get_object_or_404(ProductOptions, id=po.get('product_options_id'))
                     if po.get('amount') > po_target.stock_count:
                         raise NotEnoughStockException
@@ -135,12 +134,12 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
                     po_target.stock_count = po_target.stock_count - po.get('amount')
                     po_target.save(update_fields=['sale_count', 'stock_count'])
 
-            elif params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
+            elif params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:  #   주문한 모터 사이클이 존재할 경우
                 if not check_invalid_product_params(params['ordered_vehicle_color']): # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
                     raise WrongParameterException
                 vc_list = OrderedVehicleColor.objects.bulk_create(
                     objs=[OrderedVehicleColor(**ordered_vc, order=order_queryset[0]) for ordered_vc in params['ordered_vehicle_color']])
-                for index, vc in enumerate(params['ordered_vehicle_color']):  # 주문 생성시 판매량, 재고량 조절
+                for index, vc in enumerate(params['ordered_vehicle_color']):  # 모터 사이클 주문 생성시 판매량, 재고량 조절
                     vc_target = get_object_or_404(VehicleColor, id=vc.get('vehicle_color_id'))
                     if vc.get('amount') > vc_target.stock_count:
                         raise NotEnoughStockException
@@ -158,10 +157,40 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
 def change_order_state(request, id: int, state: OrderState):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
-    target = get_object_or_404(Order, id=id)
-    target.state = state
-    target.save(update_fields=['state'])
 
+    try:
+        target = get_object_or_404(Order, id=id)
+        if target.state == OrderState.IS_CANCELED:
+            raise OrderStateCantChangeException
+        target.state = state
+        target.save(update_fields=['state'])
+
+        if OrderState.IS_CANCELED: # 주문 취소 하였을 때 재고량과 판매량을 원복 해줘야 한다.
+            ordered_product_options = target.orderedproductoptions_set.all()
+            ordered_vehicle_colors = target.orderedvehiclecolor_set.all()
+
+            if len(ordered_product_options) > 0:
+                for ordered_product_option in ordered_product_options:
+                    amount = ordered_product_option.amount
+                    ordered_product_option.product_options.stock_count = ordered_product_option.product_options.stock_count + amount
+                    ordered_product_option.product_options.sale_count = ordered_product_option.product_options.sale_count - amount
+
+                    if ordered_product_option.product_options.sale_count < 0:
+                        ordered_product_option.product_options.sale_count = 0
+                    ordered_product_option.product_options.save(update_fields=['stock_count', 'sale_count'])
+
+            elif len(ordered_vehicle_colors) > 0:
+                for ordered_vehicle_color in ordered_vehicle_colors:
+                    amount = ordered_vehicle_color.amount
+                    ordered_vehicle_color.vehicle_color.stock_count = ordered_vehicle_color.vehicle_color.stock_count + amount
+                    ordered_vehicle_color.vehicle_color.sale_count = ordered_vehicle_color.vehicle_color.sale_count - amount
+
+                    if ordered_vehicle_color.vehicle_color.sale_count < 0:
+                        ordered_vehicle_color.vehicle_color.sale_count = 0
+                    ordered_vehicle_color.vehicle_color.save(update_fields=['stock_count', 'sale_count'])
+
+    except Exception as e :
+        raise e
 
 # @transaction.atomic(using='default')
 # @router.put('/', description="주문 내역 수정")

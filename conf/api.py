@@ -11,7 +11,7 @@ from ninja.security import HttpBearer
 import member
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
     LoginRequiredException, FormatNotSupportedException, WrongParameterException, WrongUserInfoException, \
-    WrongTokenException, NotEnoughStockException, UserNotAccessDeniedException
+    WrongTokenException, NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException
 from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
@@ -25,7 +25,8 @@ from product.api import display_line_router as display_line_router
 from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
-    FORMAT_NOT_SUPPORTED, WRONG_PARAMETER, WRONG_TOKEN, WRONG_USER_INFO, NOT_ENOUGH_STOCK, USER_NOT_ACCESS_DENIED
+    FORMAT_NOT_SUPPORTED, WRONG_PARAMETER, WRONG_TOKEN, WRONG_USER_INFO, NOT_ENOUGH_STOCK, USER_NOT_ACCESS_DENIED, \
+    CANT_CHANGE_ORDER_STATE
 from util.permission import is_valid_token, get_jwt_token
 from util.util import ORJSONParser
 
@@ -240,9 +241,18 @@ def wrong_user_info_exception_handler(request, exec):
 
 
 @api.exception_handler(exc_class=NotEnoughStockException)
-def wrong_user_info_exception_handler(request, exec):
+def not_enough_stock_exception_handler(request, exec):
     return api.create_response(request,
                                data={'code': NOT_ENOUGH_STOCK['code'],
                                      'desc': NOT_ENOUGH_STOCK['desc']},
                                status=NOT_ENOUGH_STOCK['status']
+                               )
+
+
+@api.exception_handler(exc_class=OrderStateCantChangeException)
+def cant_change_order_state_exception_handler(request, exec):
+    return api.create_response(request,
+                               data={'code': CANT_CHANGE_ORDER_STATE['code'],
+                                     'desc': CANT_CHANGE_ORDER_STATE['desc']},
+                               status=CANT_CHANGE_ORDER_STATE['status']
                                )
