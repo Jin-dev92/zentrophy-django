@@ -103,12 +103,12 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
                 target.orderedproductoptions_set.all().delete()
                 target.orderedvehiclecolor_set.all().delete()
             else:
+                order_params['owner'] = request.auth
                 target = None
             print(target)
             customer_object = CustomerInfo.objects.update_or_create(order=target, defaults=customer_info_params)
             location_object = OrderLocationInfo.objects.update_or_create(order=target, defaults=order_location_info_params)
 
-            order_params['owner'] = request.auth
             order_params['customer_info'] = customer_object[0]
             order_params['order_location_info'] = location_object[0]
 
