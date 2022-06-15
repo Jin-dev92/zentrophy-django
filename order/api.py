@@ -102,6 +102,7 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
                 target.order_location_info.delete()
                 target.orderedproductoptions_set.all().delete()
                 target.orderedvehiclecolor_set.all().delete()
+                order_params['owner'] = target.owner
             else:
                 order_params['owner'] = request.auth
                 target = None
