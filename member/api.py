@@ -1,7 +1,8 @@
+import datetime
 from typing import List, Optional
 
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Count, Q
 from django.shortcuts import get_object_or_404
 from ninja import Router, Form
 
@@ -9,7 +10,7 @@ from conf.custom_exception import UserNotAccessDeniedException, AdminAccountInAc
 from member.constant import MemberSort
 from member.models import User, PaymentMethod, Card, RemoteToken
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
-    MemberReAssignSchema, MemberModifySchema
+    MemberReAssignSchema, MemberModifySchema, StatisticsMember
 from util.params import prepare_for_query
 from util.permission import is_admin
 
@@ -17,8 +18,39 @@ router = Router()
 payment_method_router = Router()
 
 
+@router.get('/statistics', description="회원 관련 통계", response=StatisticsMember)
+def get_statistics_member(request):
+    if not is_admin(request.auth):  # 어드민 접근 제한
+        raise UserNotAccessDeniedException
+
+    current = datetime.datetime.now()
+    queryset = User.objects.all().aggregate(
+        member_total=Count('*'),
+        new_total=Count('date_joined',
+                        filter=Q(date_joined__gte=current,
+                                 date_joined__lt=current + datetime.timedelta(days=1)
+                                 )
+                        ),
+        today_total=Count('last_login',
+                        filter=Q(last_login__gte=datetime.datetime.now().date(),
+                                 last_login__lt=datetime.datetime.now().date() - datetime.timedelta(seconds=1)
+                                 )
+                        ),
+    )
+    return queryset
+    # Aggregate
+    # "date_joined": "2022-06-14T09:07:58.119Z",
+    # "last_login": "2022-06-14T09:08:16.124Z"
+    # member_total: int = Field(description="전체 회원 수")   # 전체 회원 수
+    # new_total: int = Field(description="신규 회원 수")   # 신규 회원 수
+    # today_total: int = Field(description="오늘 방문자 수")   # 오늘 방문자 수
+    # acc_total: int = Field(description="누적 방문자 수")  # 누적 방문자 수
+
+    # if not is_admin(request.auth):
+    #     raise UserNotAccessDeniedException
+
+
 @router.get("/", description="회원 목록", response=List[MemberListSchema])
-# # @admin_permission
 def get_list_member(request, email: Optional[str] = None, username: Optional[str] = None,
                     sort: MemberSort = None):
     params = prepare_for_query(request=request, exceptions=['sort'])

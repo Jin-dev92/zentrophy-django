@@ -104,7 +104,7 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
             else:   # 생성 로직 수행 전 데이터 세팅
                 target = None
                 order_params['owner'] = request.auth
-            print(target)
+
             customer_object = CustomerInfo.objects.update_or_create(order=target, defaults=customer_info_params)
             location_object = OrderLocationInfo.objects.update_or_create(order=target, defaults=order_location_info_params)
 
@@ -126,6 +126,7 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
                                               order=order_queryset[0])
                         for ordered_po in params['ordered_product_options']]
                 )
+
                 for index, po in enumerate(params['ordered_product_options']):    # 상품 주문 생성 시 판매량, 재고량 조절
                     po_target = get_object_or_404(ProductOptions, id=po.get('product_options_id'))
                     if po.get('amount') > po_target.stock_count:
@@ -139,6 +140,7 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
                     raise WrongParameterException
                 vc_list = OrderedVehicleColor.objects.bulk_create(
                     objs=[OrderedVehicleColor(**ordered_vc, order=order_queryset[0]) for ordered_vc in params['ordered_vehicle_color']])
+
                 for index, vc in enumerate(params['ordered_vehicle_color']):  # 모터 사이클 주문 생성시 판매량, 재고량 조절
                     vc_target = get_object_or_404(VehicleColor, id=vc.get('vehicle_color_id'))
                     if vc.get('amount') > vc_target.stock_count:
@@ -191,42 +193,6 @@ def change_order_state(request, id: int, state: OrderState):
 
     except Exception as e :
         raise e
-
-# @transaction.atomic(using='default')
-# @router.put('/', description="주문 내역 수정")
-# def modify_order(request, id: int, payload: OrderCreateSchema):
-#     if not is_admin(request.auth):  # 어드민 접근 제한
-#         raise UserNotAccessDeniedException
-#     params = payload.dict()
-#     order_params = {k: v for k, v in params.items() if
-#                     k not in {'ordered_product_options', 'ordered_vehicle_color', 'extra_subside',
-#                               'customer_info',
-#                               'order_location_info'}}
-#     customer_info = params['customer_info']
-#     order_location_info = params['order_location_info']
-#     ordered_product_options = params['ordered_product_options']
-#     ordered_vehicle_color = params['ordered_vehicle_color']
-#
-#     try:
-#         with transaction.atomic():
-#             target = get_object_or_404(Order, id=id)
-#             Order.objects.filter(id=id).update(**order_params)
-#             CustomerInfo.objects.filter(order=target).update(**customer_info)
-#             OrderLocationInfo.objects.filter(order=target).update(**order_location_info)
-#             if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:
-#                 if not check_invalid_product_params(params['ordered_product_options']):
-#                     raise WrongParameterException
-#                 target.orderedproductoptions_set.all().delete()  # 수정 전 삭제
-#                 # 기획이 이상한거 같아서 홀딩
-#             elif params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:
-#                 if not check_invalid_product_params(params['ordered_vehicle_color']):
-#                     raise WrongParameterException
-#                 target.orderedvehiclecolor_set.all().delete()  # 수정 전 삭제
-#             else:
-#                 raise WrongParameterException
-#     except Exception as e:
-#         print(e)
-
 
 
 @router.delete('/', description="주문 삭제")
@@ -381,13 +347,7 @@ def request_payment_schedule_subscription(request, payload: RequestPaymentSubscr
                     json=payload.json(),
                     timeout=5
                 )
-                # if int(request_payment_schedule_response['code']) == 0:  # 요청이 성공 했을 경우
-                #     # DB에 저장 한다.
-                #     Subscriptions.objects.create(
-                #         owner=request.auth,
-                #         merchant_uid=schedules['merchant_uid'],
-                #         customer_uid=payload.dict()['customer_uid'],
-                #     )
+
                 return request_payment_schedule_response.json()
             else:
                 return token_response_json

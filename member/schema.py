@@ -3,8 +3,14 @@ from typing import List
 
 from ninja import Schema, Field
 
-from member.constant import RemoteTokenType
 from product.schema import VehicleListSchema
+
+
+class StatisticsMember(Schema):
+    member_total: int = Field(default=None, description="전체 회원 수")   # 전체 회원 수
+    new_total: int = Field(default=None, description="신규 회원 수")   # 신규 회원 수
+    today_total: int = Field(default=None, description="오늘 방문자 수")   # 오늘 방문자 수
+    # acc_total: int = Field(default=None, description="누적 방문자 수")  # 누적 방문자 수
 
 
 class TokenSchema(Schema):
@@ -74,13 +80,6 @@ class MemberReAssignSchema(Schema):
     username: str
     email: str
     password: str
-
-
-# class MemberOwnedVehiclesListSchema(Schema):
-#     id: int
-#     vehicle: VehicleListSchema
-#     license_code: str = Field(default=None, title="라이센스 코드")
-#     battery_left: int = Field(default=-1, title="잔여 배터리 량")
 
 
 class PaymentMethodInsertSchema(Schema):
