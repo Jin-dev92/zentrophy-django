@@ -6,6 +6,7 @@ from django.db.models import Prefetch, Count, Q
 from django.shortcuts import get_object_or_404
 from ninja import Router, Form
 
+from conf import settings
 from conf.custom_exception import UserNotAccessDeniedException, AdminAccountInActiveException
 from member.constant import MemberSort
 from member.models import User, PaymentMethod, Card, RemoteToken
@@ -38,16 +39,6 @@ def get_statistics_member(request):
                         ),
     )
     return queryset
-    # Aggregate
-    # "date_joined": "2022-06-14T09:07:58.119Z",
-    # "last_login": "2022-06-14T09:08:16.124Z"
-    # member_total: int = Field(description="전체 회원 수")   # 전체 회원 수
-    # new_total: int = Field(description="신규 회원 수")   # 신규 회원 수
-    # today_total: int = Field(description="오늘 방문자 수")   # 오늘 방문자 수
-    # acc_total: int = Field(description="누적 방문자 수")  # 누적 방문자 수
-
-    # if not is_admin(request.auth):
-    #     raise UserNotAccessDeniedException
 
 
 @router.get("/", description="회원 목록", response=List[MemberListSchema])
@@ -64,7 +55,7 @@ def get_list_member(request, email: Optional[str] = None, username: Optional[str
 
 @transaction.atomic(using='default')
 @router.post("/", description="회원 생성", auth=None)
-def create_user(request, payload: MemberInsertSchema = Form(...)):
+def create_user(request, payload: MemberInsertSchema = Form("" if settings.DEBUG else ...)):
     try:
         member_params = {k: v for k, v in payload.dict().items() if k not in {'token_info'}}
         user_queryset = User.objects.create_user(**member_params)

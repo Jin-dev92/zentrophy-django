@@ -3,6 +3,7 @@ from typing import List
 
 from ninja import Schema, Field
 
+from conf import settings
 from product.schema import VehicleListSchema
 
 
@@ -14,20 +15,19 @@ class StatisticsMember(Schema):
 
 
 class TokenSchema(Schema):
-    access_token: str
-    refresh_token: str
+    access_token: str = "f006c2f8-2d9e-44ac-9b99-0cc9dda056bc"
+    refresh_token: str = "f006c2f8-2d9e-44ac-9b99-0cc9dda056bc"
     token_type: str = "Bearer"
 
 
 class MemberInsertSchema(Schema):
-    username: str
-    email: str
-    password: str
-    phone_number: str
-    address: str
-    address_detail: str
-    zipcode: str
-    # token_info: TokenSchema
+    username: str = 'string' if settings.DEBUG else ...
+    email: str = "string@string.com" if settings.DEBUG else ...
+    password: str = 'string' if settings.DEBUG else ...
+    phone_number: str = 'string' if settings.DEBUG else ...
+    address: str = 'string' if settings.DEBUG else ...
+    address_detail: str = 'string' if settings.DEBUG else ...
+    zipcode: str = 'string' if settings.DEBUG else ...
 
 
 class MemberModifySchema(Schema):
@@ -39,13 +39,13 @@ class MemberModifySchema(Schema):
 
 
 class CardInsertSchema(Schema):
-    card_number: str
-    user_name: str
-    validate_date: str
-    cvc: str
-    pwd_2digit: str
-    personal_number: str
-    is_business: bool
+    card_number: str = '1234123412341234' if settings.DEBUG else ...
+    user_name: str = 'string' if settings.DEBUG else ...
+    validate_date: str = '1128' if settings.DEBUG else ...
+    cvc: str = '123' if settings.DEBUG else ...
+    pwd_2digit: str = '12' if settings.DEBUG else ...
+    personal_number: str = '110101' if settings.DEBUG else ...
+    is_business: bool = False
 
 
 class PaymentMethodListSchema(Schema):
@@ -83,5 +83,5 @@ class MemberReAssignSchema(Schema):
 
 
 class PaymentMethodInsertSchema(Schema):
-    name: str
+    name: str = 'string' if settings.DEBUG else ...
     card: CardInsertSchema

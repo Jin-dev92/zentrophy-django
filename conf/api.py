@@ -9,6 +9,7 @@ from ninja import NinjaAPI, Form, Schema
 from ninja.security import HttpBearer
 
 import member
+from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
     LoginRequiredException, FormatNotSupportedException, WrongParameterException, WrongUserInfoException, \
     WrongTokenException, NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException
@@ -150,7 +151,10 @@ def member_logout(request):
 
 
 @api.post("/login", description="로그인", auth=None, response=LoginResponse)
-def member_login(request, token_info: TokenSchema = Form(...), email: str = Form(...), password: str = Form(...)):
+def member_login(request, token_info: TokenSchema = Form(...),
+                 email: str = Form(default="admin@admin.com" if settings.DEBUG else ...),
+                 password: str = Form(default="Test111!" if settings.DEBUG else ...)
+                 ):
     user = authenticate(request, email=email, password=password)
     if user is None:
         raise WrongUserInfoException
