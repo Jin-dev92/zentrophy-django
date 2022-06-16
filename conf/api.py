@@ -27,7 +27,7 @@ from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
     FORMAT_NOT_SUPPORTED, WRONG_PARAMETER, WRONG_TOKEN, WRONG_USER_INFO, NOT_ENOUGH_STOCK, USER_NOT_ACCESS_DENIED, \
-    CANT_CHANGE_ORDER_STATE, INCORRECT_TOTAL_AMOUNT, MUST_HAVE_DELIVERY_TO
+    CANT_CHANGE_ORDER_STATE, INCORRECT_TOTAL_AMOUNT, MUST_HAVE_DELIVERY_TO, EXPIRED_SIGNATURE
 from util.permission import is_valid_token, get_jwt_token
 from util.util import ORJSONParser
 
@@ -282,4 +282,13 @@ def must_have_delivery_to_exception_handler(request, exec):
                                data={'code': MUST_HAVE_DELIVERY_TO['code'],
                                      'desc': MUST_HAVE_DELIVERY_TO['desc']},
                                status=MUST_HAVE_DELIVERY_TO['status']
+                               )
+
+
+@api.exception_handler(exc_class=jwt.ExpiredSignatureError)
+def expired_signature_exception_handler(request, exec):
+    return api.create_response(request,
+                               data={'code': EXPIRED_SIGNATURE['code'],
+                                     'desc': EXPIRED_SIGNATURE['desc']},
+                               status=EXPIRED_SIGNATURE['status']
                                )

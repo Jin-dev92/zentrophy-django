@@ -85,3 +85,9 @@ USER_NOT_ACCESS_DENIED = {
     'desc': "일반 유저는 접근 할 수 없습니다.",
     'status': 401
 }
+
+EXPIRED_SIGNATURE = {
+    'code': 4010004,
+    'desc': "만료된 토큰 입니다. 다시 로그인 해주세요.",
+    'status': 401
+}

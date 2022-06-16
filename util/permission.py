@@ -1,9 +1,8 @@
 import datetime
-
 import jwt
 
 from conf.custom_exception import WrongTokenException
-from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
+from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG, DEBUG
 
 
 def is_admin(user):  # 어드민 유저만 허용
@@ -20,8 +19,7 @@ def is_valid_token(token: str):
 
 
 def get_jwt_token(user_id: int):
-    from conf import settings
-    token_valid_time = datetime.timedelta(hours=24) if settings.DEBUG else datetime.timedelta(minutes=60)
+    token_valid_time = datetime.timedelta(hours=24) if DEBUG else datetime.timedelta(minutes=60)
     payload = {
         'id': user_id,
         'exp': datetime.datetime.now() + token_valid_time,
