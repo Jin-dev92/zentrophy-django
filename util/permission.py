@@ -20,9 +20,11 @@ def is_valid_token(token: str):
 
 
 def get_jwt_token(user_id: int):
+    from conf import settings
+    token_valid_time = datetime.timedelta(hours=24) if settings.DEBUG else datetime.timedelta(minutes=60)
     payload = {
         'id': user_id,
-        'exp': datetime.datetime.now() + datetime.timedelta(minutes=60),
+        'exp': datetime.datetime.now() + token_valid_time,
         'iat': datetime.datetime.now()
     }
     token = jwt.encode(payload=payload, key=SECRET_KEY, algorithm=JWT_ENCRYPTION_ALG)
