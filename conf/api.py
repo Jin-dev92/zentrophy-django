@@ -8,7 +8,6 @@ from ninja import NinjaAPI, Form, Schema
 # util
 from ninja.security import HttpBearer
 
-import member
 from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
     LoginRequiredException, FormatNotSupportedException, WrongParameterException, WrongUserInfoException, \
@@ -160,14 +159,18 @@ def member_login(request, token_info: TokenSchema = Form(...),
     if user is None:
         raise WrongUserInfoException
     try:
-        if user.remotetoken.refresh_token and user.remotetoken.access_token:
-            target = get_object_or_404(RemoteToken, user=user)
-            target.access_token = token_info.access_token
-            target.refresh_token = token_info.refresh_token
-            target.save(update_fields=['access_token', 'refresh_token'])
+        if len(RemoteToken.objects.filter(user=user)) == 0:
+            RemoteToken.objects.create(user=user,
+                                       access_token=is_valid_token(token_info.access_token),
+                                       refresh_token=is_valid_token(token_info.refresh_token)
+                                       )
+        else:
+            if user.remotetoken.refresh_token and user.remotetoken.access_token:
+                target = get_object_or_404(RemoteToken, user=user)
+                target.access_token = token_info.access_token
+                target.refresh_token = token_info.refresh_token
+                target.save(update_fields=['access_token', 'refresh_token'])
 
-    except member.models.User.remotetoken.RelatedObjectDoesNotExist:  # user가 remote token을 보유하고 있지 않을 때,
-        RemoteToken.objects.create(user=user, access_token=is_valid_token(token_info.access_token), refresh_token=is_valid_token(token_info.refresh_token))
     except Exception as e:
         raise e
 
