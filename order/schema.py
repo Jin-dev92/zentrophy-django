@@ -61,6 +61,10 @@ class OrderListSchema(Schema):
     subside: bool = Field(default=0, title="기본 보조금")
     is_visited: bool = Field(default=False, title="방문 구매 여부")
     total: int = 0
+    is_request_submit: bool = Field(default=False, description="서류 재 검토 요청 여부")
+    discount_total: int = Field(default=0, description="보조금 할인 총 합계")
+    delivery_method: DeliveryMethod = Field(default=DeliveryMethod.DEPEND_ON, description="배달 방법")
+    delivery_to: str = Field(default=None, description="탁송 시, 배달지 주소")
     state: OrderState = Field(default=OrderState.ACCEPT_ORDER,
                               title="주문 상태",
                               description="0: 주문 수락, 1: 서류 검토중, 2: 결제 대기중, 3: 배달 준비중, 4: 배달 완료, 5: 주문 취소")
