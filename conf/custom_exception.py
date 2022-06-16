@@ -74,5 +74,5 @@ class MustHaveDeliveryToException(Exception):
     pass
 
 
-class ReviewDocsStateOnlyException(Exception):
+class IncorrectOrderStateException(Exception):
     pass

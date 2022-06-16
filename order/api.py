@@ -11,7 +11,7 @@ from ninja.files import UploadedFile
 
 from conf.custom_exception import AlreadyExistsException, WrongParameterException, \
     NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException, IncorrectTotalAmountException, \
-    MustHaveDeliveryToException, ReviewDocsStateOnlyException
+    MustHaveDeliveryToException, IncorrectOrderStateException
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.constant import OrderState, DeliveryMethod
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
@@ -116,15 +116,28 @@ def apply_subsides_to_order(request, payload: ApplySubSideSchema, id: int):
         raise e
 
 
-@router.post('/is_request_submit/{id}', description="서류 재접수 요청하기")
+@router.post('/is_request_submit/{id}', description="서류 재접수 토글")
 def change_is_request_submit(request, id: int):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     target = get_object_or_404(Order, id=id)
     if target.state != OrderState.REVIEW_DOCS:
-        raise ReviewDocsStateOnlyException
-    target.is_request_submit = True
+        raise IncorrectOrderStateException
+    target.is_request_submit = not target.is_request_submit
     target.save(update_fields=['is_request_submit'])
+
+
+@router.post('/is_delivery/{id}', description="출고준비 -> 배송중, 배송중 -> 출고 준비 상태 토글")
+def change_is_delivery(request, id: int):
+    if not is_admin(request.auth):  # 어드민 접근 제한
+        raise UserNotAccessDeniedException
+
+    target = get_object_or_404(Order, id=id)
+    if target.state != OrderState.PREPARE_DELIVERY:
+        raise IncorrectOrderStateException
+
+    target.is_delivery = not target.is_delivery
+    target.save(update_fields=['is_delivery'])
 
 
 @transaction.atomic(using='default')
@@ -234,6 +247,9 @@ def change_order_state(request, id: int, state: OrderState):
             raise OrderStateCantChangeException
         if target.state > OrderState.REVIEW_DOCS and target.is_request_submit:
             target.is_request_submit = False
+        if state == OrderState.PREPARE_DELIVERY:
+            target.is_delivery = False   # 출고 준비 중
+
         target.state = state
         target.save(update_fields=['state', 'is_request_submit'])
 
