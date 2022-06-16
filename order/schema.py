@@ -82,8 +82,8 @@ class OrderCreateSchema(Schema):
     extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")
     total: int = 0
     is_visited: bool = Field(default=False, description="방문 구매 여부")
-    delivery_method: DeliveryMethod = Field(default=DeliveryMethod.DEPEND_ON, description="배달 방법")
-    delivery_to: str = Field(default=None, description="탁송 시 택배 주소 input")
+    # delivery_method: DeliveryMethod = Field(default=DeliveryMethod.DEPEND_ON, description="배달 방법")
+    # delivery_to: str = Field(default=None, description="탁송 시 택배 주소 input")
 
 
 # class OrderModifySchema(Schema):

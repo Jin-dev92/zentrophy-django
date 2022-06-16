@@ -77,6 +77,18 @@ def get_order_list_by_id(request, id: int):
     return queryset
 
 
+@router.post('/delivery_method/{id}', description="배달 정보 입력")
+def delivery_method_input(request, id: int, delivery_method: DeliveryMethod = DeliveryMethod.DEPEND_ON, delivery_to: str = None):
+    if delivery_method == delivery_method.DEPEND_ON and not delivery_to:
+        raise MustHaveDeliveryToException
+
+    target = get_object_or_404(Order, id=id, owner=request.auth)
+    target.delivery_method = delivery_method
+    target.delivery_to = delivery_to
+    target.save(update_fields=['delivery_method', 'delivery_to'])
+
+
+
 @router.post('/apply_subsides/{id}', description="주문 보조금 적용")
 def apply_subsides_to_order(request, payload: ApplySubSideSchema, id: int):
     if not is_admin(request.auth):
@@ -124,12 +136,6 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
             ordered_vehicle_color = params['ordered_vehicle_color']
             ordered_product_options = params['ordered_product_options']
             total = params['total']
-
-            delivery_method = params['delivery_method']
-            delivery_to = params['delivery_to']
-
-            if delivery_method == DeliveryMethod.DEPEND_ON and not delivery_to:
-                raise MustHaveDeliveryToException
 
             if id and id > -1:  # 수정 로직 수행 전 데이터 세팅
                 target = get_object_or_404(Order, id=id)
