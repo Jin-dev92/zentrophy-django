@@ -5,7 +5,7 @@ from ninja import Schema, Field
 
 from member.schema import MemberListSchema
 from order.constant import OrderState
-from product.schema import VehicleColorListSchema, ProductOptionsListSchema, ProductImageListSchema
+from product.schema import VehicleColorListSchema, ProductOptionsListSchema
 
 
 class CustomerInfoSchema(Schema):
@@ -58,7 +58,7 @@ class OrderListSchema(Schema):
     ordered_vehicle_color: List[OrderedVehicleColorListSchema] = None
     customer_info: CustomerInfoSchema = None
     order_location_info: OrderLocationInfoSchema = None
-    subside: int = Field(default=0, title="기본 보조금")
+    subside: bool = Field(default=0, title="기본 보조금")
     is_visited: bool = Field(default=False, title="방문 구매 여부")
     total: int = 0
     state: OrderState = Field(default=OrderState.ACCEPT_ORDER,
@@ -147,3 +147,7 @@ class Schedule(Schema):
 class RequestPaymentSubscriptionsScheduleSchema(Schema):
     customer_uid: str
     schedules: List[Schedule]
+
+
+class ApplySubSideSchema(Schema):
+    extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")

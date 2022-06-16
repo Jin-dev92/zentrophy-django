@@ -12,7 +12,8 @@ import member
 from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
     LoginRequiredException, FormatNotSupportedException, WrongParameterException, WrongUserInfoException, \
-    WrongTokenException, NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException
+    WrongTokenException, NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException, \
+    IncorrectTotalAmountException
 from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
     cart_router
@@ -27,7 +28,7 @@ from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
     FORMAT_NOT_SUPPORTED, WRONG_PARAMETER, WRONG_TOKEN, WRONG_USER_INFO, NOT_ENOUGH_STOCK, USER_NOT_ACCESS_DENIED, \
-    CANT_CHANGE_ORDER_STATE
+    CANT_CHANGE_ORDER_STATE, INCORRECT_TOTAL_AMOUNT
 from util.permission import is_valid_token, get_jwt_token
 from util.util import ORJSONParser
 
@@ -174,6 +175,7 @@ def member_login(request, token_info: TokenSchema = Form(...),
     return get_jwt_token(user.id)
 
 
+# 에러 핸들링
 @api.exception_handler(exc_class=UserNotAccessDeniedException)
 def user_not_access_denied_exception_handler(request, exec):
     return api.create_response(request,
@@ -260,3 +262,13 @@ def cant_change_order_state_exception_handler(request, exec):
                                      'desc': CANT_CHANGE_ORDER_STATE['desc']},
                                status=CANT_CHANGE_ORDER_STATE['status']
                                )
+
+
+@api.exception_handler(exc_class=IncorrectTotalAmountException)
+def incorrect_total_amount_exception_handler(request, exec):
+    return api.create_response(request,
+                               data={'code': INCORRECT_TOTAL_AMOUNT['code'],
+                                     'desc': INCORRECT_TOTAL_AMOUNT['desc']},
+                               status=INCORRECT_TOTAL_AMOUNT['status']
+                               )
+

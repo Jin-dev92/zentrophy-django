@@ -7,7 +7,6 @@ LOGIN_REQUIRED = {
     'desc': '로그인이 필요합니다.',
     'status': 401
 }
-USER_NOT_ACCESS_DENIED = '일반 유저는 접근 할 수 없습니다.'
 DB_ERROR = 'DB ORM Error'
 FILE_ERROR = 'File I/O Error'
 # member
@@ -15,7 +14,6 @@ WRONG_BUSINESS_NUMBER = '잘못된 사업자 번호 입니다.'
 WRONG_BIRTH_NUMBER = '잘못된 생년월일 입니다.'
 ACCESS_DENIED = '이메일 혹은 비밀번호가 틀립니다.'
 # product
-CANT_CHANGE_ORDER_STATE = "변경 하려는 주문 상태와 db 내 주문 상태가 같습니다."
 CANT_APPLY_PERIOD_PAYMENT = '정기 결제 에는 적용할 수 없습니다.'
 MUST_HAVE_SPLIT_WORD = "옵션 구분 문자를 섞어 주세요. 옵션 구분 문자는 {split}입니다. ex)상품명{split}옵션명".format(split=settings.OPTION_SPLIT)
 DISPLAY_LINE_DONT_EXCEEDED_SIZE = {
@@ -56,6 +54,12 @@ NOT_ENOUGH_STOCK = {
 CANT_CHANGE_ORDER_STATE = {
     'code': 4000008,
     'desc': "주문 취소 상태의 주문은 상태를 다시 바꿀 수 없습니다.",
+    'status': 400
+}
+
+INCORRECT_TOTAL_AMOUNT = {
+    'code': 4000009,
+    'desc': "요청한 금액과 실제 계산된 금액이 맞지 않습니다.",
     'status': 400
 }
 

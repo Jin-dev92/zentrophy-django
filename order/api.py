@@ -1,23 +1,23 @@
 from typing import List
 
+import requests
 from asgiref.sync import sync_to_async
 from django.db import transaction
-from django.db.models import Prefetch
 from django.db.models import F
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.files import UploadedFile
-import requests
 
 from conf.custom_exception import AlreadyExistsException, WrongParameterException, \
-    NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException
+    NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException, IncorrectTotalAmountException
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.constant import OrderState
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
     OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
-    RequestPaymentSubscriptionsScheduleSchema
+    RequestPaymentSubscriptionsScheduleSchema, ApplySubSideSchema
 from product.models import ProductOptions, VehicleColor
 from util.number import check_invalid_product_params
 from util.permission import is_admin
@@ -76,6 +76,34 @@ def get_order_list_by_id(request, id: int):
     return queryset
 
 
+@router.post('/apply_subsides/{id}', description="주문 보조금 적용")
+def apply_subsides_to_order(request, payload: ApplySubSideSchema, id: int):
+    if not is_admin(request.auth):
+        raise UserNotAccessDeniedException
+    try:
+        discount = 0    # 1대당 할인 금액
+
+        target = get_object_or_404(Order, id=id)
+        extra_bulk = ExtraSubside.objects.in_bulk(id_list=payload.dict()['extra_subside'])
+        print(extra_bulk)
+        # 1대당 할인 금액 계산
+        for ordered_vehicle in target.orderedvehiclecolor_set.all():
+            if ordered_vehicle.vehicle_color.vehicle.able_subsidy and target.subside:   # 기본 보조금 계산
+                discount += Subside.objects.all().first().amount * ordered_vehicle.amount
+
+            if ordered_vehicle.vehicle_color.vehicle.able_extra_subsidy:
+                for extra_id in extra_bulk:
+                    discount += ExtraSubside.objects.get(id=extra_id).amount * ordered_vehicle.amount
+
+        target.total -= discount
+        if target.total < 0:
+            target.total = 0
+        target.save(update_fields=['total'])
+
+    except Exception as e:
+        raise e
+
+
 @transaction.atomic(using='default')
 @router.post('/', description="주문 생성 / 수정")
 def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
@@ -91,6 +119,10 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
             order_location_info_params = params['order_location_info']
             customer_info_params = params['customer_info']
             extra_subside_params: list = params.get('extra_subside')
+
+            ordered_vehicle_color = params['ordered_vehicle_color']
+            ordered_product_options = params['ordered_product_options']
+            total = params['total']
 
             if id and id > -1:  # 수정 로직 수행 전 데이터 세팅
                 target = get_object_or_404(Order, id=id)
@@ -117,37 +149,47 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
                 order_queryset[0].extra_subside.add(
                     *ExtraSubside.objects.in_bulk(id_list=params.get('extra_subside')))  # manytomany field
 
-            if params['ordered_product_options'] and len(params['ordered_product_options']) > 0:    #   주문한 상품이 존재할 경우
-                if not check_invalid_product_params(params['ordered_product_options']):     # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
+            if ordered_product_options and len(ordered_product_options) > 0:    #   주문한 상품이 존재할 경우
+                if not check_invalid_product_params(ordered_product_options):     # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
                     raise WrongParameterException
-                po_list = OrderedProductOptions.objects.bulk_create(
-                    objs=[
-                        OrderedProductOptions(**ordered_po,
-                                              order=order_queryset[0])
-                        for ordered_po in params['ordered_product_options']]
-                )
-
-                for index, po in enumerate(params['ordered_product_options']):    # 상품 주문 생성 시 판매량, 재고량 조절
+                acc_total = 0   # 가격 검증을 위한 변수
+                for index, po in enumerate(ordered_product_options):    # 상품 주문 생성 시 판매량, 재고량 조절
                     po_target = get_object_or_404(ProductOptions, id=po.get('product_options_id'))
+                    acc_total += po_target.product.product_price * po.get('amount')
                     if po.get('amount') > po_target.stock_count:
                         raise NotEnoughStockException
                     po_target.sale_count = po_target.sale_count + po.get('amount')
                     po_target.stock_count = po_target.stock_count - po.get('amount')
                     po_target.save(update_fields=['sale_count', 'stock_count'])
 
-            elif params['ordered_vehicle_color'] and len(params['ordered_vehicle_color']) > 0:  #   주문한 모터 사이클이 존재할 경우
-                if not check_invalid_product_params(params['ordered_vehicle_color']): # 파라미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
-                    raise WrongParameterException
-                vc_list = OrderedVehicleColor.objects.bulk_create(
-                    objs=[OrderedVehicleColor(**ordered_vc, order=order_queryset[0]) for ordered_vc in params['ordered_vehicle_color']])
+                if total != acc_total:  # 가격 검증의 결과와 요청한 금액이 맞지 않을 때 에러를 띄워 준다.
+                    raise IncorrectTotalAmountException
 
-                for index, vc in enumerate(params['ordered_vehicle_color']):  # 모터 사이클 주문 생성시 판매량, 재고량 조절
+                po_list = OrderedProductOptions.objects.bulk_create(
+                    objs=[
+                        OrderedProductOptions(**ordered_po,
+                                              order=order_queryset[0])
+                        for ordered_po in ordered_product_options]
+                )
+
+            elif ordered_vehicle_color and len(ordered_vehicle_color) > 0:  #   주문한 모터 사이클이 존재할 경우
+                if not check_invalid_product_params(ordered_vehicle_color): # 파라 미터 잘못 보냈는지 체크 (수량 0 이거나 id 가 0 or 음수일 때)
+                    raise WrongParameterException
+                acc_total = 0   # 가격 검증을 위한 변수
+                for index, vc in enumerate(ordered_vehicle_color):  # 모터 사이클 주문 생성시 판매량, 재고량 조절
                     vc_target = get_object_or_404(VehicleColor, id=vc.get('vehicle_color_id'))
+                    acc_total += vc_target.price * vc.get('amount')
                     if vc.get('amount') > vc_target.stock_count:
                         raise NotEnoughStockException
                     vc_target.sale_count = vc_target.sale_count + vc.get('amount')
                     vc_target.stock_count = vc_target.stock_count - vc.get('amount')
                     vc_target.save(update_fields=['sale_count', 'stock_count'])
+
+                if total != acc_total:  # 가격 검증의 결과와 요청한 금액이 맞지 않을 때 에러를 띄워 준다.
+                    raise IncorrectTotalAmountException
+
+                vc_list = OrderedVehicleColor.objects.bulk_create(
+                    objs=[OrderedVehicleColor(**ordered_vc, order=order_queryset[0]) for ordered_vc in ordered_vehicle_color])
             else:
                 raise WrongParameterException
 
@@ -231,7 +273,7 @@ def create_subside(request, payload: SubsideInsertSchema):
 
 
 @subside_router.put('/', description="기본 보조금 수정")
-def modify_extra_subside(request, payload: SubsideInsertSchema = None):
+def modify_subside(request, payload: SubsideInsertSchema = None):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     for extra_subside in ExtraSubside.objects.get_queryset():

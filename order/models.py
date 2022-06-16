@@ -2,7 +2,7 @@ from django.db import models
 
 from member.models import User
 from order.constant import OrderState
-from product.models import ProductOptions, VehicleColor, ProductImage, VehicleImage
+from product.models import ProductOptions, VehicleColor
 from util.models import TimeStampModel, SoftDeleteModel
 
 
@@ -51,8 +51,22 @@ class Order(TimeStampModel, SoftDeleteModel):
     def __str__(self):
         return str(self.id)
 
-    def check_total(self):
-        return
+    # def check_total(self):
+    #     acc_total = 0
+    #     if self.orderedproductoptions_set:  # 상품 주문 시
+    #         for po in self.orderedproductoptions_set.all():
+    #             acc_total += po.product_options.product.product_price * po.amount
+    #     elif self.orderedvehiclecolor_set:  # 모터 사이클 주문 시
+    #         for vc in self.orderedvehiclecolor_set.all():
+    #             acc_total += vc.vehicle_color.price * vc.amount
+    #     else:
+    #         print("else")
+    #         return False
+    #     # print(self.total)
+    #     # print(acc_total)
+    #     if self.total != acc_total:
+    #         return False
+    #     return True
 
 
 class OrderedProductOptions(TimeStampModel):

@@ -1,9 +1,8 @@
 from typing import List
 
-from django.db import transaction
 from django.db import IntegrityError
+from django.db import transaction
 from django.shortcuts import get_object_or_404
-
 from ninja import Router
 
 from conf.custom_exception import DataBaseORMException, UserNotAccessDeniedException
@@ -85,7 +84,7 @@ def get_faq_category_list(request):
 
 
 @faq_category_router.post('/', description='FAQ 카테고리 생성 / 수정')
-def update_or_create_faq_category(request, category_name: str):
+def update_or_create_faq_category(request, category_name: str = "카테고리 이름 1"):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     try:
