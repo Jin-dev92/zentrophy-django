@@ -11,7 +11,7 @@ from ninja.files import UploadedFile
 
 from conf.custom_exception import AlreadyExistsException, WrongParameterException, \
     NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException, IncorrectTotalAmountException, \
-    MustHaveDeliveryToException
+    MustHaveDeliveryToException, ReviewDocsStateOnlyException
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.constant import OrderState, DeliveryMethod
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
@@ -121,6 +121,8 @@ def change_is_request_submit(request, id: int):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     target = get_object_or_404(Order, id=id)
+    if target.state != OrderState.REVIEW_DOCS:
+        raise ReviewDocsStateOnlyException
     target.is_request_submit = True
     target.save(update_fields=['is_request_submit'])
 

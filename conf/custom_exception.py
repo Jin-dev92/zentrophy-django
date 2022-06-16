@@ -72,3 +72,7 @@ class OrderStateCantChangeException(Exception):
 
 class MustHaveDeliveryToException(Exception):
     pass
+
+
+class ReviewDocsStateOnlyException(Exception):
+    pass
