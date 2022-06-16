@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 
 class OrderState(IntEnum):
@@ -10,9 +10,12 @@ class OrderState(IntEnum):
     IS_CANCELED = 5
 
 
-class PaymentType(IntEnum):
-    PRODUCT = 0
-    VEHICLE = 1
-    PERIOD = 2
+# class PaymentType(IntEnum):
+#     PRODUCT = 0
+#     VEHICLE = 1
+#     PERIOD = 2
 
 
+class DeliveryMethod(IntEnum):
+    DEPEND_ON = 0
+    YOURSELF = 1

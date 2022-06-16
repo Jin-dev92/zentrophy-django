@@ -1,7 +1,7 @@
 from django.db import models
 
 from member.models import User
-from order.constant import OrderState
+from order.constant import OrderState, DeliveryMethod
 from product.models import ProductOptions, VehicleColor
 from util.models import TimeStampModel, SoftDeleteModel
 
@@ -45,9 +45,12 @@ class Order(TimeStampModel, SoftDeleteModel):
     is_visited = models.BooleanField(default=False)
     total = models.IntegerField(default=0)
     is_request_submit = models.BooleanField(default=False)
+    discount_total = models.IntegerField(default=0)
     state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
     customer_info = models.OneToOneField('order.CustomerInfo', on_delete=models.CASCADE, null=True)
     order_location_info = models.OneToOneField('order.OrderLocationInfo', on_delete=models.CASCADE, null=True)
+    delivery_method = models.PositiveSmallIntegerField(default=DeliveryMethod.DEPEND_ON, null=True)
+    delivery_to = models.CharField(max_length=200, null=True)
 
     def __str__(self):
         return str(self.id)

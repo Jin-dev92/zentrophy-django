@@ -63,6 +63,12 @@ INCORRECT_TOTAL_AMOUNT = {
     'status': 400
 }
 
+MUST_HAVE_DELIVERY_TO = {
+    'code': 4000010,
+    'desc': "탁송 배송은 반드시 배송지 주소를 포함 하여야 합니다.",
+    'status': 400
+}
+
 WRONG_TOKEN = {
     'code': 4010001,
     'desc': "잘못된 토큰 입니다. 데이터를 확인하세요",

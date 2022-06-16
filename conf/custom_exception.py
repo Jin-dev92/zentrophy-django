@@ -68,3 +68,7 @@ class AdminAccountInActiveException(Exception):
 
 class OrderStateCantChangeException(Exception):
     pass
+
+
+class MustHaveDeliveryToException(Exception):
+    pass

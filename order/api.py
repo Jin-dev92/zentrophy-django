@@ -10,9 +10,10 @@ from ninja import Router
 from ninja.files import UploadedFile
 
 from conf.custom_exception import AlreadyExistsException, WrongParameterException, \
-    NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException, IncorrectTotalAmountException
+    NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException, IncorrectTotalAmountException, \
+    MustHaveDeliveryToException
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
-from order.constant import OrderState
+from order.constant import OrderState, DeliveryMethod
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
     OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
@@ -95,9 +96,10 @@ def apply_subsides_to_order(request, payload: ApplySubSideSchema, id: int):
                     discount += ExtraSubside.objects.get(id=extra_id).amount * ordered_vehicle.amount
 
         target.total -= discount
+        target.discount_total = discount
         if target.total < 0:
             target.total = 0
-        target.save(update_fields=['total'])
+        target.save(update_fields=['total', 'discount_total'])
 
     except Exception as e:
         raise e
@@ -122,6 +124,12 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
             ordered_vehicle_color = params['ordered_vehicle_color']
             ordered_product_options = params['ordered_product_options']
             total = params['total']
+
+            delivery_method = params['delivery_method']
+            delivery_to = params['delivery_to']
+
+            if delivery_method == DeliveryMethod.DEPEND_ON and not delivery_to:
+                raise MustHaveDeliveryToException
 
             if id and id > -1:  # 수정 로직 수행 전 데이터 세팅
                 target = get_object_or_404(Order, id=id)
@@ -189,6 +197,7 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
 
                 vc_list = OrderedVehicleColor.objects.bulk_create(
                     objs=[OrderedVehicleColor(**ordered_vc, order=order_queryset[0]) for ordered_vc in ordered_vehicle_color])
+
             else:
                 raise WrongParameterException
 
@@ -198,8 +207,10 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
 
 @router.put('/', description="주문 상태 수정, OrderListSchema - state 주석 참조")
 def change_order_state(request, id: int, state: OrderState):
+    # orderState가 3일 경우 유저 접근 가능하도록.
     if not is_admin(request.auth):  # 어드민 접근 제한
-        raise UserNotAccessDeniedException
+        if state != OrderState.PREPARE_DELIVERY:
+            raise UserNotAccessDeniedException
 
     try:
         target = get_object_or_404(Order, id=id)
@@ -359,7 +370,7 @@ def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSc
                     json=payload.json(),
                     timeout=5
                 )
-                if int(request_payment_response['code']) == 0:  # 요청이 성공 했을 경우
+                if int(request_payment_response.json()['code']) == 0:  # 요청이 성공 했을 경우
                     # DB에 저장 한다.
                     Subscriptions.objects.create(
                         owner=request.auth,
