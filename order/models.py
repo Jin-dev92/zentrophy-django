@@ -31,9 +31,9 @@ class ExtraSubside(SoftDeleteModel, TimeStampModel):
     subside = models.ForeignKey('order.Subside', on_delete=models.CASCADE)
 
 
-class IntegratedFeePlan(SoftDeleteModel):
-    zentrophy_fee = models.IntegerField(default=0)
-    battery_fee = models.IntegerField(default=0)
+# class IntegratedFeePlan(SoftDeleteModel):
+#     zentrophy_fee = models.IntegerField(default=0)
+#     battery_fee = models.IntegerField(default=0)
 
 
 class Order(TimeStampModel, SoftDeleteModel):
@@ -44,6 +44,7 @@ class Order(TimeStampModel, SoftDeleteModel):
     extra_subside = models.ManyToManyField(ExtraSubside)
     is_visited = models.BooleanField(default=False)
     total = models.IntegerField(default=0)
+    is_request_submit = models.BooleanField(default=False)
     state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
     customer_info = models.OneToOneField('order.CustomerInfo', on_delete=models.CASCADE, null=True)
     order_location_info = models.OneToOneField('order.OrderLocationInfo', on_delete=models.CASCADE, null=True)
@@ -72,7 +73,6 @@ class Order(TimeStampModel, SoftDeleteModel):
 class OrderedProductOptions(TimeStampModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
     product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE, null=True)
-    # image_path = models.CharField(max_length=2000, null=True)
     amount = models.IntegerField(default=0)
 
     def __str__(self):
@@ -82,8 +82,6 @@ class OrderedProductOptions(TimeStampModel):
 class OrderedVehicleColor(TimeStampModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
     vehicle_color = models.ForeignKey(VehicleColor, on_delete=models.CASCADE, null=True)
-
-    # image_path = models.CharField(max_length=2000, null=True)
     amount = models.IntegerField(default=0)
 
     def __str__(self):

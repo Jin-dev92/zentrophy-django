@@ -85,7 +85,6 @@ def apply_subsides_to_order(request, payload: ApplySubSideSchema, id: int):
 
         target = get_object_or_404(Order, id=id)
         extra_bulk = ExtraSubside.objects.in_bulk(id_list=payload.dict()['extra_subside'])
-        print(extra_bulk)
         # 1대당 할인 금액 계산
         for ordered_vehicle in target.orderedvehiclecolor_set.all():
             if ordered_vehicle.vehicle_color.vehicle.able_subsidy and target.subside:   # 기본 보조금 계산
@@ -206,18 +205,20 @@ def change_order_state(request, id: int, state: OrderState):
         target = get_object_or_404(Order, id=id)
         if target.state == OrderState.IS_CANCELED:
             raise OrderStateCantChangeException
+        if target.state > OrderState.REVIEW_DOCS and target.is_request_submit:
+            target.is_request_submit = False
         target.state = state
-        target.save(update_fields=['state'])
+        target.save(update_fields=['state', 'is_request_submit'])
 
-        if OrderState.IS_CANCELED: # 주문 취소 하였을 때 재고량과 판매량을 원복 해줘야 한다.
+        if OrderState.IS_CANCELED:  # 주문 취소 하였을 때 재고량과 판매량을 원복 해줘야 한다.
             ordered_product_options = target.orderedproductoptions_set.all()
             ordered_vehicle_colors = target.orderedvehiclecolor_set.all()
 
             if len(ordered_product_options) > 0:
                 for ordered_product_option in ordered_product_options:
                     amount = ordered_product_option.amount
-                    ordered_product_option.product_options.stock_count = ordered_product_option.product_options.stock_count + amount
-                    ordered_product_option.product_options.sale_count = ordered_product_option.product_options.sale_count - amount
+                    ordered_product_option.product_options.stock_count += amount
+                    ordered_product_option.product_options.sale_count -= amount
 
                     if ordered_product_option.product_options.sale_count < 0:
                         ordered_product_option.product_options.sale_count = 0
@@ -226,8 +227,8 @@ def change_order_state(request, id: int, state: OrderState):
             elif len(ordered_vehicle_colors) > 0:
                 for ordered_vehicle_color in ordered_vehicle_colors:
                     amount = ordered_vehicle_color.amount
-                    ordered_vehicle_color.vehicle_color.stock_count = ordered_vehicle_color.vehicle_color.stock_count + amount
-                    ordered_vehicle_color.vehicle_color.sale_count = ordered_vehicle_color.vehicle_color.sale_count - amount
+                    ordered_vehicle_color.vehicle_color.stock_count += amount
+                    ordered_vehicle_color.vehicle_color.sale_count -= amount
 
                     if ordered_vehicle_color.vehicle_color.sale_count < 0:
                         ordered_vehicle_color.vehicle_color.sale_count = 0
