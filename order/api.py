@@ -116,6 +116,15 @@ def apply_subsides_to_order(request, payload: ApplySubSideSchema, id: int):
         raise e
 
 
+@router.post('/is_request_submit/{id}', description="서류 재접수 요청하기")
+def change_is_request_submit(request, id: int):
+    if not is_admin(request.auth):  # 어드민 접근 제한
+        raise UserNotAccessDeniedException
+    target = get_object_or_404(Order, id=id)
+    target.is_request_submit = True
+    target.save(update_fields=['is_request_submit'])
+
+
 @transaction.atomic(using='default')
 @router.post('/', description="주문 생성 / 수정")
 def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
