@@ -58,7 +58,7 @@ class OrderListSchema(Schema):
     ordered_vehicle_color: List[OrderedVehicleColorListSchema] = None
     customer_info: CustomerInfoSchema = None
     order_location_info: OrderLocationInfoSchema = None
-    subside: bool = Field(default=0, title="기본 보조금")
+    # subside: bool = Field(default=0, title="기본 보조금")
     is_visited: bool = Field(default=False, title="방문 구매 여부")
     total: int = 0
     is_request_submit: bool = Field(default=False, description="서류 재 검토 요청 여부")

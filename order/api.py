@@ -78,7 +78,7 @@ def get_order_list_by_id(request, id: int):
 
 
 @router.post('/delivery_method/{id}', description="배달 정보 입력")
-def delivery_method_input(request, id: int, delivery_method: DeliveryMethod = DeliveryMethod.DEPEND_ON, delivery_to: str = None):
+def delivery_method_input(request, id: int, delivery_method: DeliveryMethod = DeliveryMethod.DEPEND_ON, delivery_to: str= None):
     if delivery_method == delivery_method.DEPEND_ON and not delivery_to:
         raise MustHaveDeliveryToException
 
@@ -86,7 +86,6 @@ def delivery_method_input(request, id: int, delivery_method: DeliveryMethod = De
     target.delivery_method = delivery_method
     target.delivery_to = delivery_to
     target.save(update_fields=['delivery_method', 'delivery_to'])
-
 
 
 @router.post('/apply_subsides/{id}', description="주문 보조금 적용")
@@ -100,10 +99,10 @@ def apply_subsides_to_order(request, payload: ApplySubSideSchema, id: int):
         extra_bulk = ExtraSubside.objects.in_bulk(id_list=payload.dict()['extra_subside'])
         # 1대당 할인 금액 계산
         for ordered_vehicle in target.orderedvehiclecolor_set.all():
-            if ordered_vehicle.vehicle_color.vehicle.able_subsidy and target.subside:   # 기본 보조금 계산
+            if ordered_vehicle.vehicle_color.vehicle.able_subsidy and target.customer_info.is_apply_subside:   # 기본 보조금 계산
                 discount += Subside.objects.all().first().amount * ordered_vehicle.amount
 
-            if ordered_vehicle.vehicle_color.vehicle.able_extra_subsidy:
+            if ordered_vehicle.vehicle_color.vehicle.able_extra_subsidy and target.customer_info.is_apply_subside:
                 for extra_id in extra_bulk:
                     discount += ExtraSubside.objects.get(id=extra_id).amount * ordered_vehicle.amount
 
