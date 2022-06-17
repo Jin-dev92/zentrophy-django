@@ -183,4 +183,4 @@ class InicisAuthResultSchema(Schema):
     authUrl: str
     netCancelUrl: str = None
     charset: str = None
-    merchantData: dict = None
+    merchantData: str = None
