@@ -384,7 +384,7 @@ def delete_format_files(request, id: int):
 
 
 @sync_to_async
-@subscription_router.post('/payment_result', description="일반 결제 인증 결과 수신")
+@payment_router.post('/payment_result', description="일반 결제 인증 결과 수신")
 def response_normal_payment_auth_result(request, result: dict):
     # 인증 결과를 저장 ( 로그 쌓기 )
     queryset = Payment.objects.create(owner=request.auth, auth_result=result)
