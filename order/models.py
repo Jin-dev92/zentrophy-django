@@ -123,5 +123,6 @@ class Subscriptions(TimeStampModel, SoftDeleteModel):
 
 class Payment(TimeStampModel, SoftDeleteModel):
     owner = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True)
     auth_result = models.JSONField(null=True)
     approval_result = models.JSONField(null=True)

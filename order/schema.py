@@ -172,3 +172,15 @@ class DeliveryMethodInputSchema(Schema):
     delivery_method: DeliveryMethod = None
     delivery_to: DeliveryToSchema = None
     place_remote_pk: int = None
+
+
+class InicisAuthResultSchema(Schema):
+    resultCode: str
+    resultMsg: str = None
+    mid: str
+    orderNumber: str = None
+    authToken: str
+    authUrl: str
+    netCancelUrl: str = None
+    charset: str = None
+    merchantData: dict = None

@@ -21,7 +21,7 @@ from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProd
     OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions, DeliveryTo, Payment
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
-    RequestPaymentSubscriptionsScheduleSchema, ApplySubSideSchema, DeliveryMethodInputSchema
+    RequestPaymentSubscriptionsScheduleSchema, ApplySubSideSchema, DeliveryMethodInputSchema, InicisAuthResultSchema
 from product.models import ProductOptions, VehicleColor
 from util.number import check_invalid_product_params
 from util.permission import is_admin
@@ -384,34 +384,37 @@ def delete_format_files(request, id: int):
 
 
 @sync_to_async
-@payment_router.post('/payment_result', description="일반 결제 인증 결과 수신")
-def response_normal_payment_auth_result(request, result: dict):
+@payment_router.post('/payment_result{order_id}', description="일반 결제 인증 결과 수신")
+def response_normal_payment_auth_result(request, order_id: int, payload: InicisAuthResultSchema):
     # 인증 결과를 저장 ( 로그 쌓기 )
-    queryset = Payment.objects.create(owner=request.auth, auth_result=result)
-    if result['resultCode'] == '0000':  # 성공
-        auth_token = result['authToken']
-        auth_url = result['authUrl']
-        mid = result['mid']
-        timestamp = datetime.datetime.now().timestamp()
-        signature = hashlib.sha256(('authToken=' + auth_token + '&timestamp=' + str(timestamp)).encode())
-        data = {
-            'authToken': auth_token,
-            'timestamp': timestamp,
-            'mid': mid,
-            'signature': signature,
-            'format': 'NVP',
-        }
-        print(data)
-        response = requests.post(url=auth_url, json=data)
-        response_json = response.json()
-        queryset.approval_result = response_json
-        queryset.save(update_fields=['approval_result'])
-        # if response_json['resultCode'] and response_json['resultCode'] == '0000': # 성공
-        # 성공 했을 때 뭔가 해준다.
-        return response_json
-
+    auth_result = payload.dict()
+    queryset = Payment.objects.create(owner=request.auth, auth_result=auth_result, order_id=order_id)
+    if auth_result['resultCode'] == '0000':  # 성공
+        try:
+            auth_token = auth_result['authToken']
+            auth_url = auth_result['authUrl']
+            mid = auth_result['mid']
+            timestamp = datetime.datetime.now().timestamp()
+            signature = hashlib.sha256(('authToken=' + auth_token + '&timestamp=' + str(timestamp)).encode())
+            data = {
+                'authToken': auth_token,
+                'timestamp': timestamp,
+                'mid': mid,
+                'signature': signature,
+                'format': 'NVP',
+            }
+            print(data)
+            response = requests.post(url=auth_url, json=data)
+            response_json = response.json()
+            queryset.approval_result = response_json
+            queryset.save(update_fields=['approval_result'])
+            # if response_json['resultCode'] and response_json['resultCode'] == '0000': # 성공
+            # 성공 했을 때 뭔가 해준다.
+            return response_json
+        except Exception as e:
+            raise WrongParameterException
     else:   # 실패
-        raise Exception("결제 결과 실패 했네? code: " + result['resultCode'])
+        raise Exception("결제 결과 실패 했네? code: " + auth_result['resultCode'])
 
 
 @sync_to_async
