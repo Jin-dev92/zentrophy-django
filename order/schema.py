@@ -158,3 +158,15 @@ class RequestPaymentSubscriptionsScheduleSchema(Schema):
 
 class ApplySubSideSchema(Schema):
     extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")
+
+
+class DeliveryToSchema(Schema):
+    post_code: str
+    address_1: str
+    address_2: str = None
+    address_3: str = None
+
+
+class DeliveryMethodInputSchema(Schema):
+    delivery_method: DeliveryMethod = None
+    delivery_to: DeliveryToSchema = None

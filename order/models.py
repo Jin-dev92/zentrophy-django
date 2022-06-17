@@ -47,31 +47,23 @@ class Order(TimeStampModel, SoftDeleteModel):
     is_request_submit = models.BooleanField(default=False)
     discount_total = models.IntegerField(default=0)
     state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
-    customer_info = models.OneToOneField('order.CustomerInfo', on_delete=models.CASCADE, null=True)
-    order_location_info = models.OneToOneField('order.OrderLocationInfo', on_delete=models.CASCADE, null=True)
+    customer_info = models.OneToOneField('order.CustomerInfo', on_delete=models.SET_NULL, null=True)
+    order_location_info = models.OneToOneField('order.OrderLocationInfo', on_delete=models.SET_NULL, null=True)
+
     delivery_method = models.PositiveSmallIntegerField(default=DeliveryMethod.DEPEND_ON, null=True)
-    delivery_to = models.CharField(max_length=200, null=True)
+    delivery_to = models.OneToOneField('order.DeliveryTo', on_delete=models.SET_NULL, null=True)
+    place_remote_id = models.IntegerField(null=True)
     is_delivery = models.BooleanField(help_text="False = 출고 준비 중 , True = 배송 중", null=True)
 
     def __str__(self):
         return str(self.id)
 
-    # def check_total(self):
-    #     acc_total = 0
-    #     if self.orderedproductoptions_set:  # 상품 주문 시
-    #         for po in self.orderedproductoptions_set.all():
-    #             acc_total += po.product_options.product.product_price * po.amount
-    #     elif self.orderedvehiclecolor_set:  # 모터 사이클 주문 시
-    #         for vc in self.orderedvehiclecolor_set.all():
-    #             acc_total += vc.vehicle_color.price * vc.amount
-    #     else:
-    #         print("else")
-    #         return False
-    #     # print(self.total)
-    #     # print(acc_total)
-    #     if self.total != acc_total:
-    #         return False
-    #     return True
+
+class DeliveryTo(TimeStampModel):
+    post_code = models.CharField(max_length=10, null=True)
+    address_1 = models.CharField(max_length=200, null=True)
+    address_2 = models.CharField(max_length=200, null=True)
+    address_3 = models.CharField(max_length=200, null=True)
 
 
 class OrderedProductOptions(TimeStampModel):

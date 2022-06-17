@@ -15,10 +15,10 @@ from conf.custom_exception import AlreadyExistsException, WrongParameterExceptio
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.constant import OrderState, DeliveryMethod
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
-    OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions
+    OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions, DeliveryTo
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
-    RequestPaymentSubscriptionsScheduleSchema, ApplySubSideSchema
+    RequestPaymentSubscriptionsScheduleSchema, ApplySubSideSchema, DeliveryMethodInputSchema
 from product.models import ProductOptions, VehicleColor
 from util.number import check_invalid_product_params
 from util.permission import is_admin
@@ -78,13 +78,17 @@ def get_order_list_by_id(request, id: int):
 
 
 @router.post('/delivery_method/{id}', description="배달 정보 입력")
-def delivery_method_input(request, id: int, delivery_method: DeliveryMethod = DeliveryMethod.DEPEND_ON, delivery_to: str= None):
+def delivery_method_input(request, id: int, payload: DeliveryMethodInputSchema):
+    params = payload.dict()
+    delivery_method = params['delivery_method']
+    delivery_to: dict = params['delivery_to']
+
     if delivery_method == delivery_method.DEPEND_ON and not delivery_to:
         raise MustHaveDeliveryToException
 
     target = get_object_or_404(Order, id=id, owner=request.auth)
     target.delivery_method = delivery_method
-    target.delivery_to = delivery_to
+    target.delivery_to = DeliveryTo.objects.create(**delivery_to)
     target.save(update_fields=['delivery_method', 'delivery_to'])
 
 
