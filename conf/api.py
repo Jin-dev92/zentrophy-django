@@ -19,7 +19,7 @@ from history.api import after_service_router as after_service_router, refund_rou
 from member.api import router as member_router, payment_method_router
 from member.models import RemoteToken, User
 from member.schema import TokenSchema
-from order.api import router as order_router, subside_router, file_router, subscription_router
+from order.api import router as order_router, subside_router, file_router, subscription_router, payment_router
 from placement.api import router as placement_router
 from post.api import faq_router, notice_router, faq_category_router
 from product.api import display_line_router as display_line_router
@@ -75,6 +75,11 @@ API_LIST = [
         'prefix': "/subscription/",
         'router': subscription_router,
         'tags': ["정기 결제"]
+    },
+    {
+        'prefix': "/payment/",
+        'router': payment_router,
+        'tags': ["일반 결제"]
     },
     {
         'prefix': "/subside/",

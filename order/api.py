@@ -1,5 +1,8 @@
+import datetime
+import hashlib
 from typing import List
 
+import jwt
 import requests
 from asgiref.sync import sync_to_async
 from django.db import transaction
@@ -15,7 +18,7 @@ from conf.custom_exception import AlreadyExistsException, WrongParameterExceptio
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.constant import OrderState, DeliveryMethod
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
-    OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions, DeliveryTo
+    OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions, DeliveryTo, Payment
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
     RequestPaymentSubscriptionsScheduleSchema, ApplySubSideSchema, DeliveryMethodInputSchema
@@ -27,7 +30,7 @@ router = Router()
 subside_router = Router()
 file_router = Router()
 subscription_router = Router()
-
+payment_router = Router()
 upload_exceed_count = 5
 
 
@@ -378,6 +381,37 @@ def delete_format_files(request, id: int):
         raise UserNotAccessDeniedException
     target = get_object_or_404(DocumentFormat, id=id)
     queryset = target.soft_delete()
+
+
+@sync_to_async
+@subscription_router.post('/payment_result', description="일반 결제 인증 결과 수신")
+def response_normal_payment_auth_result(request, result: dict):
+    # 인증 결과를 저장 ( 로그 쌓기 )
+    queryset = Payment.objects.create(owner=request.auth, auth_result=result)
+    if result['resultCode'] == '0000':  # 성공
+        auth_token = result['authToken']
+        auth_url = result['authUrl']
+        mid = result['mid']
+        timestamp = datetime.datetime.now().timestamp()
+        signature = hashlib.sha256(('authToken=' + auth_token + '&timestamp=' + str(timestamp)).encode())
+        data = {
+            'authToken': auth_token,
+            'timestamp': timestamp,
+            'mid': mid,
+            'signature': signature,
+            'format': 'NVP',
+        }
+        print(data)
+        response = requests.post(url=auth_url, json=data)
+        response_json = response.json()
+        queryset.approval_result = response_json
+        queryset.save(update_fields=['approval_result'])
+        # if response_json['resultCode'] and response_json['resultCode'] == '0000': # 성공
+        # 성공 했을 때 뭔가 해준다.
+        return response_json
+
+    else:   # 실패
+        raise Exception("결제 결과 실패 했네? code: " + result['resultCode'])
 
 
 @sync_to_async
