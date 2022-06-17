@@ -50,9 +50,9 @@ class Order(TimeStampModel, SoftDeleteModel):
     customer_info = models.OneToOneField('order.CustomerInfo', on_delete=models.SET_NULL, null=True)
     order_location_info = models.OneToOneField('order.OrderLocationInfo', on_delete=models.SET_NULL, null=True)
 
+    place_remote_pk = models.IntegerField(null=True)
     delivery_method = models.PositiveSmallIntegerField(default=DeliveryMethod.DEPEND_ON, null=True)
     delivery_to = models.OneToOneField('order.DeliveryTo', on_delete=models.SET_NULL, null=True)
-    place_remote_id = models.IntegerField(null=True)
     is_delivery = models.BooleanField(help_text="False = 출고 준비 중 , True = 배송 중", null=True)
 
     def __str__(self):

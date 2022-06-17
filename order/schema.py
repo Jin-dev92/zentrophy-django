@@ -73,6 +73,7 @@ class OrderListSchema(Schema):
     delivery_method: DeliveryMethod = Field(default=DeliveryMethod.DEPEND_ON, description="배달 방법")
     delivery_to: DeliveryToSchema = Field(default=None, description="탁송 시, 배달지 주소")
     is_delivery: bool = Field(default=None, description="배송 중 여부 , True일 경우 배송 중, False 일 경우 출고 준비")
+    place_remote_pk: int = Field(default=None, description="제우스에서 받아온 place_pk , delivery_method 가 직접 수령일 때 방문하는 지점의 pk 를 입력 해준다. ")
     state: OrderState = Field(default=OrderState.ACCEPT_ORDER,
                               title="주문 상태",
                               description="0: 주문 수락, 1: 서류 검토중, 2: 결제 대기중, 3: 배달 준비중, 4: 배달 완료, 5: 주문 취소")
@@ -170,3 +171,4 @@ class ApplySubSideSchema(Schema):
 class DeliveryMethodInputSchema(Schema):
     delivery_method: DeliveryMethod = None
     delivery_to: DeliveryToSchema = None
+    place_remote_pk: int = None

@@ -82,14 +82,21 @@ def delivery_method_input(request, id: int, payload: DeliveryMethodInputSchema):
     params = payload.dict()
     delivery_method = params['delivery_method']
     delivery_to: dict = params['delivery_to']
+    place_remote_pk = params['place_remote_pk']
 
-    if delivery_method == delivery_method.DEPEND_ON and not delivery_to:
+    if delivery_method == DeliveryMethod.DEPEND_ON and not delivery_to:
+        raise MustHaveDeliveryToException
+    if delivery_method == DeliveryMethod.YOURSELF and not place_remote_pk:
         raise MustHaveDeliveryToException
 
     target = get_object_or_404(Order, id=id, owner=request.auth)
     target.delivery_method = delivery_method
-    target.delivery_to = DeliveryTo.objects.create(**delivery_to)
-    target.save(update_fields=['delivery_method', 'delivery_to'])
+    if delivery_method == DeliveryMethod.DEPEND_ON:
+        target.delivery_to = DeliveryTo.objects.create(**delivery_to)
+    else:
+        target.place_remote_pk = place_remote_pk
+
+    target.save(update_fields=['delivery_method', 'delivery_to', 'place_remote_pk'])
 
 
 @router.post('/apply_subsides/{id}', description="주문 보조금 적용")
