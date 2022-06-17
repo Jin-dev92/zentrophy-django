@@ -347,6 +347,8 @@ def upload_files(request, order_id: int, files: List[UploadedFile]):
     order = get_object_or_404(Order, id=order_id)
     if order.state == OrderState.REVIEW_DOCS and order.is_request_submit:
         order.is_request_submit = False
+        order.save(update_fields=['is_request_submit'])
+
     queryset = DocumentFile.objects.bulk_create(
         objs=[DocumentFile(order=order, file=file) for file in files], batch_size=upload_exceed_count)
 
