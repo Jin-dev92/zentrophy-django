@@ -51,6 +51,13 @@ class DocumentFileListSchema(Schema):
     file: str = None
 
 
+class DeliveryToSchema(Schema):
+    post_code: str
+    address_1: str
+    address_2: str = None
+    address_3: str = None
+
+
 class OrderListSchema(Schema):
     id: int
     owner: MemberListSchema = None
@@ -64,7 +71,7 @@ class OrderListSchema(Schema):
     is_request_submit: bool = Field(default=False, description="서류 재 검토 요청 여부")
     discount_total: int = Field(default=0, description="보조금 할인 총 합계")
     delivery_method: DeliveryMethod = Field(default=DeliveryMethod.DEPEND_ON, description="배달 방법")
-    delivery_to: str = Field(default=None, description="탁송 시, 배달지 주소")
+    delivery_to: DeliveryToSchema = Field(default=None, description="탁송 시, 배달지 주소")
     is_delivery: bool = Field(default=None, description="배송 중 여부 , True일 경우 배송 중, False 일 경우 출고 준비")
     state: OrderState = Field(default=OrderState.ACCEPT_ORDER,
                               title="주문 상태",
@@ -158,13 +165,6 @@ class RequestPaymentSubscriptionsScheduleSchema(Schema):
 
 class ApplySubSideSchema(Schema):
     extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")
-
-
-class DeliveryToSchema(Schema):
-    post_code: str
-    address_1: str
-    address_2: str = None
-    address_3: str = None
 
 
 class DeliveryMethodInputSchema(Schema):
