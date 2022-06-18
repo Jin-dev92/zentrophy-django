@@ -190,4 +190,4 @@ class TestSchema(Schema):
     customer_uid: str
     issue_billing: Subscriptions = None
     payment_subscription: RequestPaymentSubscriptionsSchema = None
-    schedules: List[Schedule] = None
+    schedules: RequestPaymentSubscriptionsScheduleSchema = None
