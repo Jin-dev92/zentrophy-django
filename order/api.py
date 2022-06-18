@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import hashlib
 from typing import List
@@ -23,6 +24,7 @@ from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, 
     DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
     RequestPaymentSubscriptionsScheduleSchema, ApplySubSideSchema, DeliveryMethodInputSchema, InicisAuthResultSchema
 from product.models import ProductOptions, VehicleColor
+from util.externals import subscription_payment_test
 from util.number import check_invalid_product_params
 from util.permission import is_admin
 
@@ -415,6 +417,11 @@ def response_normal_payment_auth_result(request, order_id: int, payload: InicisA
             raise WrongParameterException
     else:   # 실패
         raise Exception("결제 결과 실패 했네? code: " + auth_result['resultCode'])
+
+
+@subscription_router.post('/test', description="나이츠 페이먼츠 정기 결제 테스트")
+def test(request, payload: SubscriptionsCreateSchema):
+    asyncio.run(subscription_payment_test(user=request.auth, data=payload.dict()))
 
 
 @sync_to_async
