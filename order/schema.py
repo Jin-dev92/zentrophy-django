@@ -184,3 +184,10 @@ class InicisAuthResultSchema(Schema):
     netCancelUrl: str = None
     charset: str = None
     merchantData: str = None
+
+
+class TestSchema(Schema):
+    customer_uid: str
+    issue_billing: Subscriptions = None
+    payment_subscription: RequestPaymentSubscriptionsSchema = None
+    schedules: List[Schedule] = None

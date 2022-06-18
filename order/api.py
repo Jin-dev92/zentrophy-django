@@ -22,7 +22,8 @@ from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProd
     OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions, DeliveryTo, Payment
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
-    RequestPaymentSubscriptionsScheduleSchema, ApplySubSideSchema, DeliveryMethodInputSchema, InicisAuthResultSchema
+    RequestPaymentSubscriptionsScheduleSchema, ApplySubSideSchema, DeliveryMethodInputSchema, InicisAuthResultSchema, \
+    TestSchema
 from product.models import ProductOptions, VehicleColor
 from util.externals import subscription_payment_test
 from util.number import check_invalid_product_params
@@ -419,9 +420,12 @@ def response_normal_payment_auth_result(request, order_id: int, payload: InicisA
         raise Exception("결제 결과 실패 했네? code: " + auth_result['resultCode'])
 
 
+@sync_to_async
 @subscription_router.post('/test', description="나이츠 페이먼츠 정기 결제 테스트")
-def test(request, payload: SubscriptionsCreateSchema):
-    asyncio.run(subscription_payment_test(user=request.auth, data=payload.dict()))
+def test(request, payload: TestSchema):
+    merchant_uid = payload.dict()['payment_subscription'].get('merchant_uid')
+    response = asyncio.run(subscription_payment_test(user=request.auth, merchant_uid=merchant_uid, data=payload.dict()))
+    return response
 
 
 @sync_to_async
