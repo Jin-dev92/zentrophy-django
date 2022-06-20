@@ -41,12 +41,20 @@ def get_statistics_member(request):
     return queryset
 
 
-@router.get("/", description="회원 목록", response=List[MemberListSchema])
+@router.get("/", response=List[MemberListSchema])
 def get_list_member(request,
                     email: str = None,
                     username: str =  None,
                     sort: MemberSort = None
                     ):
+    """
+    멤버 목록
+    admin은 모든 멤버 내역을 볼 수 있고, 일반 유저는 본인 것만 볼 수 있음.
+    - :param email: 이메일
+    - :param username: 유저 이름
+    - :param sort: recent(최신순),  later(나중순)
+    - :return: list
+    """
     params = prepare_for_query(request=request, exceptions=['sort'])
     field_name = 'date_joined'
     if sort == MemberSort.RECENT:
@@ -71,8 +79,13 @@ def create_user(request, payload: MemberInsertSchema = Form("" if settings.DEBUG
         raise e
 
 
-@router.get('/{id}', description="id로 회원 찾기", response=List[MemberListSchema])
+@router.get('/{id}', response=List[MemberListSchema])
 def get_member_by_id(request, id: int):
+    """
+    id 로 유저 정보를 가져옴. 어드민은 제약이 없고, 일반 유저는 본인 id와 찾으려는 유저가 같을 때만 불러 옴.
+    - :param id: 유저 아이디
+    - :return: list
+    """
     if is_admin(request.auth):
         target = User.objects.filter(id=id)
     elif request.auth.is_staff and not request.auth.is_active:
@@ -105,12 +118,18 @@ def delete_user(request, id: int):
         raise UserNotAccessDeniedException
 
 
-@router.post('/forgot/id', description="아이디 찾기", response=str)
+@router.post('/forgot/id', response=str)
 def forgot_id(request, username: str = Form(...), phone_number: str = Form(...)):
+    """
+    아이디 찾기
+    :param username: 유저 이름
+    :param phone_number: 연락처
+    :return: str
+    """
     return get_object_or_404(User, username=username, phone_number=phone_number).email
 
 
-@router.post('/forgot/pwd', description="비밀번호 재생성")
+@router.post('/forgot/pwd', description="비밀번호 재생성", deprecated=True)
 def forgot_pwd(request, payload: MemberReAssignSchema = Form(...)):
     user = get_object_or_404(User, username=payload.dict()['username'], email=payload.dict()['email'])
     user.set_password(payload.dict()['password'])
@@ -123,8 +142,13 @@ def get_payment_method(request):
 
 
 @transaction.atomic(using='default')
-@payment_method_router.post('/', description="결제 수단 생성 / 수정")
+@payment_method_router.post('/')
 def update_or_create_payment_method(request, id: int = None, payload: PaymentMethodInsertSchema = Form(...)):
+    """
+    결제 수단 생성 / 수정
+    - :param id: 수정일 경우에 id를 함께 파라 미터에 넣어 준다.
+    - :return:
+    """
     try:
         with transaction.atomic():
             params = payload.dict()

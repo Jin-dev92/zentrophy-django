@@ -76,9 +76,9 @@ class MemberListSchema(Schema):
 
 
 class MemberReAssignSchema(Schema): # 비밀 번호 재생성 시 사용 되는 스키마.
-    username: str
-    email: str
-    password: str
+    username: str = Field(description="유저 이름")
+    email: str = Field(description="이메일")
+    password: str = Field(description="비밀번호")
 
 
 class PaymentMethodInsertSchema(Schema):
