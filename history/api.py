@@ -25,9 +25,18 @@ battery_router = Router()
 cart_router = Router()
 
 
-@after_service_router.get("/", description="a/s 특정한 내역", response=List[AfterServiceListSchema])
+@after_service_router.get("/", response=List[AfterServiceListSchema])
 def get_after_service_list(request, status: AfterServiceStatus = None, is_created__gte: date = None,
                            is_created__lte: date = None):
+    """
+    A/S 리스트 API
+    - :param status:     APPLY_WAITING(접수 대기) = 0
+    APPLY_COMPLETED(접수 완료) = 1
+    ON_PROGRESS(처리 중) = 2
+    PROGRESS_COMPLETED(처리 완료) = 3
+    - :param is_created__gte: 기간 지정 검색, 해당 파라 미터 보다 미래 값이 도출 된다.
+    - :param is_created__lte: 기간 지정 검색, 해당 파라 미터 보다 과거 값이 도출 된다.
+    """
     params = prepare_for_query(request=request)
     if request.auth.is_staff and request.auth.is_active:
         target = AfterService.objects.get_queryset(**params)
@@ -58,8 +67,16 @@ def get_after_service_by_id(request, id: int):
     return queryset
 
 
-@after_service_router.put("/", description="a/s 상태 수정")
+@after_service_router.put("/")
 def modify_after_service(request, id: int, status: AfterServiceStatus = AfterServiceStatus.APPLY_WAITING):
+    """
+    a/s 상태 수정
+    - :param id: A/S 아이디
+    - :param status:     APPLY_WAITING(접수 대기) = 0
+    APPLY_COMPLETED(접수 완료) = 1
+    ON_PROGRESS(처리 중) = 2
+    PROGRESS_COMPLETED(처리 완료) = 3
+    """
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     target = get_object_or_404(AfterService, id=id, user=request.auth)
@@ -67,7 +84,7 @@ def modify_after_service(request, id: int, status: AfterServiceStatus = AfterSer
     target.save(update_fields=['status'])
 
 
-@after_service_router.delete("/", description="a/s 상태 삭제")
+@after_service_router.delete("/", description="a/s 삭제")
 def delete_after_service(request, id: int):
     if not request.auth.is_staff:
         obj = get_object_or_404(AfterService, id=id, user=request.auth)
@@ -75,7 +92,7 @@ def delete_after_service(request, id: int):
         obj = get_object_or_404(AfterService, id=id)
     obj.soft_delete()
 
-
+# 여기까지
 @refund_router.get("/", description="환불 내역 조회",
                    response=List[RefundListSchema],
                    )

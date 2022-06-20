@@ -11,10 +11,10 @@ from product.schema import VehicleListSchema, ProductOptionsListSchema, ProductI
 
 
 class AfterServiceInsertSchema(Schema):
-    place_id: int
-    vehicle_license: str = None
-    reservation_date: datetime = None
-    detail: str = None
+    place_id: int = Field(description="플레이스 아이디")
+    vehicle_license: str = Field(None, description="제우스에서 갖고 오는 모터 사이클 고유 번호")
+    reservation_date: datetime = Field(None, description="예약 날짜")
+    detail: str = Field(None, description="상세 내용")
     category: AfterServiceCategory = Field(
         default=AfterServiceCategory.ETC,
         description="0:정기점검, 1:타이거점검, 2:브레이크 패드 점검, 3:체인 점검, 4:소모품, 5:기타"
@@ -22,14 +22,13 @@ class AfterServiceInsertSchema(Schema):
 
 
 class AfterServiceListSchema(Schema):
-    user: MemberListSchema = None
-    place: PlacementListSchema = None
-    # owned_vehicle: VehicleListSchema = None
-    registration_number: str = None
-    status: AfterServiceStatus = AfterServiceStatus.APPLY_WAITING
-    reservation_date: datetime = None
-    detail: str = None
-    category: AfterServiceCategory = AfterServiceCategory.ETC
+    user: MemberListSchema = Field(None, description="유저")
+    place: PlacementListSchema = Field(None, description="A/S 맡길 지점")
+    registration_number: str = Field(None, description="예약 번호")
+    status: AfterServiceStatus = Field(AfterServiceStatus.APPLY_WAITING, description="A/S 단계")
+    reservation_date: datetime = Field(None, description="예약 날짜")
+    detail: str = Field(None, description="상세 내용")
+    category: AfterServiceCategory = Field(AfterServiceCategory.ETC, description="카테고리, 0:정기점검, 1:타이거점검, 2:브레이크 패드 점검, 3:체인 점검, 4:소모품, 5:기타")
 
 
 class RefundListSchema(Schema):
