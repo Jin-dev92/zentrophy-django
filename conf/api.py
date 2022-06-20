@@ -157,8 +157,8 @@ def member_logout(request):
 
 @api.post("/login", description="로그인", auth=None, response=LoginResponse)
 def member_login(request, token_info: TokenSchema = Form(...),
-                 email: str = Form(default="admin@admin.com" if settings.DEBUG else ...),
-                 password: str = Form(default="Test111!" if settings.DEBUG else ...)
+                 email: str = Form(default="admin@admin.com" if settings.DEBUG else ..., description="이메일"),
+                 password: str = Form(default="Test111!" if settings.DEBUG else ..., description="패스워드")
                  ):
     user = authenticate(request, email=email, password=password)
     if user is None:

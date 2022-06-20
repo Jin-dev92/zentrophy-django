@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 from ninja import Field
 from ninja import Schema

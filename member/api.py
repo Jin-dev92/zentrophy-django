@@ -4,14 +4,14 @@ from typing import List, Optional
 from django.db import transaction
 from django.db.models import Prefetch, Count, Q
 from django.shortcuts import get_object_or_404
-from ninja import Router, Form
+from ninja import Router, Form, Query
 
 from conf import settings
 from conf.custom_exception import UserNotAccessDeniedException, AdminAccountInActiveException
 from member.constant import MemberSort
 from member.models import User, PaymentMethod, Card, RemoteToken
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
-    MemberReAssignSchema, MemberModifySchema, StatisticsMember
+    MemberReAssignSchema, MemberModifySchema, StatisticsMember, MemberListParamsSchema
 from util.params import prepare_for_query
 from util.permission import is_admin
 
@@ -42,8 +42,11 @@ def get_statistics_member(request):
 
 
 @router.get("/", description="회원 목록", response=List[MemberListSchema])
-def get_list_member(request, email: Optional[str] = None, username: Optional[str] = None,
-                    sort: MemberSort = None):
+def get_list_member(request,
+                    email: str = None,
+                    username: str =  None,
+                    sort: MemberSort = None
+                    ):
     params = prepare_for_query(request=request, exceptions=['sort'])
     field_name = 'date_joined'
     if sort == MemberSort.RECENT:
