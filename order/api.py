@@ -3,7 +3,6 @@ import datetime
 import hashlib
 from typing import List
 
-import jwt
 import requests
 from asgiref.sync import sync_to_async
 from django.db import transaction
@@ -16,7 +15,7 @@ from ninja.files import UploadedFile
 from conf.custom_exception import AlreadyExistsException, WrongParameterException, \
     NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException, IncorrectTotalAmountException, \
     MustHaveDeliveryToException, IncorrectOrderStateException
-from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
+from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT, upload_exceed_count
 from order.constant import OrderState, DeliveryMethod
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
     OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions, DeliveryTo, Payment
@@ -34,11 +33,14 @@ subside_router = Router()
 file_router = Router()
 subscription_router = Router()
 payment_router = Router()
-upload_exceed_count = 5
 
 
-@router.get('/', response=List[OrderListSchema], description="주문 검색")
+@router.get('/', response=List[OrderListSchema])
 def get_order_list(request):
+    """
+    주문 목록 API
+    어드민은 모든 주문 목록을 가져 오며, 일반 유저는 본인이 주문한 주문만 가져 온다.
+    """
     if is_admin(request.auth):
         target = Order.objects.get_queryset()
     else:
@@ -60,8 +62,13 @@ def get_order_list(request):
     return queryset
 
 
-@router.get('/{id}', description="주문 id로 검색", response=List[OrderListSchema])
+@router.get('/{id}',
+            response=List[OrderListSchema])
 def get_order_list_by_id(request, id: int):
+    """
+    주문 목록 API
+    어드민은 모든 주문 목록을 가져 오며, 일반 유저는 본인이 주문한 주문만 가져 온다.
+    """
     if is_admin(request.auth):
         target = Order.objects.get_queryset(id=id)
     else:
@@ -83,8 +90,13 @@ def get_order_list_by_id(request, id: int):
     return queryset
 
 
-@router.post('/delivery_method/{id}', description="배달 정보 입력")
+@router.post('/delivery_method/{id}')
 def delivery_method_input(request, id: int, payload: DeliveryMethodInputSchema):
+    """
+    모터 사이클 주문의 배달 정보 입력
+    - :param id: 주문 id
+    - :return:
+    """
     params = payload.dict()
     delivery_method = params['delivery_method']
     delivery_to: dict = params['delivery_to']
@@ -105,8 +117,13 @@ def delivery_method_input(request, id: int, payload: DeliveryMethodInputSchema):
     target.save(update_fields=['delivery_method', 'delivery_to', 'place_remote_pk'])
 
 
-@router.post('/apply_subsides/{id}', description="주문 보조금 적용")
+@router.post('/apply_subsides/{id}')
 def apply_subsides_to_order(request, payload: ApplySubSideSchema, id: int):
+    """
+    주문에 보조금을 적용 하는 API, 기본 보조금은 주문한 모터사이클이 기본 보조금을 지원하는 상품이며, 유저가 기본 보조금을 원할 떄 적용 된다.
+    - :param id: 주문 id
+    - :return:
+    """
     if not is_admin(request.auth):
         raise UserNotAccessDeniedException
     try:
@@ -133,8 +150,13 @@ def apply_subsides_to_order(request, payload: ApplySubSideSchema, id: int):
         raise e
 
 
-@router.post('/is_request_submit/{id}', description="서류 재접수 토글")
+@router.post('/is_request_submit/{id}')
 def change_is_request_submit(request, id: int):
+    """
+    서류 재접수 토글, 해당 주문이 서류 검토 단계에 있을 때, 서류 재검토 기능을 이용 하기 위한 API
+    - :param id: 주문 id
+    - :return:
+    """
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     target = get_object_or_404(Order, id=id)
@@ -144,8 +166,13 @@ def change_is_request_submit(request, id: int):
     target.save(update_fields=['is_request_submit'])
 
 
-@router.post('/is_delivery/{id}', description="출고준비 -> 배송중, 배송중 -> 출고 준비 상태 토글")
+@router.post('/is_delivery/{id}')
 def change_is_delivery(request, id: int):
+    """
+    출고 준비 -> 배송중, 배송중 -> 출고 준비 상태 토글, 배송 준비 단계 에서 배송 중일 때와 출고 준비를 분별 하기 위한 값을 토글 해준다.
+    - :param id: 주문 아이디
+    - :return:
+    """
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
 
@@ -158,8 +185,13 @@ def change_is_delivery(request, id: int):
 
 
 @transaction.atomic(using='default')
-@router.post('/', description="주문 생성 / 수정")
+@router.post('/')
 def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
+    """
+    주문 생성 / 수정
+    - :param id: 주문 아이디, 수정 할 때 파라 미터에 같이 보내 준다.
+    - :return:
+    """
     if not is_admin(request.auth) and (id and id > -1):  # 일반 유저가 id 를 보냈을 경우에 예외 처리 해준다.
         raise UserNotAccessDeniedException
     try:
@@ -251,8 +283,20 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
         raise e
 
 
-@router.put('/', description="주문 상태 수정, OrderListSchema - state 주석 참조")
+@router.put('/')
 def change_order_state(request, id: int, state: OrderState):
+    """
+    주문 상태 수정
+    - :param id: 주문 아이디
+    - :param state:
+    ACCEPT_ORDER(주문 접수) = 0
+    REVIEW_DOCS(서류 검토) = 1
+    WAIT_PAYMENT(결제 대기) = 2
+    PREPARE_DELIVERY(배달 준비) = 3
+    IS_COMPLETE(완료됨) = 4
+    IS_CANCELED(취소됨) = 5
+    - :return:
+    """
     # orderState가 3일 경우 유저 접근 가능하도록.
     if not is_admin(request.auth):  # 어드민 접근 제한
         if state != OrderState.PREPARE_DELIVERY:
@@ -304,7 +348,7 @@ def delete_order_list_by_id(request, id: int):
     queryset = target.soft_delete()
 
 
-@subside_router.get('/', response=List[SubsideListSchema])
+@subside_router.get('/', response=List[SubsideListSchema], description="보조금 목록")
 def get_list_subside(request):
     queryset = Subside.objects.get_queryset().prefetch_related(
         Prefetch('extrasubside_set', to_attr="extra")
@@ -315,6 +359,11 @@ def get_list_subside(request):
 @transaction.atomic(using='default')
 @subside_router.post('/')
 def create_subside(request, payload: SubsideInsertSchema):
+    """
+    보조금 생성
+    기본 보조금(Subside)는 한 개만 생성 할 수 있고, put method 를 사용 하여 보조금의 양을 수정 할 수 있다.
+    추가 보조금(ExtraSubside)는 Subside를 forienkey 로 갖고 있으며, 마찬가지로 put method로 수정 할 수 있다.
+    """
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     subside_amount = len(Subside.objects.all())
@@ -333,7 +382,7 @@ def create_subside(request, payload: SubsideInsertSchema):
     return True
 
 
-@subside_router.put('/', description="기본 보조금 수정")
+@subside_router.put('/', description="보조금 수정")
 def modify_subside(request, payload: SubsideInsertSchema = None):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
@@ -348,8 +397,14 @@ def modify_subside(request, payload: SubsideInsertSchema = None):
     return True
 
 
-@file_router.post('/', description="계획서 및 보조금 신청서 업로드")
+@file_router.post('/')
 def upload_files(request, order_id: int, files: List[UploadedFile]):
+    """
+    계획서 및 보조금 신청서 업로드, 주문에 서류가 필요한 경우 파일을 업로드 해주기 위한 API
+    - :param order_id: 주문 아이디
+    - :param files:  계획서 및 보조금 신청서 파일
+    - :return:
+    """
     order = get_object_or_404(Order, id=order_id)
     if order.state == OrderState.REVIEW_DOCS and order.is_request_submit:
         order.is_request_submit = False
@@ -364,21 +419,28 @@ def delete_files(request, id: int):
     queryset = get_object_or_404(DocumentFile, id=id).delete()
 
 
-@file_router.get('/format', description="보조금 신청서 포맷 리스트", response=List[DocumentFormatListSchema])
+@file_router.get('/format', response=List[DocumentFormatListSchema])
 def get_format_list(request):
+    """
+    보조금 신청서 에 관한 양식의 리스트를 갖고 오는 API
+    """
     queryset = DocumentFormat.objects.get_queryset()
     return queryset
 
 
-@file_router.post('/format', description="보조금 신청서 포맷 업로드")
+@file_router.post('/format')
 def upload_format_files(request, file: UploadedFile):
+    """
+    보조금 신청서 에 관한 양식을 업로드, 어드민만 접근 가능하다.
+    - :param file: 보조금 신청서 파일
+    - :return:
+    """
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     queryset = DocumentFormat.objects.create(file=file)
 
 
 @file_router.delete('/format', description="보조금 신청서 포맷 삭제")
-# @admin_permission
 def delete_format_files(request, id: int):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException

@@ -9,41 +9,40 @@ from product.schema import VehicleColorListSchema, ProductOptionsListSchema
 
 
 class CustomerInfoSchema(Schema):
-    name: str = None
-    birth: date = None
-    tel: str = None
-    email: str = None
-    is_business: bool = False
-    is_apply_subside: bool = False
+    name: str = Field(None, description="이름")
+    birth: date = Field(None, description="생년월일")
+    tel: str = Field(None, description="연락처")
+    email: str = Field(None, description="이메일")
+    is_business: bool = Field(False, description="일반 고객인지 사업자 고객인지")
+    is_apply_subside: bool = Field(False, description="주문 생성 시 유저가 보조금 받을 것인가 에 대한 내용")
 
 
 class OrderLocationInfoSchema(Schema):
-    address_1: str = None
-    address_2: str = None
-    address_3: str = None
-    detail: str = None
+    address_1: str = Field(None, description="우편 번호")
+    address_2: str = Field(None, description="주소")
+    address_3: str = Field(None, description="추가 주소")
+    detail: str = Field(None, description="추가 주소")
 
 
 class OrderedProductOptionsListSchema(Schema):
     product_options: ProductOptionsListSchema = None
-    product_image: str = None
-    amount: int = None
+    product_image: str = Field(None, description="상품 이미지 경로")
+    amount: int = Field(None, description="주문 수량")
 
 
 class OrderedVehicleColorListSchema(Schema):
-    # vehicle_color_id: int = None
     vehicle_color: VehicleColorListSchema = None
-    amount: int = None
+    amount: int = Field(None, description="주문 수량")
 
 
 class OrderedProductOptionsCreateSchema(Schema):
     product_options_id: int = None
-    amount: int = None
+    amount: int = Field(None, description="주문 수량")
 
 
 class OrderedVehicleColorCreateSchema(Schema):
     vehicle_color_id: int = None
-    amount: int = None
+    amount: int = Field(None, description="주문 수량")
 
 
 class DocumentFileListSchema(Schema):
@@ -52,10 +51,10 @@ class DocumentFileListSchema(Schema):
 
 
 class DeliveryToSchema(Schema):
-    post_code: str
-    address_1: str
-    address_2: str = None
-    address_3: str = None
+    post_code: str = Field(description="우편 번호")
+    address_1: str = Field(description="주소")
+    address_2: str = Field(default=None, description="추가 주소")
+    address_3: str = Field(default=None, description="추가 주소")
 
 
 class OrderListSchema(Schema):
@@ -91,39 +90,32 @@ class OrderCreateSchema(Schema):
     extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")
     total: int = 0
     is_visited: bool = Field(default=False, description="방문 구매 여부")
-    # delivery_method: DeliveryMethod = Field(default=DeliveryMethod.DEPEND_ON, description="배달 방법")
-    # delivery_to: str = Field(default=None, description="탁송 시 택배 주소 input")
 
-
-# class OrderModifySchema(Schema):
-#     customer_info: CustomerInfoSchema = None
-#     order_location_info: OrderLocationInfoSchema = None
-#
 
 class ExtraSubsideListSchema(Schema):
     id: int
-    name: str
-    amount: int = 0
+    name: str = Field(None, description="추가 보조금 이름")
+    amount: int = Field(0, description="추가 보조금 액수")
     description_1: str = ""
     description_2: str = ""
 
 
 class ExtraSubsideInsertSchema(Schema):
-    name: str
-    amount: int = 0
+    name: str = Field(description="추가 보조금 이름")
+    amount: int = Field(0, description="추가 보조금 액수")
     description_1: str = ""
     description_2: str = ""
 
 
 class SubsideListSchema(Schema):
     id: int
-    amount: int = 0
+    amount: int = Field(0, description="기본 보조금 액수")
     extra: List[ExtraSubsideListSchema] = None
 
 
 class SubsideInsertSchema(Schema):
-    amount: int = 0
-    extra: List[ExtraSubsideInsertSchema] = None
+    amount: int = Field(0, description="기본 보조금 액수")
+    extra: List[ExtraSubsideInsertSchema] = Field(None, description="추가 보조금 아이디 리스트")
 
 
 class DocumentFormatListSchema(Schema):
@@ -131,10 +123,32 @@ class DocumentFormatListSchema(Schema):
     file: str = None
 
 
+class ApplySubSideSchema(Schema):
+    extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")
+
+
+class DeliveryMethodInputSchema(Schema):
+    delivery_method: DeliveryMethod = Field(None, description="DEPEND_ON(탁송) = 0, YOURSELF(직접 수령) = 1")
+    delivery_to: DeliveryToSchema = None
+    place_remote_pk: int = Field(None, description="제우스에서 갖고 오는 플레이스 Pk")
+
+
+class InicisAuthResultSchema(Schema):
+    resultCode: str
+    resultMsg: str = None
+    mid: str
+    orderNumber: str = None
+    authToken: str
+    authUrl: str
+    netCancelUrl: str = None
+    charset: str = None
+    merchantData: str = None
+
+
 class Subscriptions(Schema):
-    card_number: str
+    card_number: str = Field(description="카드 번호 12자리")
     expiry: str = Field(description="카드 유효기간")
-    birth: str
+    birth: str = Field(description="생년월일")
     pwd_2digit: str = Field(description="카드 비밀번호 앞 두자리")
 
 
@@ -162,28 +176,6 @@ class Schedule(Schema):
 class RequestPaymentSubscriptionsScheduleSchema(Schema):
     customer_uid: str
     schedules: List[Schedule]
-
-
-class ApplySubSideSchema(Schema):
-    extra_subside: List[int] = Field(default=None, description="추가 보조금 pk")
-
-
-class DeliveryMethodInputSchema(Schema):
-    delivery_method: DeliveryMethod = None
-    delivery_to: DeliveryToSchema = None
-    place_remote_pk: int = None
-
-
-class InicisAuthResultSchema(Schema):
-    resultCode: str
-    resultMsg: str = None
-    mid: str
-    orderNumber: str = None
-    authToken: str
-    authUrl: str
-    netCancelUrl: str = None
-    charset: str = None
-    merchantData: str = None
 
 
 class TestSchema(Schema):

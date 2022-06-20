@@ -15,7 +15,6 @@ WRONG_BIRTH_NUMBER = '잘못된 생년월일 입니다.'
 ACCESS_DENIED = '이메일 혹은 비밀번호가 틀립니다.'
 # product
 CANT_APPLY_PERIOD_PAYMENT = '정기 결제 에는 적용할 수 없습니다.'
-MUST_HAVE_SPLIT_WORD = "옵션 구분 문자를 섞어 주세요. 옵션 구분 문자는 {split}입니다. ex)상품명{split}옵션명".format(split=settings.OPTION_SPLIT)
 DISPLAY_LINE_DONT_EXCEEDED_SIZE = {
     'code': 4000001,
     'desc': "상품 진열은 {count}개를 초과할 수 없습니다.".format(count=settings.MAX_DISPLAY_LINE_COUNT)

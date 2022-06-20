@@ -5,6 +5,7 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, Router, File
 
+import conf.settings
 from conf.custom_exception import DisplayLineExceededSizeException, WrongParameterException, \
     UserNotAccessDeniedException
 from product.constant import ProductListSort, ProductLabel
@@ -20,24 +21,27 @@ vehicle_router = Router()
 display_line_router = Router()
 
 current_product_sort = ProductListSort.CREATED_AT
-product_option_exceed = 5
-product_image_exceed = 5
-vehicle_color_exceed = 5
-vehicle_image_exceed = 5
 
 
 @product_router.get("/",
-                    description="상품 리스트 가져오기    생성 순 = 0, 판매량 순 = 1, 재고량 순 = 2 두번 호출 시 역순",
                     response=List[ProductListSchema],
                     tags=["product"],
                     auth=None
                     )
 def get_product_list(request,
                      product_label: ProductLabel = ProductLabel.NEW,
-                     product_display_line: int = None,
+                     # product_display_line_id: int = None,
                      sold_out: bool = False,
                      sort: ProductListSort = ProductListSort.CREATED_AT
                      ):
+    """
+    상품 리스트 가져 오는 API
+    두번 호출 시 현재 설정의 역순 으로 호출 된다.
+    - :param product_label:  HOT = 0, NEW = 1, SALE = 2, BEST = 3
+    - :param sold_out: 재고량 유무
+    - :param sort: CREATED_AT(생성순) = 0, SALE_COUNT(판매량 순) = 1, STOCK_COUNT(재고량 순) = 2
+    - :return: list
+    """
     global current_product_sort
     params = prepare_for_query(request, ['sort', 'sold_out'])
     if sort == ProductListSort.CREATED_AT:
@@ -57,8 +61,8 @@ def get_product_list(request,
 
     current_product_sort = field_name
 
-    if product_display_line:
-        get_object_or_404(ProductDisplayLine, id=product_display_line)
+    # if product_display_line_id:
+    #     get_object_or_404(ProductDisplayLine, id=product_display_line_id)
 
     if sold_out:
         params['productoptions__stock_count'] = 0
@@ -71,15 +75,20 @@ def get_product_list(request,
 
 
 @transaction.atomic(using='default')
-@product_router.post("/", description="상품 등록/수정 (수정 기능의 경우 id param 필수)", tags=["product"])
+@product_router.post("/",
+                     tags=["product"])
 def update_or_create_product(request, payload: ProductInsertSchema, id: int = None, files: List[UploadedFile] = File(...)):
+    """
+    상품 등록/수정
+    - :param id: 수정일 경우 파라 미터에 추가 하여 보내 준다.
+    - :param files: 상품에 첨부 되는 이미지 파일
+    - :return: none
+    """
     if not is_admin(request.auth):
         raise UserNotAccessDeniedException
     product = {k: v for k, v in payload.dict().items() if k not in {'product_options', 'product_display_line_id'}}
     product_options: list = payload.dict()['product_options']
     product_display_line_id_list = payload.dict()['product_display_line_id']
-    global product_option_exceed
-    global product_image_exceed
     if len(product_display_line_id_list) > 2:
         raise DisplayLineExceededSizeException
     try:
@@ -96,11 +105,11 @@ def update_or_create_product(request, payload: ProductInsertSchema, id: int = No
                     image.soft_delete()
                 for option in ProductOptions.objects.get_queryset(product=product_queryset[0]):
                     option.soft_delete()
-            ProductOptions.objects.bulk_create(objs=bulk_prepare_product_options_list, batch_size=product_option_exceed)
+            ProductOptions.objects.bulk_create(objs=bulk_prepare_product_options_list, batch_size=conf.settings.product_option_exceed)
             product_queryset[0].product_display_line.add(
                 *ProductDisplayLine.objects.in_bulk(id_list=product_display_line_id_list)
             )
-            ProductImage.objects.bulk_create(bulk_prepare_file_list, batch_size=product_image_exceed)
+            ProductImage.objects.bulk_create(bulk_prepare_file_list, batch_size=conf.settings.product_image_exceed)
             product_queryset[0].save()
     except Exception as e:
         raise Exception(e)
@@ -177,7 +186,7 @@ def get_vehicle_by_id(request, id: int):
 
 
 @transaction.atomic(using='default')
-@vehicle_router.post("/", description="모터 사이클 등록 / 수정")
+@vehicle_router.post("/")
 def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = None,
                              color_file_0: List[UploadedFile] = None,
                              color_file_1: List[UploadedFile] = None,
@@ -185,10 +194,18 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
                              color_file_3: List[UploadedFile] = None,
                              color_file_4: List[UploadedFile] = None,
                              ):
+    """
+    모터 사이클 등록 / 수정, 각각의 vehicle_color 당 5개의 이미지 파일을 첨부 할 수 있다.
+    - :param id: 수정일 경우 id 를 파라 미터에 넣어서 보내 준다.
+    - :param color_file_0: 첫번째 vehicle_color 에서 사용 할 이미지 파일을 넣어 준다.
+    - :param color_file_1: 두번째 vehicle_color 에서 사용 할 이미지 파일을 넣어 준다.
+    - :param color_file_2: 세번째 vehicle_color 에서 사용 할 이미지 파일을 넣어 준다.
+    - :param color_file_3: 네번째 vehicle_color 에서 사용 할 이미지 파일을 넣어 준다.
+    - :param color_file_4: 다섯 번째 vehicle_color 에서 사용 할 이미지 파일을 넣어 준다.
+    - :return: none
+    """
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
-    global vehicle_color_exceed
-    global vehicle_image_exceed
     vehicle = {k: v for k, v in payload.dict().items() if k not in {'vehicle_color'}}
     vehicle_color_params = payload.dict().get('vehicle_color')
     try:

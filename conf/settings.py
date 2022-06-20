@@ -163,15 +163,7 @@ LOGOUT_URL = '/logout/'  # 로그아웃 기본값
 LOGIN_REDIRECT_URL = '/'  # 반드시 정의할 것!
 # LOGOUT_REDIRECT_URL = None
 AUTH_USER_MODEL = 'member.User'
-
-YEAR_TWO_DIGIT = str(datetime.datetime.now().year)[0:2]
-LICENSE_NUMBER_LENGTH = 16
-OPTION_SPLIT = "++"
-# permmistion groups
 ADMIN_GROUP_NAME = 'super_user'
-CUSTOMER_GROUP_NAME = None
-MAX_DISPLAY_LINE_COUNT = 2
-JWT_ENCRYPTION_ALG = 'HS256'
 
 # NICE_PAYMENTS_TOKEN_URL = 'https://api.iamport.kr/users/getToken'
 GET_TOKEN_INFO = {
@@ -192,3 +184,17 @@ ISSUE_BILLING_INFO = {
 REQUEST_PAYMENT = {
     'url': 'https://api.iamport.kr/subscribe/payments/again'
 }
+
+# customized
+
+YEAR_TWO_DIGIT = str(datetime.datetime.now().year)[0:2]
+LICENSE_NUMBER_LENGTH = 16
+CUSTOMER_GROUP_NAME = None
+MAX_DISPLAY_LINE_COUNT = 2
+JWT_ENCRYPTION_ALG = 'HS256'
+
+product_option_exceed = 5
+product_image_exceed = 5
+vehicle_color_exceed = 5
+vehicle_image_exceed = 5
+upload_exceed_count = 5

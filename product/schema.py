@@ -11,7 +11,7 @@ from product.constant import ProductOptionsLabel, ProductLabel
 
 class VehicleImageSchema(Schema):
     id: int
-    origin_image: str = None
+    origin_image: str = Field(None, title="파일 객체")
 
 
 class ProductDisplayLineSchema(Schema):
@@ -85,8 +85,8 @@ class VehicleColorListSchema(Schema):
     stock_count: int = Field(default=0, title="재고 수량")
     hex_code: str = Field(default="FFFFFF", title="색 코드", description="css에서 사용하는 컬러값 사용 가능, 16진수, white, rgba 값")
     on_sale: bool = Field(default=False, title="판매 여부")
-    price: int = 0
-    vehicle_image: List[VehicleImageSchema] = None
+    price: int = Field(default=0, title="가격")
+    vehicle_image: List[VehicleImageSchema] = Field(default=None, title="모터 사이클 이미지, 최대 5개까지 가능")
 
 
 class ProductInsertSchema(Schema):
@@ -107,15 +107,14 @@ class ProductInsertSchema(Schema):
 
 class VehicleListSchema(Schema):
     id: int
-    vehicle_name: str
-    zero_to_fifty: int
-    max_speed: int
+    vehicle_name: str = Field(title="모터 사이클 이름")
+    zero_to_fifty: int = Field(title="속력 0 부터 50까지 걸리는 시간")
+    max_speed: int = Field(title="최대 속력")
     max_output: int = Field(title="최대 출력")
     able_subsidy: bool = Field(title="기본 지원금 가능 여부")
     able_extra_subsidy: bool = Field(title="추가 지원금 가능 여부")
     is_display: bool = Field(title="진열 여부")
-    vehicle_color: List[VehicleColorListSchema] = []
-    # vehicle_image: List[ProductImageListSchema] = None
+    vehicle_color: List[VehicleColorListSchema] = Field(default=[], title="모터 사이클 컬러")
 
 
 class VehicleInsertSchema(Schema):
