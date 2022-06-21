@@ -37,7 +37,7 @@ class AfterService(TimeStampModel, SoftDeleteModel):
 class Warranty(TimeStampModel, SoftDeleteModel):
     name = models.CharField(max_length=100, blank=True)
     validity = models.DateTimeField(null=True)
-    is_warranty = models.BooleanField(default=True)
+    is_warranty = models.BooleanField(default=True, help_text="보증 범위 적용 유무")
 
 
 class Cart(TimeStampModel):

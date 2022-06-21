@@ -167,16 +167,23 @@ def delete_refund(request, id: int):
     target.soft_delete()
 
 
-@warranty_router.get('/', description="보증 범위 리스트",
-                     response=List[WarrantyListSchema]
-                     )
+@warranty_router.get('/',
+                     response=List[WarrantyListSchema])
 def get_warranty_list(request, is_warranty: bool = True):
+    """
+    보증 범위에 관현 리스트를 가져 오는 API
+    -   :param is_warranty: 보증 범위 적용 여부
+    """
     qs = Warranty.objects.get_queryset(is_warranty=is_warranty)
     return qs
 
 
-@warranty_router.post('/', description="보증 범위 객체 생성 / 수정")
+@warranty_router.post('/')
 def create_or_update_warranty(request, payload: WarrantyInsertSchema, id: int = None):
+    """
+    보증 범위 객체 생성 / 수정
+    -   :param id: 수정일 경우 id를 파라 미터로 넘겨 줘야 함.
+    """
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     Warranty.objects.update_or_create(id=id, defaults=payload.dict())
