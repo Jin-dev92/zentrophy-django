@@ -8,10 +8,17 @@ from product.models import ProductOptions
 from util.models import TimeStampModel, SoftDeleteModel
 
 
+class RefundLocation(TimeStampModel):
+    post_code = models.CharField(max_length=10, null=True)
+    address_1 = models.CharField(max_length=200, null=True)
+    address_2 = models.CharField(max_length=200, null=True)
+    address_3 = models.CharField(max_length=200, null=True)
+
+
 class Refund(TimeStampModel, SoftDeleteModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     reject_reason = models.CharField(max_length=200, null=True)
-    refund_location = models.CharField(max_length=200, null=True)
+    refund_location = models.OneToOneField('history.RefundLocation', on_delete=models.CASCADE, null=True)
     method = models.PositiveSmallIntegerField(default=RefundMethod.RECALL_REQUEST)
     status = models.PositiveSmallIntegerField(default=RefundStatus.WAITING)
 

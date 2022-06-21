@@ -31,18 +31,25 @@ class AfterServiceListSchema(Schema):
     category: AfterServiceCategory = Field(AfterServiceCategory.ETC, description="카테고리, 0:정기점검, 1:타이거점검, 2:브레이크 패드 점검, 3:체인 점검, 4:소모품, 5:기타")
 
 
+class RefundLocationSchema(Schema):
+    post_code: str
+    address_1: str
+    address_2: str = None
+    address_3: str = None
+
+
 class RefundListSchema(Schema):
     id: int
     order: OrderListSchema = None
-    reject_reason: str = None
+    reject_reason: RefundLocationSchema = None
     method: RefundMethod = RefundMethod.RECALL_REQUEST
     status: RefundStatus = RefundStatus.WAITING
 
 
 class RefundInsertSchema(Schema):
     order_id: int
-    reject_reason: str = None
-    refund_location: str = None
+    reject_reason: str = Field(None, description="환불 거절 사유, status가 환불 거절 일 때 필수.")
+    refund_location: RefundLocationSchema = Field(None, description="환불 수락 시 환불 받을 위치 정보를 입력 하기 위한 컬럼")
     method: RefundMethod = Field(
         title="환불 방법",
         default=RefundMethod.RECALL_REQUEST,

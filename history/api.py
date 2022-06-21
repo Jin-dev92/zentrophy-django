@@ -7,7 +7,7 @@ from django.db.models import F
 
 from conf.custom_exception import RefuseMustHaveReasonException, LoginRequiredException, UserNotAccessDeniedException
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
-from history.models import AfterService, Refund, Warranty, Cart
+from history.models import AfterService, Refund, Warranty, Cart, RefundLocation
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, CartListSchema, \
     CartCreateSchema, AfterServiceListSchema, RefundListSchema, \
     WarrantyListSchema
@@ -92,11 +92,22 @@ def delete_after_service(request, id: int):
         obj = get_object_or_404(AfterService, id=id)
     obj.soft_delete()
 
-# 여기까지
-@refund_router.get("/", description="환불 내역 조회",
-                   response=List[RefundListSchema],
+
+@refund_router.get("/",
+                   response=List[RefundListSchema]
                    )
 def get_refund_list(request, method: RefundMethod = None, status: RefundStatus = None):
+    """
+    환불 내역 조회
+    - :param method:
+    RECALL_REQUEST(회수 요청) = 0,
+    DIRECT (직접 발송)= 1
+    - :param status:
+    WAITING(환불 대기) = 0
+    COMPLETED(환불 완료) = 1
+    ACCEPTED(환불 수락) = 2
+    REFUSE(환불 거절) = 3
+    """
     params = prepare_for_query(request=request)
     if is_admin(request.auth):
         qs = Refund.objects.get_queryset(**params).select_related('order').all()
@@ -117,13 +128,26 @@ def get_refund_list_by_id(request, id: int):
 @refund_router.post("/", description="환불 내역 생성")
 def create_refund_history(request, payload: RefundInsertSchema):
     params = payload.dict()
-    except_params = {k: v for k, v in params.items() if k not in {'order_id'}}
+    except_params = {k: v for k, v in params.items() if k not in {'order_id', 'refund_location'}}
+    refund_location_params = params['refund_location']
+
     order = get_object_or_404(Order, id=params.get('order_id'), deleted_at__isnull=True)
-    queryset = Refund.objects.create(order=order, **except_params)
+    refund_location = RefundLocation.objects.create(**refund_location_params)
+    queryset = Refund.objects.create(order=order, refund_location=refund_location, **except_params)
 
 
-@refund_router.put("/", description="환불 상태 변경, status 가 3일 경우 reject_reason 필수")
+@refund_router.put("/")
 def modify_refund(request, id: int, status: RefundStatus, reject_reason: str = None):
+    """
+    환불 상태 변경 API, status 가 3일 경우 reject_reason 필수
+    - :param id: 환불 아이디
+    - :param status: 환불 상태
+    WAITING(환불 대기) = 0
+    COMPLETED(환불 완료) = 1
+    ACCEPTED(환불 수락) = 2
+    REFUSE(환불 거절) = 3
+    - :param reject_reason: 환불 사유, 환불 거절 상태일 때 필수 값
+    """
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     if status == RefundStatus.REFUSE and reject_reason is None:
@@ -136,8 +160,6 @@ def modify_refund(request, id: int, status: RefundStatus, reject_reason: str = N
 
 @refund_router.delete('/', description="환불 내역 삭제")
 def delete_refund(request, id: int):
-    # params = {'id': id, 'order__owner': request.auth} if is_admin(request.auth) else {id: id}
-    # print(Refund.objects.filter(**params))
     if is_admin(request.auth):
         target = get_object_or_404(Refund, id=id)
     else:
