@@ -1,9 +1,11 @@
 # package
+import datetime
 
 import jwt
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
+from jwt import ExpiredSignatureError
 from ninja import NinjaAPI, Form, Schema
 # util
 from ninja.security import HttpBearer
@@ -296,10 +298,6 @@ def must_have_delivery_to_exception_handler(request, exec):
                                )
 
 
-@api.exception_handler(exc_class=jwt.ExpiredSignatureError)
+@api.exception_handler(exc_class=ExpiredSignatureError)
 def expired_signature_exception_handler(request, exec):
-    return api.create_response(request,
-                               data={'code': EXPIRED_SIGNATURE['code'],
-                                     'desc': EXPIRED_SIGNATURE['desc']},
-                               status=EXPIRED_SIGNATURE['status']
-                               )
+    return get_jwt_token(request.auth.id)

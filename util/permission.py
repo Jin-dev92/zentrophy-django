@@ -19,7 +19,7 @@ def is_valid_token(token: str):
 
 
 def get_jwt_token(user_id: int):
-    token_valid_time = datetime.timedelta(hours=24) if DEBUG else datetime.timedelta(minutes=60)
+    token_valid_time = datetime.timedelta(seconds=5) if DEBUG else datetime.timedelta(minutes=60)
     payload = {
         'id': user_id,
         'exp': datetime.datetime.now() + token_valid_time,

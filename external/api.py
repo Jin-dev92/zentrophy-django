@@ -192,7 +192,6 @@ def get_avg_recent_prices(request, prodcd: Prodcd = None):
     KEROSENE = "C004"   # 실내 등유
     BUTAN = "K015"  #   자동차 부탄
     """
-    print(type(str(prodcd)))
     code = 'F220426124'  #  공공 데이터 키 값
     url = 'https://www.opinet.co.kr/api/avgRecentPrice.do'
     params = {
@@ -200,7 +199,6 @@ def get_avg_recent_prices(request, prodcd: Prodcd = None):
         'out': 'json',
         'prodcd': prodcd
     }
-    print(params)
     response = requests.get(url=url, params=params, timeout=5)
 
     return response.json()
