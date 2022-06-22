@@ -182,12 +182,12 @@ def iamport_callback(request, imp_uid: str, merchant_uid: str):
 
 @sync_to_async
 @external_router.get('/avg_recent_price', auth=None)
-def get_avg_recent_prices(request, out: str = 'json', prodcd: Prodcd = None):
+def get_avg_recent_prices(request, prodcd: Prodcd = None):
     code = 'F220426124'  #  공공 데이터 키 값
     url = 'https://www.opinet.co.kr/api/avgRecentPrice.do'
     params = {
         'code': code,
-        'out': out,
+        'out': 'json',
         'prodcd': prodcd
     }
     print(params)
