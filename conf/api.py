@@ -300,4 +300,7 @@ def must_have_delivery_to_exception_handler(request, exec):
 
 @api.exception_handler(exc_class=ExpiredSignatureError)
 def expired_signature_exception_handler(request, exec):
-    return get_jwt_token(request.auth.id)
+    return api.create_response(request,
+                               data=get_jwt_token(request.auth.id),
+                               status=401
+                               )
