@@ -1,10 +1,5 @@
-import asyncio
-import datetime
-import hashlib
 from typing import List
 
-import requests
-from asgiref.sync import sync_to_async
 from django.db import transaction
 from django.db.models import F
 from django.db.models import Prefetch
@@ -15,24 +10,19 @@ from ninja.files import UploadedFile
 from conf.custom_exception import AlreadyExistsException, WrongParameterException, \
     NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException, IncorrectTotalAmountException, \
     MustHaveDeliveryToException, IncorrectOrderStateException
-from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT, upload_exceed_count
+from conf.settings import upload_exceed_count
 from order.constant import OrderState, DeliveryMethod
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
-    OrderLocationInfo, CustomerInfo, DocumentFormat, Subscriptions, DeliveryTo, Payment
+    OrderLocationInfo, CustomerInfo, DocumentFormat, DeliveryTo
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
-    DocumentFormatListSchema, SubscriptionsCreateSchema, RequestPaymentSubscriptionsSchema, \
-    RequestPaymentSubscriptionsScheduleSchema, ApplySubSideSchema, DeliveryMethodInputSchema, InicisAuthResultSchema, \
-    TestSchema
+    DocumentFormatListSchema, ApplySubSideSchema, DeliveryMethodInputSchema
 from product.models import ProductOptions, VehicleColor
-from util.externals import subscription_payment_test
 from util.number import check_invalid_product_params
 from util.permission import is_admin
 
 router = Router()
 subside_router = Router()
 file_router = Router()
-subscription_router = Router()
-payment_router = Router()
 
 
 @router.get('/', response=List[OrderListSchema])
@@ -446,155 +436,3 @@ def delete_format_files(request, id: int):
         raise UserNotAccessDeniedException
     target = get_object_or_404(DocumentFormat, id=id)
     queryset = target.soft_delete()
-
-
-@sync_to_async
-@payment_router.post('/payment_result/{order_id}', description="일반 결제 인증 결과 수신")
-def response_normal_payment_auth_result(request, order_id: int, payload: InicisAuthResultSchema):
-    # 인증 결과를 저장 ( 로그 쌓기 )
-    auth_result = payload.dict()
-    queryset = Payment.objects.create(owner=request.auth, auth_result=auth_result, order_id=order_id)
-    if auth_result['resultCode'] == '0000':  # 성공
-        try:
-            auth_token = auth_result['authToken']
-            auth_url = auth_result['authUrl']
-            mid = auth_result['mid']
-            timestamp = datetime.datetime.now().timestamp()
-            signature = hashlib.sha256(('authToken=' + auth_token + '&timestamp=' + str(timestamp)).encode())
-            data = {
-                'authToken': auth_token,
-                'timestamp': timestamp,
-                'mid': mid,
-                'signature': signature,
-                'format': 'NVP',
-            }
-            print(data)
-            response = requests.post(url=auth_url, json=data)
-            response_json = response.json()
-            queryset.approval_result = response_json
-            queryset.save(update_fields=['approval_result'])
-            # if response_json['resultCode'] and response_json['resultCode'] == '0000': # 성공
-            # 성공 했을 때 뭔가 해준다.
-            return response_json
-        except Exception as e:
-            raise WrongParameterException
-    else:   # 실패
-        raise Exception("결제 결과 실패 했네? code: " + auth_result['resultCode'])
-
-
-@sync_to_async
-@subscription_router.post('/test', description="나이츠 페이먼츠 정기 결제 테스트")
-def test(request, payload: TestSchema):
-    merchant_uid = payload.dict()['payment_subscription'].get('merchant_uid')
-    response = asyncio.run(subscription_payment_test(user=request.auth, merchant_uid=merchant_uid, data=payload.dict()))
-    return response
-
-
-@sync_to_async
-@subscription_router.post('/issue_billing', description="나이츠 페이먼츠 정기 결제")
-def create_subscription(request, payload: SubscriptionsCreateSchema):
-    params = payload.dict()
-    data = {k: v for k, v in payload.dict().items() if k not in {'customer_uid'}}
-    try:
-        token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'], timeout=5)
-        token_response_json = token_response.json()
-        if int(token_response_json['code']) == 0:
-            access_token = token_response_json['response'].get('access_token')
-            issue_billing_response = requests.post(
-                url=ISSUE_BILLING_INFO['url'] + params.get('customer_uid'),
-                headers={'Authorization': access_token},
-                json=data,
-                timeout=5
-            )
-            return issue_billing_response.json()
-    except Exception as e:
-        raise e
-
-
-@transaction.atomic(using='default')
-@sync_to_async
-@subscription_router.post('/payment')
-def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSchema):
-    try:
-        with transaction.atomic():
-            token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'], timeout=5)
-            token_response_json = token_response.json()
-            if int(token_response_json['code']) == 0:
-                access_token = token_response_json['response'].get('access_token')
-                request_payment_response = requests.post(
-                    url=REQUEST_PAYMENT['url'],
-                    headers={'Authorization': access_token},
-                    json=payload.json(),
-                    timeout=5
-                )
-                if int(request_payment_response.json()['code']) == 0:  # 요청이 성공 했을 경우
-                    # DB에 저장 한다.
-                    Subscriptions.objects.create(
-                        owner=request.auth,
-                        merchant_uid=payload.dict()['merchant_uid'],
-                        customer_uid=payload.dict()['customer_uid'],
-                    )
-                return request_payment_response.json()
-            else:
-                return token_response_json
-    except Exception as e:
-        raise e
-
-
-@transaction.atomic(using='default')
-@sync_to_async
-@subscription_router.post('/payment/schedule')
-def request_payment_schedule_subscription(request, payload: RequestPaymentSubscriptionsScheduleSchema):
-    schedules = payload.dict()['schedules']
-    try:
-        with transaction.atomic():
-            token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'], timeout=5)
-            token_response_json = token_response.json()
-            if int(token_response_json['code']) == 0:
-                access_token = token_response_json['response'].get('access_token')
-                request_payment_schedule_response = requests.post(
-                    url='https://api.iamport.kr/subscribe/payments/schedule',
-                    headers={'Authorization': access_token},
-                    json=payload.json(),
-                    timeout=5
-                )
-
-                return request_payment_schedule_response.json()
-            else:
-                return token_response_json
-    except Exception as e:
-        raise e
-
-
-@sync_to_async
-@subscription_router.get('/iamport_callback/schedule')
-def iamport_callback(request, imp_uid: str, merchant_uid: str):
-    try:
-        with transaction.atomic():
-            token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'], timeout=5)
-            token_response_json = token_response.json()
-            if int(token_response_json['code']) == 0:
-                access_token = token_response_json['response'].get('access_token')
-                # imp_uid 로 아임포트 서버에서 결제 정보 조회
-                payment_response = requests.post(
-                    url='https://api.iamport.kr/payments/' + imp_uid,
-                    headers={'Authorization': access_token}
-                )
-                payment_response_json = payment_response.json()
-                if int(payment_response_json['code']) == 0 and payment_response_json['data']:
-                    status = payment_response_json['data']['response']['status']
-                    if status == 'paid':
-                        # DB에 저장하기.
-                        Subscriptions.objects.update_or_create(
-                            owner=request.auth,
-                            merchant_uid=merchant_uid,
-                            defaults={
-                                'imp_uid': imp_uid,
-                                'merchant_uid': merchant_uid,
-                                'response_raw': payment_response_json
-                            })
-                return payment_response_json
-            else:
-                return token_response_json
-    except Exception as e:
-        raise e
