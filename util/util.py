@@ -1,3 +1,5 @@
+from enum import Enum
+
 import orjson
 from ninja.parser import Parser
 from ninja.renderers import BaseRenderer
@@ -15,3 +17,11 @@ class ORJSONRenderer(BaseRenderer):
 
     def render(self, request, data, *, response_status):
         return orjson.dumps(data)
+
+
+class StrEnum(str, Enum):
+    def _generate_next_value_(name, start, count, last_values):
+        return name
+
+    def __str__(self):
+        return self.name

@@ -1,7 +1,9 @@
 from enum import Enum
 
+from util.util import StrEnum
 
-class Prodcd(Enum):
+
+class Prodcd(StrEnum):
     ADVANCED = "B034"   # 고급 휘발유
     NORMAL = "B027" # 일반 휘발유
     DIESEL = "D047" # 경우

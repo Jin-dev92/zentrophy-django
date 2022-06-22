@@ -183,6 +183,16 @@ def iamport_callback(request, imp_uid: str, merchant_uid: str):
 @sync_to_async
 @external_router.get('/avg_recent_price', auth=None)
 def get_avg_recent_prices(request, prodcd: Prodcd = None):
+    """
+    공공 API 데이터, 유류 비용 평균 값
+    - :param prodcd:
+     ADVANCED = "B034"   # 고급 휘발유
+    NORMAL = "B027" # 일반 휘발유
+    DIESEL = "D047" # 경우
+    KEROSENE = "C004"   # 실내 등유
+    BUTAN = "K015"  #   자동차 부탄
+    """
+    print(type(str(prodcd)))
     code = 'F220426124'  #  공공 데이터 키 값
     url = 'https://www.opinet.co.kr/api/avgRecentPrice.do'
     params = {
@@ -192,4 +202,5 @@ def get_avg_recent_prices(request, prodcd: Prodcd = None):
     }
     print(params)
     response = requests.get(url=url, params=params, timeout=5)
+
     return response.json()
