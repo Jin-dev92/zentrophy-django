@@ -88,5 +88,5 @@ class CartCreateSchema(Schema):
 
 
 class FeePlanCreateSchema(Schema):
-    zentrophy_tax: int
-    battery_exchange_fee: int
+    zentrophy_tax: float = Field(description="젠트로피 수수료")
+    battery_exchange_fee: float = Field(description="배터리 교환 요금")

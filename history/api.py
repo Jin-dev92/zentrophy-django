@@ -6,7 +6,8 @@ from ninja import Router
 from django.db.models import F
 from ninja.orm import create_schema
 
-from conf.custom_exception import RefuseMustHaveReasonException, LoginRequiredException, UserNotAccessDeniedException
+from conf.custom_exception import RefuseMustHaveReasonException, LoginRequiredException, UserNotAccessDeniedException, \
+    FeeFlanHaveOneException
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
 from history.models import AfterService, Refund, Warranty, Cart, RefundLocation, FeePlan
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, CartListSchema, \
@@ -237,12 +238,17 @@ def get_fee_plan(request):
 
 @fee_plan_router.post('/')
 def update_or_create_fee_plan(request, payload: FeePlanCreateSchema):
+    """
+    어드민 요금제 관리
+    해당 객체는 1개만 존재할 수 있으며, 해당 객체가 존재 하지 않을 경우 우선적으로 생성한다.
+    그 후 해당 API 에 hit 할 경우 수정 로직을 수행한다.
+    """
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
 
     fee_plan_count = len(FeePlan.objects.all())
     if fee_plan_count > 1:
-        raise Exception("임시")
+        raise FeeFlanHaveOneException
 
     if fee_plan_count == 0:
         FeePlan.objects.create(**payload.dict())
