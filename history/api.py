@@ -226,18 +226,23 @@ def delete_cart(request, id: int):
     return queryset
 
 
-@fee_plan_router.get('/', response=create_schema(FeePlan), auth=None)
+@fee_plan_router.get('/', response=create_schema(FeePlan))
 def get_fee_plan(request):
     # queryset = FeePlan.objects.all().first()
+    # if not is_admin(request.auth):  # 어드민 접근 제한
+    #     raise UserNotAccessDeniedException
     queryset = get_object_or_404(FeePlan)
     return queryset
 
 
-@fee_plan_router.post('/', auth=None)
+@fee_plan_router.post('/')
 def update_or_create_fee_plan(request, payload: FeePlanCreateSchema):
+    if not is_admin(request.auth):  # 어드민 접근 제한
+        raise UserNotAccessDeniedException
+
     fee_plan_count = len(FeePlan.objects.all())
     if fee_plan_count > 1:
-        raise Exception("테스트")
+        raise Exception("임시")
 
     if fee_plan_count == 0:
         FeePlan.objects.create(**payload.dict())
