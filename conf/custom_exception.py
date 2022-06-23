@@ -78,5 +78,5 @@ class IncorrectOrderStateException(Exception):
     pass
 
 
-class FeeFlanHaveOneException(Exception):
+class PrevEstimateHaveOneException(Exception):
     pass

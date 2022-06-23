@@ -4,13 +4,15 @@ from typing import List
 from django.db.models import F
 from django.shortcuts import get_object_or_404
 from ninja import Router
+from ninja.orm import create_schema
 
-from conf.custom_exception import RefuseMustHaveReasonException, UserNotAccessDeniedException
+from conf.custom_exception import RefuseMustHaveReasonException, UserNotAccessDeniedException, \
+    PrevEstimateHaveOneException
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
-from history.models import AfterService, Refund, Warranty, Cart, RefundLocation
+from history.models import AfterService, Refund, Warranty, Cart, RefundLocation, PrevEstimate
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, CartListSchema, \
     CartCreateSchema, AfterServiceListSchema, RefundListSchema, \
-    WarrantyListSchema
+    WarrantyListSchema, PrevEstimateCreateSchema
 from order.models import Order
 from placement.models import Placement
 from product.models import ProductOptions
@@ -23,7 +25,7 @@ after_service_router = Router()
 warranty_router = Router()
 battery_router = Router()
 cart_router = Router()
-fee_plan_router = Router()
+prev_estimate_router = Router()
 
 
 @after_service_router.get("/", response=List[AfterServiceListSchema])
@@ -223,3 +225,24 @@ def create_cart(request, payload: CartCreateSchema):
 def delete_cart(request, id: int):
     queryset = get_object_or_404(Cart, id=id, owner=request.auth).delete()
     return queryset
+
+
+@prev_estimate_router.get('/', response=create_schema(PrevEstimate), auth=None)
+def get_prev_estimate(request):
+    queryset = get_object_or_404(PrevEstimate)
+    return queryset
+
+
+@prev_estimate_router.post('/', auth=None)
+def update_or_create_prev_estimate(request, payload: PrevEstimateCreateSchema):
+    if not is_admin(request.auth):  # 어드민 접근 제한
+        raise UserNotAccessDeniedException
+
+    prev_estimate_count = len(PrevEstimate.objects.filter())
+    if prev_estimate_count > 1:
+        raise PrevEstimateHaveOneException
+
+    if prev_estimate_count == 0:
+        PrevEstimate.objects.create(**payload.dict())
+    else:
+        PrevEstimate.objects.update(**payload.dict())

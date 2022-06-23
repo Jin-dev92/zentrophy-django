@@ -85,3 +85,11 @@ class CartListSchema(Schema):
 class CartCreateSchema(Schema):
     product_options_id: int = Field(title="상품 product_options_id")
     amount: int = Field(title="상품 수량")
+
+
+class PrevEstimateCreateSchema(Schema):
+    battery_user_avg_fee: float = Field(description="배터리 사용자 평균 사용 요금")
+    consume_user_avg_fee: float = Field(description="소모품 사용자 평균 사용 요금")
+    user_avg_fuel: float = Field(description="사용자 평균 전비")
+    gasoline_calc: float = Field(description="가솔린 계수")
+    battery_fee: float = Field(description="기본 배터리 요금")

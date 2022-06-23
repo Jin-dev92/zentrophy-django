@@ -47,3 +47,11 @@ class Cart(TimeStampModel):
 
     def __str__(self):
         return self.product_options.option_name + "//" + str(self.amount) + self.owner.email
+
+
+class PrevEstimate(TimeStampModel):
+    battery_user_avg_fee = models.FloatField(default=0, help_text="배터리 사용자 평균 사용 요금")
+    consume_user_avg_fee = models.FloatField(default=0, help_text="소모품 사용자 평균 사용 요금")
+    user_avg_fuel = models.FloatField(default=0, help_text="사용자 평균 전비")
+    gasoline_calc = models.FloatField(default=0, help_text="가솔린 계수")
+    battery_fee = models.FloatField(default=0, help_text="기본 배터리 요금")
