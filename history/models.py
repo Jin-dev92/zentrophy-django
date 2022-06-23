@@ -47,3 +47,8 @@ class Cart(TimeStampModel):
 
     def __str__(self):
         return self.product_options.option_name + "//" + str(self.amount) + self.owner.email
+
+
+class FeePlan(TimeStampModel): #  요금제 관리
+    zentrophy_tax = models.FloatField(default=0.0, help_text="젠트로피 수수료")
+    battery_exchange_fee = models.FloatField(default=0.0, help_text="배터리 교환 요금")

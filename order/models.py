@@ -31,11 +31,6 @@ class ExtraSubside(SoftDeleteModel, TimeStampModel):
     subside = models.ForeignKey('order.Subside', on_delete=models.CASCADE)
 
 
-# class IntegratedFeePlan(SoftDeleteModel):
-#     zentrophy_fee = models.IntegerField(default=0)
-#     battery_fee = models.IntegerField(default=0)
-
-
 class Order(TimeStampModel, SoftDeleteModel):
     owner = models.ForeignKey('member.User',
                               on_delete=models.CASCADE,

@@ -4,13 +4,14 @@ from typing import List
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from django.db.models import F
+from ninja.orm import create_schema
 
 from conf.custom_exception import RefuseMustHaveReasonException, LoginRequiredException, UserNotAccessDeniedException
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
-from history.models import AfterService, Refund, Warranty, Cart, RefundLocation
+from history.models import AfterService, Refund, Warranty, Cart, RefundLocation, FeePlan
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, CartListSchema, \
     CartCreateSchema, AfterServiceListSchema, RefundListSchema, \
-    WarrantyListSchema
+    WarrantyListSchema, FeePlanCreateSchema
 from order.models import Order
 from placement.models import Placement
 from product.models import ProductOptions
@@ -23,6 +24,7 @@ after_service_router = Router()
 warranty_router = Router()
 battery_router = Router()
 cart_router = Router()
+fee_plan_router = Router()
 
 
 @after_service_router.get("/", response=List[AfterServiceListSchema])
@@ -222,3 +224,22 @@ def create_cart(request, payload: CartCreateSchema):
 def delete_cart(request, id: int):
     queryset = get_object_or_404(Cart, id=id, owner=request.auth).delete()
     return queryset
+
+
+@fee_plan_router.get('/', response=create_schema(FeePlan), auth=None)
+def get_fee_plan(request):
+    # queryset = FeePlan.objects.all().first()
+    queryset = get_object_or_404(FeePlan)
+    return queryset
+
+
+@fee_plan_router.post('/', auth=None)
+def update_or_create_fee_plan(request, payload: FeePlanCreateSchema):
+    fee_plan_count = len(FeePlan.objects.all())
+    if fee_plan_count > 1:
+        raise Exception("테스트")
+
+    if fee_plan_count == 0:
+        FeePlan.objects.create(**payload.dict())
+    else:
+        FeePlan.objects.update(**payload.dict())

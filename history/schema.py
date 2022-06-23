@@ -85,3 +85,8 @@ class CartListSchema(Schema):
 class CartCreateSchema(Schema):
     product_options_id: int = Field(title="상품 product_options_id")
     amount: int = Field(title="상품 수량")
+
+
+class FeePlanCreateSchema(Schema):
+    zentrophy_tax: int
+    battery_exchange_fee: int

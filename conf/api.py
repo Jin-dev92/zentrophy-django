@@ -18,7 +18,7 @@ from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExce
 from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
 from external.api import subscription_router, payment_router, external_router
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
-    cart_router
+    cart_router, fee_plan_router
 from member.api import router as member_router, payment_method_router
 from member.models import RemoteToken, User
 from member.schema import TokenSchema
@@ -88,6 +88,11 @@ API_LIST = [
         'prefix': "/subside/",
         'router': subside_router,
         'tags': ["보조금"]
+    },
+    {
+        'prefix': "/fee_plan/",
+        'router': fee_plan_router,
+        'tags': ["요금제 관리"]
     },
     {
         'prefix': "/upload/",
