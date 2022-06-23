@@ -229,9 +229,9 @@ def delete_cart(request, id: int):
 
 @fee_plan_router.get('/', response=create_schema(FeePlan))
 def get_fee_plan(request):
-    # queryset = FeePlan.objects.all().first()
-    # if not is_admin(request.auth):  # 어드민 접근 제한
-    #     raise UserNotAccessDeniedException
+    """
+        현재 적용 되어 있는 어드민 요금제 관리
+    """
     queryset = get_object_or_404(FeePlan)
     return queryset
 
