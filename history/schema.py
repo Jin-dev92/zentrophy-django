@@ -7,7 +7,7 @@ from history.constant import RefundMethod, RefundStatus, AfterServiceCategory, A
 from member.schema import MemberListSchema
 from order.schema import OrderListSchema
 from placement.schema import PlacementListSchema
-from product.schema import VehicleListSchema, ProductOptionsListSchema, ProductImageListSchema
+from product.schema import ProductOptionsListSchema
 
 
 class AfterServiceInsertSchema(Schema):
@@ -85,8 +85,3 @@ class CartListSchema(Schema):
 class CartCreateSchema(Schema):
     product_options_id: int = Field(title="상품 product_options_id")
     amount: int = Field(title="상품 수량")
-
-
-class FeePlanCreateSchema(Schema):
-    zentrophy_tax: float = Field(description="젠트로피 수수료")
-    battery_exchange_fee: float = Field(description="배터리 교환 요금")
