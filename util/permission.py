@@ -1,4 +1,6 @@
 import datetime
+from uuid import UUID
+
 import jwt
 
 from conf.custom_exception import WrongTokenException
@@ -9,7 +11,8 @@ def is_admin(user):  # 어드민 유저만 허용
     return user.is_staff and user.is_active
 
 
-def is_valid_token(token: str):
+def is_valid_token(token: UUID):
+    token = str(token)
     if len(token) != 36:
         raise WrongTokenException
     split = token.split(sep='-', maxsplit=4)
