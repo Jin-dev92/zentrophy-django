@@ -191,6 +191,15 @@ def member_login(request, token_info: TokenSchema = Form(...),
     return get_jwt_token(user.id)
 
 
+@api.get('/refresh', response=LoginResponse)
+def get_request_refresh_token(request):
+    """
+    리프레쉬 토큰 API
+    """
+    if not request.auth:
+        raise LoginRequiredException
+    return get_jwt_token(request.auth.id)
+
 # 에러 핸들링
 @api.exception_handler(exc_class=UserNotAccessDeniedException)
 def user_not_access_denied_exception_handler(request, exec):
@@ -301,6 +310,7 @@ def must_have_delivery_to_exception_handler(request, exec):
 @api.exception_handler(exc_class=ExpiredSignatureError)
 def expired_signature_exception_handler(request, exec):
     return api.create_response(request,
-                               data=get_jwt_token(request.auth.id),
-                               status=401
+                               data={'code': EXPIRED_SIGNATURE['code'],
+                                     'desc': EXPIRED_SIGNATURE['desc']},
+                               status=EXPIRED_SIGNATURE['status']
                                )
