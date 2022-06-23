@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 
 from conf import settings
-from conf.custom_exception import AlreadyExistsException, FormatNotSupportedException, WrongTokenException
+from conf.custom_exception import AlreadyExistsException, FormatNotSupportedException
 # from member.constant import CardCompany
 from util.models import TimeStampModel, SoftDeleteModel
 
@@ -58,14 +58,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['password']
 
 
-class MemberOwnedVehicles(TimeStampModel, SoftDeleteModel):
-    vehicle = models.ForeignKey('product.Vehicle', on_delete=models.SET_NULL, null=True)
-    order = models.ForeignKey('order.Order', on_delete=models.SET_NULL, null=True)
-    owner = models.ForeignKey('member.User', on_delete=models.CASCADE)
-    license_code = models.CharField(max_length=50, default=None)
-    battery_left = models.IntegerField(default=-1)  # -1의 경우 사용 불가.
-
-
 class PaymentMethod(TimeStampModel, SoftDeleteModel):
     name = models.CharField(max_length=100)  # 결제 수단 별명
     owner = models.ForeignKey('member.User', on_delete=models.CASCADE)
@@ -116,7 +108,9 @@ class RemoteToken(TimeStampModel):
     def __str__(self):
         return str(self.access_token)
 
-    # def format(self):
-    #     if len(self.access_token) != 36 or len(self.refresh_token) != 36:
-    #         raise WrongTokenException
-    #     self.access_token.split(sep='-', maxsplit=4)
+
+class OwnedVehicle(TimeStampModel):
+    user = models.ForeignKey('member.User', on_delete=models.CASCADE, null=True)
+    order = models.ForeignKey('order.Order', on_delete=models.SET_NULL, null=True)
+    vehicle_color = models.ForeignKey('product.VehicleColor', on_delete=models.CASCADE, null=True)
+    release_number = models.CharField(max_length=12, null=True, unique=True)

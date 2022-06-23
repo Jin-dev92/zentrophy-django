@@ -1,17 +1,17 @@
 import datetime
-from typing import List, Optional
+from typing import List
 
 from django.db import transaction
 from django.db.models import Prefetch, Count, Q
 from django.shortcuts import get_object_or_404
-from ninja import Router, Form, Query
+from ninja import Router, Form
 
 from conf import settings
 from conf.custom_exception import UserNotAccessDeniedException, AdminAccountInActiveException
 from member.constant import MemberSort
-from member.models import User, PaymentMethod, Card, RemoteToken
+from member.models import User, PaymentMethod, Card, RemoteToken, OwnedVehicle
 from member.schema import MemberInsertSchema, MemberListSchema, PaymentMethodListSchema, PaymentMethodInsertSchema, \
-    MemberReAssignSchema, MemberModifySchema, StatisticsMember, MemberListParamsSchema
+    MemberReAssignSchema, MemberModifySchema, StatisticsMember
 from util.params import prepare_for_query
 from util.permission import is_admin
 
@@ -61,6 +61,11 @@ def get_list_member(request,
         field_name = '-date_joined'
     return User.objects.filter(**params).prefetch_related(
         Prefetch('paymentmethod_set', to_attr="payment_method"),
+        Prefetch('ownedvehicle_set',
+                 queryset=OwnedVehicle.objects.prefetch_related(
+                     Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image')
+                 ),
+                 to_attr="owned_vehicle"),
     ).order_by(field_name)
 
 
@@ -94,7 +99,12 @@ def get_member_by_id(request, id: int):
         target = User.objects.filter(id=request.auth.id)
 
     queryset = target.prefetch_related(
-        Prefetch('paymentmethod_set', to_attr="payment_method")
+        Prefetch('paymentmethod_set', to_attr="payment_method"),
+        Prefetch('ownedvehicle_set',
+                 queryset=OwnedVehicle.objects.prefetch_related(
+                     Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image')
+                 ),
+                 to_attr="owned_vehicle"),
     )
     return queryset
 

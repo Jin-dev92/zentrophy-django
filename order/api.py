@@ -11,13 +11,14 @@ from conf.custom_exception import AlreadyExistsException, WrongParameterExceptio
     NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException, IncorrectTotalAmountException, \
     MustHaveDeliveryToException, IncorrectOrderStateException
 from conf.settings import upload_exceed_count
+from member.models import OwnedVehicle
 from order.constant import OrderState, DeliveryMethod
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
     OrderLocationInfo, CustomerInfo, DocumentFormat, DeliveryTo
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
     DocumentFormatListSchema, ApplySubSideSchema, DeliveryMethodInputSchema
 from product.models import ProductOptions, VehicleColor
-from util.number import check_invalid_product_params
+from util.number import check_invalid_product_params, generate_release_number
 from util.permission import is_admin
 
 router = Router()
@@ -156,10 +157,12 @@ def change_is_request_submit(request, id: int):
     target.save(update_fields=['is_request_submit'])
 
 
+@transaction.atomic(using='default')
 @router.post('/is_delivery/{id}')
 def change_is_delivery(request, id: int):
     """
     출고 준비 -> 배송중, 배송중 -> 출고 준비 상태 토글, 배송 준비 단계 에서 배송 중일 때와 출고 준비를 분별 하기 위한 값을 토글 해준다.
+    배송 중으로 변했을 경우, 출고 번호와 유저 에게 모터 사이클 소유 목록 부여 한다.
     - :param id: 주문 아이디
     - :return:
     """
@@ -169,9 +172,25 @@ def change_is_delivery(request, id: int):
     target = get_object_or_404(Order, id=id)
     if target.state != OrderState.PREPARE_DELIVERY:
         raise IncorrectOrderStateException
+    try:
+        with transaction.atomic():
+            if not target.is_delivery:
+                for ordered_vehicle in target.orderedvehiclecolor_set.all():
+                    print(ordered_vehicle.amount)
+                    for i in range(ordered_vehicle.amount):
+                        release_number = generate_release_number()
+                        is_pass = len(OwnedVehicle.objects.filter(release_number__exact=release_number)) == 0
+                        if is_pass:
+                            OwnedVehicle.objects.create(user=request.auth,
+                                                        order=target,
+                                                        vehicle_color=ordered_vehicle.vehicle_color,
+                                                        release_number=release_number)
 
-    target.is_delivery = not target.is_delivery
-    target.save(update_fields=['is_delivery'])
+            target.is_delivery = not target.is_delivery
+            target.save(update_fields=['is_delivery'])
+            # 출고 되었을 경우, 유저가 소유한 모터사이클 목록 추가 후 출고 번호를 적어준다.
+    except Exception as e:
+        raise e
 
 
 @transaction.atomic(using='default')
@@ -304,7 +323,7 @@ def change_order_state(request, id: int, state: OrderState):
         target.state = state
         target.save(update_fields=['state', 'is_request_submit'])
 
-        if OrderState.IS_CANCELED:  # 주문 취소 하였을 때 재고량과 판매량을 원복 해줘야 한다.
+        if state == OrderState.IS_CANCELED:  # 주문 취소 하였을 때 재고량과 판매량을 원복 해줘야 한다.
             ordered_product_options = target.orderedproductoptions_set.all()
             ordered_vehicle_colors = target.orderedvehiclecolor_set.all()
 
@@ -328,7 +347,7 @@ def change_order_state(request, id: int, state: OrderState):
                         ordered_vehicle_color.vehicle_color.sale_count = 0
                     ordered_vehicle_color.vehicle_color.save(update_fields=['stock_count', 'sale_count'])
 
-    except Exception as e :
+    except Exception as e:
         raise e
 
 

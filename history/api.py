@@ -16,7 +16,7 @@ from history.schema import AfterServiceInsertSchema, RefundInsertSchema, Warrant
 from order.models import Order
 from placement.models import Placement
 from product.models import ProductOptions
-from util.number import generate_random_number
+from util.number import generate_after_service_number
 from util.params import prepare_for_query
 from util.permission import is_admin
 
@@ -53,7 +53,7 @@ def get_after_service_list(request, status: AfterServiceStatus = None, is_create
 def update_or_create_after_service_history(request, payload: AfterServiceInsertSchema):
     params = payload.dict()
     except_params = {k: v for k, v in params.items() if k in {'place_id'}}
-    except_params['registration_number'] = generate_random_number()
+    except_params['registration_number'] = generate_after_service_number()
     place = Placement.objects.get_queryset(id=params.get('place_id'))
     AfterService.objects.update_or_create(user=request.auth, place=place.first(),
                                           defaults=except_params)

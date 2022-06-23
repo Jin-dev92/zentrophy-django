@@ -2,7 +2,6 @@ from django.db import models
 
 from conf.settings import LICENSE_NUMBER_LENGTH
 from history.constant import RefundStatus, AfterServiceStatus, RefundMethod, AfterServiceCategory
-from order.models import Order
 from placement.models import Placement
 from product.models import ProductOptions
 from util.models import TimeStampModel, SoftDeleteModel
@@ -16,7 +15,7 @@ class RefundLocation(TimeStampModel):
 
 
 class Refund(TimeStampModel, SoftDeleteModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey('order.Order', on_delete=models.CASCADE, null=True)
     reject_reason = models.CharField(max_length=200, null=True)
     refund_location = models.OneToOneField('history.RefundLocation', on_delete=models.CASCADE, null=True)
     method = models.PositiveSmallIntegerField(default=RefundMethod.RECALL_REQUEST)
@@ -55,3 +54,6 @@ class PrevEstimate(TimeStampModel):
     user_avg_fuel = models.FloatField(default=0, help_text="사용자 평균 전비")
     gasoline_calc = models.FloatField(default=0, help_text="가솔린 계수")
     battery_fee = models.FloatField(default=0, help_text="기본 배터리 요금")
+
+    def __str__(self):
+        return str(self.battery_user_avg_fee)

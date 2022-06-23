@@ -62,6 +62,26 @@ class MemberListParamsSchema(Schema):
     sort: MemberSort = None
 
 
+class VehicleImageInOwnedVehicleSchema(Schema):
+    id: int
+    origin_image: str
+
+
+class VehicleColorInOwnedVehicleSchema(Schema):
+    color_name: str = None
+    stock_count: int = None
+    sale_count: int = None
+    hex_code: str = None
+    on_sale: bool = None
+    price: int = None
+    vehicle_image: List[VehicleImageInOwnedVehicleSchema] = None
+
+
+class OwnedVehicleListSchema(Schema):
+    vehicle_color: VehicleColorInOwnedVehicleSchema = None
+    release_number: str = None
+
+
 class MemberListSchema(Schema):
     id: int
     username: str = Field(description="유저 이름")
@@ -71,6 +91,7 @@ class MemberListSchema(Schema):
     address_detail: str = Field(default=None, description="상세 주소")
     zipcode: str = Field(default=None, description="우편 번호")
     payment_method: List[PaymentMethodListSchema] = Field(default=[], description="결제 수단")
+    owned_vehicle: List[OwnedVehicleListSchema] = Field(default=None, description="유저가 소유 중 인 모터 사이클 목록")
     date_joined: datetime = Field(default=None, description="가입한 시간")
     last_login: datetime = Field(default=None, description="마지막 로그인 시간")
 
