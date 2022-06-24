@@ -90,39 +90,39 @@ class CartCreateSchema(Schema):
 
 
 class PrevEstimateInputCreateSchema(Schema):
-    exchange_period: float
-    exchange_price: float
+    exchange_period: float = Field(description="교환 주기")
+    exchange_price: float = Field(description="교환 가격")
 
 
 class ExpendablesCreateSchema(PrevEstimateInputCreateSchema):
-    type: ExpendablesType
+    type: ExpendablesType = Field(description="소모품 타입 // GEAR_OIL(기어 오일) = 0,FRONT_TIRE(앞 바퀴) = 1,BREAK_PAD(브레이크 패드) = 2,BACK_TIRE(뒷 바퀴) = 3, ACTUATOR (구동계)= 4")
 
 
 class InternalCombustionEngineCreateSchema(PrevEstimateInputCreateSchema):
-    type: InternalCombustionEngineType
+    type: InternalCombustionEngineType = Field(description="ENGINE_OIL(엔진 오일) = 0 AIR_CLEANER (에어클리너)= 1 IGNITION_PLUG(점화플러그) = 2    FRONT_TIRE(앞바퀴) = 3  MISSION_OIL(미션오일) = 4 BACK_TIRE(뒷바퀴) = 5   BREAK_PAD(브레이크패드) = 6   ACTUATOR = 7(구동계)")
 
 
 class FuelRateByVehicleTypeCreateSchema(Schema):
-    model_name: str
-    driving_style: DrivingStyle
-    fuel_rate: float
+    model_name: str = Field(description="모델 이름")
+    driving_style: DrivingStyle = Field(description="운전 스타일 // HARD(격렬한) = 0, NORMAL(무난한) = 1, SAFE(안전 주행) = 2")
+    fuel_rate: float = Field(description="연비")
 
 
 class VehicleInfoCreateSchema(Schema):
-    fuel_rate_by_vehicle_type: List[FuelRateByVehicleTypeCreateSchema] = None
-    avg_fuel_price: float = None
-    gasoline_calc: float = None
-    electric_fuel_rate: float = None
+    fuel_rate_by_vehicle_type: List[FuelRateByVehicleTypeCreateSchema] = Field(None, description="차종 별 연비")
+    avg_fuel_price: float = Field(None, description="평균 연료 가격")
+    gasoline_calc: float = Field(None, description="가솔린 계수")
+    electric_fuel_rate: float = Field(None, description="전비")
 
 
 class PrevEstimateCreateSchema(Schema):
-    vehicle_info: VehicleInfoCreateSchema = None
-    expendables: List[ExpendablesCreateSchema] = None
-    internal_combustion_engine: List[InternalCombustionEngineCreateSchema] = None
+    vehicle_info: VehicleInfoCreateSchema = Field(None, description="자동차 정보 ( 가견적 위에 4개) ")
+    expendables: List[ExpendablesCreateSchema] = Field(None, description="젠트로피 소모품")
+    internal_combustion_engine: List[InternalCombustionEngineCreateSchema] = Field(None, description="내연 기관")
 
 
 class PrevEstimateListSchema(Schema):
     id: int
-    vehicle_info: VehicleInfoCreateSchema = None
-    expendables_list: List[ExpendablesCreateSchema] = None
-    internal_combustion_engine: List[InternalCombustionEngineCreateSchema] = None
+    vehicle_info: VehicleInfoCreateSchema = Field(None, description="자동차 정보 ( 가견적 위에 4개) ")
+    expendables_list: List[ExpendablesCreateSchema] = Field(None, description="젠트로피 소모품")
+    internal_combustion_engine: List[InternalCombustionEngineCreateSchema] = Field(None, description="내연 기관")

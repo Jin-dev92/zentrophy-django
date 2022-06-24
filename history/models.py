@@ -50,33 +50,20 @@ class Cart(TimeStampModel):
 
 class PrevEstimate(TimeStampModel):
     ...
-    # vehicle_info = models.ForeignKey('history.VehicleInfo',
-    #                                  on_delete=models.CASCADE,
-    #                                  null=True,
-    #                                  help_text="평균 유루비, 가솔린 계수, 차종별 연비, 전비 담아 둘 곳"
-    #                                  )
-    #
-    # expendables = models.ForeignKey('history.Expendables',
-    #                                    on_delete=models.CASCADE,
-    #                                    null=True,
-    #                                    help_text="요금제 가견적 기능 내 젠트로피 소모품 입력에 쓰이는 객체")
-    #
-    # internal_combustion_engine = models.ForeignKey('history.InternalCombustionEngine',
-    #                                                   on_delete=models.CASCADE,
-    #                                                   null=True,
-    #                                                   help_text="요금제 가견적 기능 내 내연 기관 입력에 쓰이는 객체")
 
 
 class FuelRateByVehicleType(TimeStampModel): # 차종별 연비
     vehicle_info = models.ForeignKey('history.VehicleInfo',
                                      on_delete=models.CASCADE,
-                                     null=True)
+                                     null=True,
+                                     help_text="평균 유루비, 가솔린 계수, 차종별 연비, 전비 담아 둘 곳"
+                                     )
     model_name = models.CharField(max_length=10, null=True) # 모덺 명
     driving_style = models.PositiveSmallIntegerField(default=0) # 운전 스타일
     fuel_rate = models.FloatField(default=0)    # 연비
 
 
-class VehicleInfo(TimeStampModel):
+class VehicleInfo(TimeStampModel):  # "평균 유루비, 가솔린 계수, 차종별 연비, 전비 담아 둘 곳"
     prev_estimate = models.OneToOneField('history.PrevEstimate',
                                          on_delete=models.CASCADE,
                                          null=True,
@@ -92,14 +79,14 @@ class PrevEstimateInput(TimeStampModel):
     type = models.PositiveSmallIntegerField(default=0)
 
 
-class InternalCombustionEngine(PrevEstimateInput):
+class InternalCombustionEngine(PrevEstimateInput):  # "요금제 가견적 기능 내 내연기관 입력에 쓰이는 객체"
     prev_estimate = models.ForeignKey('history.PrevEstimate',
                                          on_delete=models.CASCADE,
                                          null=True,
                                          )
 
 
-class Expendables(PrevEstimateInput):
+class Expendables(PrevEstimateInput):   #   "요금제 가견적 기능 내 젠트로피 소모품 입력에 쓰이는 객체"
     prev_estimate = models.ForeignKey('history.PrevEstimate',
                                          on_delete=models.CASCADE,
                                          null=True,

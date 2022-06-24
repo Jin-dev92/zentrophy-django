@@ -231,11 +231,14 @@ def delete_cart(request, id: int):
 
 @prev_estimate_router.get('/', response=List[PrevEstimateListSchema])
 def get_prev_estimate(request):
+    """
+        가견적 가져 오는 API
+    """
     queryset = PrevEstimate.objects.filter().prefetch_related(
         Prefetch('vehicleinfo', queryset=VehicleInfo.objects.prefetch_related(
             Prefetch('fuelratebyvehicletype_set', to_attr='fuel_rate_by_vehicle_type')), to_attr='vehicle_info'),
         Prefetch('internalcombustionengine_set', to_attr='internal_combustion_engine'),
-        Prefetch('expendables_set',to_attr='expendables_list'),
+        Prefetch('expendables_set', to_attr='expendables_list'),
     )
     return queryset
 
@@ -243,6 +246,9 @@ def get_prev_estimate(request):
 @transaction.atomic(using='default')
 @prev_estimate_router.post('/')
 def update_or_create_prev_estimate(request, payload: PrevEstimateCreateSchema):
+    """
+    가견적 관리 생성 및 수정
+    """
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
 
