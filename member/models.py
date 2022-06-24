@@ -112,5 +112,6 @@ class RemoteToken(TimeStampModel):
 class OwnedVehicle(TimeStampModel):
     user = models.ForeignKey('member.User', on_delete=models.CASCADE, null=True)
     order = models.ForeignKey('order.Order', on_delete=models.SET_NULL, null=True)
+    is_subscribed = models.ForeignKey('order.Subscriptions', on_delete=models.SET_NULL, null=True)
     vehicle_color = models.ForeignKey('product.VehicleColor', on_delete=models.CASCADE, null=True)
     release_number = models.CharField(max_length=12, null=True, unique=True)

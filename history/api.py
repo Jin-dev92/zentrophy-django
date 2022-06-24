@@ -227,13 +227,13 @@ def delete_cart(request, id: int):
     return queryset
 
 
-@prev_estimate_router.get('/', response=create_schema(PrevEstimate), auth=None)
+@prev_estimate_router.get('/', response=create_schema(PrevEstimate), auth=None, deprecated=True)
 def get_prev_estimate(request):
     queryset = get_object_or_404(PrevEstimate)
     return queryset
 
 
-@prev_estimate_router.post('/', auth=None)
+@prev_estimate_router.post('/', deprecated=True)
 def update_or_create_prev_estimate(request, payload: PrevEstimateCreateSchema):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
