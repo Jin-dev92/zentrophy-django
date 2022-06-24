@@ -119,3 +119,10 @@ class PrevEstimateCreateSchema(Schema):
     vehicle_info: VehicleInfoCreateSchema = None
     expendables: List[ExpendablesCreateSchema] = None
     internal_combustion_engine: List[InternalCombustionEngineCreateSchema] = None
+
+
+class PrevEstimateListSchema(Schema):
+    id: int
+    vehicle_info: VehicleInfoCreateSchema = None
+    expendables_list: List[ExpendablesCreateSchema] = None
+    internal_combustion_engine: List[InternalCombustionEngineCreateSchema] = None

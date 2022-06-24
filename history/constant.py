@@ -52,5 +52,3 @@ class ExpendablesType(IntEnum):
     BREAK_PAD = 2,
     BACK_TIRE = 3,
     ACTUATOR = 4
-
-    ...

@@ -1,7 +1,8 @@
 from datetime import date
 from typing import List
 
-from django.db.models import F
+from django.db import transaction
+from django.db.models import F, Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.orm import create_schema
@@ -9,10 +10,11 @@ from ninja.orm import create_schema
 from conf.custom_exception import RefuseMustHaveReasonException, UserNotAccessDeniedException, \
     PrevEstimateHaveOneException
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
-from history.models import AfterService, Refund, Warranty, Cart, RefundLocation, PrevEstimate
+from history.models import AfterService, Refund, Warranty, Cart, RefundLocation, PrevEstimate, InternalCombustionEngine, \
+    Expendables, FuelRateByVehicleType, VehicleInfo
 from history.schema import AfterServiceInsertSchema, RefundInsertSchema, WarrantyInsertSchema, CartListSchema, \
     CartCreateSchema, AfterServiceListSchema, RefundListSchema, \
-    WarrantyListSchema, PrevEstimateCreateSchema
+    WarrantyListSchema, PrevEstimateCreateSchema, PrevEstimateListSchema
 from order.models import Order
 from placement.models import Placement
 from product.models import ProductOptions
@@ -227,22 +229,61 @@ def delete_cart(request, id: int):
     return queryset
 
 
-@prev_estimate_router.get('/', response=create_schema(PrevEstimate), auth=None, deprecated=True)
+@prev_estimate_router.get('/', response=List[PrevEstimateListSchema])
 def get_prev_estimate(request):
-    queryset = get_object_or_404(PrevEstimate)
+    queryset = PrevEstimate.objects.filter().prefetch_related(
+        Prefetch('vehicleinfo', queryset=VehicleInfo.objects.prefetch_related(
+            Prefetch('fuelratebyvehicletype_set', to_attr='fuel_rate_by_vehicle_type')), to_attr='vehicle_info'),
+        Prefetch('internalcombustionengine_set', to_attr='internal_combustion_engine'),
+        Prefetch('expendables_set',to_attr='expendables_list'),
+    )
     return queryset
 
 
-@prev_estimate_router.post('/', deprecated=True, auth=None)
+@transaction.atomic(using='default')
+@prev_estimate_router.post('/')
 def update_or_create_prev_estimate(request, payload: PrevEstimateCreateSchema):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
 
-    # prev_estimate_count = len(PrevEstimate.objects.filter())
-    # if prev_estimate_count > 1:
-    #     raise PrevEstimateHaveOneException
-    #
-    # if prev_estimate_count == 0:
-    #     PrevEstimate.objects.create(**payload.dict())
-    # else:
-    #     PrevEstimate.objects.update(**payload.dict())
+    params = payload.dict()
+    vehicle_info: dict = params['vehicle_info']
+    expendables = params['expendables']
+    internal_combustion_engine = params['internal_combustion_engine']
+    fuel_rate_by_vehicle_type = vehicle_info['fuel_rate_by_vehicle_type']
+    vehicle_info_except_vt = {k: v for k, v in vehicle_info.items() if k not in {'fuel_rate_by_vehicle_type'}}
+
+    try:
+        with transaction.atomic():
+            count = len(PrevEstimate.objects.filter())
+            if count > 1:
+                raise Exception("asdasd")
+
+            if count == 0:
+                prev_estimate = PrevEstimate.objects.create()
+            else:
+                prev_estimate = PrevEstimate.objects.all().first()
+                # 업데이트 전 초기화
+                prev_estimate.vehicleinfo.delete()
+                for ice_set in prev_estimate.internalcombustionengine_set.all():
+                    ice_set.delete()
+
+                for ex_set in prev_estimate.expendables_set.all():
+                    ex_set.delete()
+
+            if vehicle_info:
+                created_vi = VehicleInfo.objects.create(**vehicle_info_except_vt, prev_estimate=prev_estimate)
+                if fuel_rate_by_vehicle_type:
+                    for vt in fuel_rate_by_vehicle_type:
+                        FuelRateByVehicleType.objects.create(**vt, vehicle_info=created_vi)
+
+            if internal_combustion_engine:
+                for ice in internal_combustion_engine:
+                    created_ice = InternalCombustionEngine.objects.create(**ice, prev_estimate=prev_estimate)
+
+            if expendables:
+                for ex in expendables:
+                    created_ex = Expendables.objects.create(**ex, prev_estimate=prev_estimate)
+
+    except Exception as e:
+        raise e
