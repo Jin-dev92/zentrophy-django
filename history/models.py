@@ -49,11 +49,53 @@ class Cart(TimeStampModel):
 
 
 class PrevEstimate(TimeStampModel):
-    battery_user_avg_fee = models.FloatField(default=0, help_text="배터리 사용자 평균 사용 요금")
-    consume_user_avg_fee = models.FloatField(default=0, help_text="소모품 사용자 평균 사용 요금")
-    user_avg_fuel = models.FloatField(default=0, help_text="사용자 평균 전비")
-    gasoline_calc = models.FloatField(default=0, help_text="가솔린 계수")
-    battery_fee = models.FloatField(default=0, help_text="기본 배터리 요금")
+    vehicle_info = models.ForeignKey('history.VehicleInfo',
+                                     on_delete=models.CASCADE,
+                                     null=True,
+                                     help_text="평균 유루비, 가솔린 계수, 차종별 연비, 전비 담아 둘 곳"
+                                     )
+    expendables = models.ForeignKey('history.Expendables',
+                                       on_delete=models.CASCADE,
+                                       null=True,
+                                       help_text="요금제 가견적 기능 내 젠트로피 소모품 입력에 쓰이는 객체")
+    internal_combustion_engine = models.ForeignKey('history.InternalCombustionEngine',
+                                                      on_delete=models.CASCADE,
+                                                      null=True,
+                                                      help_text="요금제 가견적 기능 내 내연 기관 입력에 쓰이는 객체")
 
-    def __str__(self):
-        return str(self.battery_user_avg_fee)
+
+class FuelRateByVehicleType(TimeStampModel): # 차종별 연비
+    model_name = models.CharField(max_length=10, null=True) # 모덺 명
+    driving_style = models.PositiveSmallIntegerField(default=0) # 운전 스타일
+    fuel_rate = models.FloatField(default=0)    # 연비
+
+
+class VehicleInfo(TimeStampModel):
+    fuel_rate_by_vehicle_type = models.ForeignKey('history.FuelRateByVehicleType',
+                                                  on_delete=models.CASCADE,
+                                                  null=True,
+                                                  help_text="차종 별 연비"
+                                                  )
+    avg_fuel_price = models.FloatField(default=0, help_text="평균 유루비")
+    gasoline_calc = models.FloatField(default=0, help_text="가솔린 계수")
+    electric_fuel_rate = models.FloatField(default=0, help_text="전비")
+
+
+class PrevEstimateInput(TimeStampModel):
+    exchange_period = models.FloatField(default=0, help_text="교체 주기")
+    exchange_price = models.FloatField(default=0, help_text="교체 가격")
+    type = models.PositiveSmallIntegerField(default=0)
+
+
+class InternalCombustionEngine(PrevEstimateInput):
+    ...
+    # exchange_period = models.FloatField(default=0, help_text="교체 주기")
+    # exchange_price = models.FloatField(default=0, help_text="교체 가격")
+    # type = models.PositiveSmallIntegerField(default=0)
+
+
+class Expendables(PrevEstimateInput):
+    ...
+    # exchange_period = models.FloatField(default=0, help_text="교체 주기")
+    # exchange_price = models.FloatField(default=0, help_text="교체 가격")
+    # type = models.PositiveSmallIntegerField(default=0)

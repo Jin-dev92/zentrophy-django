@@ -1,9 +1,11 @@
 from datetime import datetime
+from typing import List
 
 from ninja import Field
 from ninja import Schema
 
-from history.constant import RefundMethod, RefundStatus, AfterServiceCategory, AfterServiceStatus
+from history.constant import RefundMethod, RefundStatus, AfterServiceCategory, AfterServiceStatus, DrivingStyle, \
+    ExpendablesType, InternalCombustionEngineType
 from member.schema import MemberListSchema
 from order.schema import OrderListSchema
 from placement.schema import PlacementListSchema
@@ -87,9 +89,33 @@ class CartCreateSchema(Schema):
     amount: int = Field(title="상품 수량")
 
 
+class PrevEstimateInputCreateSchema(Schema):
+    exchange_period: float
+    exchange_price: float
+
+
+class ExpendablesCreateSchema(PrevEstimateInputCreateSchema):
+    type: ExpendablesType
+
+
+class InternalCombustionEngineCreateSchema(PrevEstimateInputCreateSchema):
+    type: InternalCombustionEngineType
+
+
+class FuelRateByVehicleTypeCreateSchema(Schema):
+    model_name: str
+    driving_style: DrivingStyle
+    fuel_rate: float
+
+
+class VehicleInfoCreateSchema(Schema):
+    fuel_rate_by_vehicle_type: List[FuelRateByVehicleTypeCreateSchema] = None
+    avg_fuel_price: float = None
+    gasoline_calc: float = None
+    electric_fuel_rate: float = None
+
+
 class PrevEstimateCreateSchema(Schema):
-    battery_user_avg_fee: float = Field(description="배터리 사용자 평균 사용 요금")
-    consume_user_avg_fee: float = Field(description="소모품 사용자 평균 사용 요금")
-    user_avg_fuel: float = Field(description="사용자 평균 전비")
-    gasoline_calc: float = Field(description="가솔린 계수")
-    battery_fee: float = Field(description="기본 배터리 요금")
+    vehicle_info: VehicleInfoCreateSchema = None
+    expendables: List[ExpendablesCreateSchema] = None
+    internal_combustion_engine: List[InternalCombustionEngineCreateSchema] = None

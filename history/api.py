@@ -233,16 +233,16 @@ def get_prev_estimate(request):
     return queryset
 
 
-@prev_estimate_router.post('/', deprecated=True)
+@prev_estimate_router.post('/', deprecated=True, auth=None)
 def update_or_create_prev_estimate(request, payload: PrevEstimateCreateSchema):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
 
-    prev_estimate_count = len(PrevEstimate.objects.filter())
-    if prev_estimate_count > 1:
-        raise PrevEstimateHaveOneException
-
-    if prev_estimate_count == 0:
-        PrevEstimate.objects.create(**payload.dict())
-    else:
-        PrevEstimate.objects.update(**payload.dict())
+    # prev_estimate_count = len(PrevEstimate.objects.filter())
+    # if prev_estimate_count > 1:
+    #     raise PrevEstimateHaveOneException
+    #
+    # if prev_estimate_count == 0:
+    #     PrevEstimate.objects.create(**payload.dict())
+    # else:
+    #     PrevEstimate.objects.update(**payload.dict())

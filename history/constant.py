@@ -29,11 +29,28 @@ class AfterServiceCategory(IntEnum):
     ETC = 5
 
 
-# [정렬] -  { 최근 지불 일정, 늦은 지불 일정, 높은 요금 순, 낮은 요금 순 , 누적 사용량 높은 순 , 누적 사용량 낮은 순 }
-# class BatteryExchangeSort(IntEnum):
-#     RECENT_PAYMENT_DATE = 0
-#     LATEST_PAYMENT_DATE = 1
-#     HIGH_PAYMENT = 2
-#     LOW_PAYMENT = 3
-#     HIGH_USED_BATTERY = 4
-#     LOW_USED_BATTERY = 5
+class DrivingStyle(IntEnum):
+    HARD = 0
+    NORMAL = 1
+    SAFE = 2
+
+
+class InternalCombustionEngineType(IntEnum):
+    ENGINE_OIL = 0
+    AIR_CLEANER = 1
+    IGNITION_PLUG = 2
+    FRONT_TIRE = 3
+    MISSION_OIL = 4
+    BACK_TIRE = 5
+    BREAK_PAD = 6
+    ACTUATOR = 7
+
+
+class ExpendablesType(IntEnum):
+    GEAR_OIL = 0,
+    FRONT_TIRE = 1,
+    BREAK_PAD = 2,
+    BACK_TIRE = 3,
+    ACTUATOR = 4
+
+    ...
