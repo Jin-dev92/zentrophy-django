@@ -145,14 +145,14 @@ class InicisAuthResultSchema(Schema):
     merchantData: str = None
 
 
-class Subscriptions(Schema):
+class SubscriptionsSchema(Schema):
     card_number: str = Field(description="카드 번호 12자리")
     expiry: str = Field(description="카드 유효기간")
     birth: str = Field(description="생년월일")
     pwd_2digit: str = Field(description="카드 비밀번호 앞 두자리")
 
 
-class SubscriptionsCreateSchema(Subscriptions):
+class SubscriptionsCreateSchema(SubscriptionsSchema):
     customer_uid: str
 
 
@@ -180,6 +180,6 @@ class RequestPaymentSubscriptionsScheduleSchema(Schema):
 
 class TestSchema(Schema):
     customer_uid: str
-    issue_billing: Subscriptions = None
+    issue_billing: SubscriptionsSchema = None
     payment_subscription: RequestPaymentSubscriptionsSchema = None
     schedules: RequestPaymentSubscriptionsScheduleSchema = None

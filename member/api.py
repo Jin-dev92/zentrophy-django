@@ -66,7 +66,7 @@ def get_list_member(request,
                      Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image')
                  ),
                  to_attr="owned_vehicle"),
-    ).order_by(field_name)
+    ).select_related('subscriptions').order_by(field_name)
 
 
 @transaction.atomic(using='default')
@@ -105,7 +105,8 @@ def get_member_by_id(request, id: int):
                      Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image')
                  ),
                  to_attr="owned_vehicle"),
-    )
+    ).select_related('subscriptions')
+
     return queryset
 
 
