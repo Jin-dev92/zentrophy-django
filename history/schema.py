@@ -110,7 +110,7 @@ class FuelRateByVehicleTypeCreateSchema(Schema):
 
 class VehicleInfoCreateSchema(Schema):
     fuel_rate_by_vehicle_type: List[FuelRateByVehicleTypeCreateSchema] = Field(None, description="차종 별 연비")
-    avg_fuel_price: float = Field(None, description="평균 연료 가격")
+    # avg_fuel_price: float = Field(None, description="평균 연료 가격")
     gasoline_calc: float = Field(None, description="가솔린 계수")
     electric_fuel_rate: float = Field(None, description="전비")
 
