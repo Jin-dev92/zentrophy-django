@@ -462,8 +462,8 @@ def delete_format_files(request, id: int):
 def update_or_create_product_delivery_info(request, payload: ProductDeliveryInfoCreateSchema, order_id: int):
     '''
     주문한 물건이 상품이고 택배사 이름 및 운송장 번호를 입력할 때 사용하는 api
-    :param payload: ProductDeliveryInfoCreateSchema
-    :param order_id: 주문 아이디
+    - :param payload: ProductDeliveryInfoCreateSchema
+    - :param order_id: 주문 아이디
     :return:
     '''
     if not is_admin(request.auth):  # 어드민 접근 제한
