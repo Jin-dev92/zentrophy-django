@@ -2,7 +2,7 @@ from colorfield.fields import ColorField
 from django.db import models
 from sorl.thumbnail import ImageField
 
-from product.constant import ProductLabel, ProductOptionsLabel
+from product.constant import ProductOptionsLabel
 from util.models import TimeStampModel, SoftDeleteModel
 
 
@@ -63,7 +63,7 @@ class Product(TimeStampModel, SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)
-    product_label = models.PositiveSmallIntegerField(default=ProductLabel.NEW)
+    product_label = models.PositiveSmallIntegerField(null=True)
     product_display_line = models.ManyToManyField('product.ProductDisplayLine', help_text="전시 라인 설정, 최대 2개")
     is_display = models.BooleanField(default=False, help_text="전시 유무")
     is_refundable = models.BooleanField(default=False, help_text="환불 가능 유무")
