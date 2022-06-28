@@ -1,7 +1,7 @@
 from django.db import models
 
 from member.models import User
-from order.constant import OrderState, DeliveryMethod
+from order.constant import OrderState, DeliveryMethod, DeliveryCompany
 from product.models import ProductOptions, VehicleColor
 from util.models import TimeStampModel, SoftDeleteModel
 
@@ -44,14 +44,22 @@ class Order(TimeStampModel, SoftDeleteModel):
     state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
     customer_info = models.OneToOneField('order.CustomerInfo', on_delete=models.SET_NULL, null=True)
     order_location_info = models.OneToOneField('order.OrderLocationInfo', on_delete=models.SET_NULL, null=True)
-
-    place_remote_pk = models.IntegerField(null=True)
+    is_delivery = models.BooleanField(help_text="False = 출고 준비 중 , True = 배송 중", null=True)
+    # 상품 배송 관련
+    product_option_input = models.TextField( help_text="상품이 입력형 일 경우에 텍스트 받는 필드.", null=True)
+    product_delivery_info = models.OneToOneField('order.ProductDeliveryInfo', on_delete=models.CASCADE, null=True)
+    # 모터사이클 배송 관련
     delivery_method = models.PositiveSmallIntegerField(default=DeliveryMethod.DEPEND_ON, null=True)
     delivery_to = models.OneToOneField('order.DeliveryTo', on_delete=models.SET_NULL, null=True)
-    is_delivery = models.BooleanField(help_text="False = 출고 준비 중 , True = 배송 중", null=True)
+    place_remote_pk = models.IntegerField(null=True, help_text="모터 사이클 직접 수령 시 수령 할 플레이스 입력")
 
     def __str__(self):
         return str(self.id)
+
+
+class ProductDeliveryInfo(TimeStampModel):
+    delivery_company = models.PositiveSmallIntegerField(null=True, help_text="택배사 이름")
+    delivery_number = models.CharField(max_length=13, help_text="운송장 길이는 최대 13", null=True)
 
 
 class DeliveryTo(TimeStampModel):

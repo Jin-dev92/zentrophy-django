@@ -4,7 +4,7 @@ from typing import List
 from ninja import Schema, Field
 
 from member.schema import MemberListSchema
-from order.constant import OrderState, DeliveryMethod
+from order.constant import OrderState, DeliveryMethod, DeliveryCompany
 from product.schema import VehicleColorListSchema, ProductOptionsListSchema
 
 
@@ -57,6 +57,11 @@ class DeliveryToSchema(Schema):
     address_3: str = Field(default=None, description="추가 주소")
 
 
+class ProductDeliveryInfoCreateSchema(Schema):
+    delivery_company: DeliveryCompany = Field(None, description="택배사")
+    delivery_number: str = Field(None, description="운송장 번호")
+
+
 class OrderListSchema(Schema):
     id: int
     owner: MemberListSchema = None
@@ -69,10 +74,13 @@ class OrderListSchema(Schema):
     total: int = 0
     is_request_submit: bool = Field(default=False, description="서류 재 검토 요청 여부")
     discount_total: int = Field(default=0, description="보조금 할인 총 합계")
+    product_option_input: str = Field(None, description="주문한 상품이 입력형인 경우 사용자가 넣어 준다.")
+    product_delivery_info: ProductDeliveryInfoCreateSchema = Field(None, description="상품 일 경우 택배사 이름과 운송장 번호를 입력 해준다.")
     delivery_method: DeliveryMethod = Field(default=DeliveryMethod.DEPEND_ON, description="배달 방법")
     delivery_to: DeliveryToSchema = Field(default=None, description="탁송 시, 배달지 주소")
     is_delivery: bool = Field(default=None, description="배송 중 여부 , True일 경우 배송 중, False 일 경우 출고 준비")
     place_remote_pk: int = Field(default=None, description="제우스에서 받아온 place_pk , delivery_method 가 직접 수령일 때 방문하는 지점의 pk 를 입력 해준다. ")
+
     state: OrderState = Field(default=OrderState.ACCEPT_ORDER,
                               title="주문 상태",
                               description="0: 주문 수락, 1: 서류 검토중, 2: 결제 대기중, 3: 배달 준비중, 4: 배달 완료, 5: 주문 취소")

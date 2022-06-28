@@ -14,9 +14,9 @@ from conf.settings import upload_exceed_count
 from member.models import OwnedVehicle
 from order.constant import OrderState, DeliveryMethod
 from order.models import Order, Subside, DocumentFile, ExtraSubside, OrderedProductOptions, OrderedVehicleColor, \
-    OrderLocationInfo, CustomerInfo, DocumentFormat, DeliveryTo
+    OrderLocationInfo, CustomerInfo, DocumentFormat, DeliveryTo, ProductDeliveryInfo
 from order.schema import OrderListSchema, OrderCreateSchema, SubsideListSchema, SubsideInsertSchema, \
-    DocumentFormatListSchema, ApplySubSideSchema, DeliveryMethodInputSchema
+    DocumentFormatListSchema, ApplySubSideSchema, DeliveryMethodInputSchema, ProductDeliveryInfoCreateSchema
 from product.models import ProductOptions, VehicleColor
 from util.number import check_invalid_product_params, generate_release_number
 from util.permission import is_admin
@@ -50,6 +50,7 @@ def get_order_list(request):
                  to_attr="ordered_vehicle_color"),
         Prefetch(lookup='documentfile_set', to_attr="files"),
     )
+
     return queryset
 
 
@@ -455,3 +456,27 @@ def delete_format_files(request, id: int):
         raise UserNotAccessDeniedException
     target = get_object_or_404(DocumentFormat, id=id)
     queryset = target.soft_delete()
+
+
+@router.post('/product_delivery_info')
+def update_or_create_product_delivery_info(request, payload: ProductDeliveryInfoCreateSchema, order_id: int):
+    '''
+    주문한 물건이 상품이고 택배사 이름 및 운송장 번호를 입력할 때 사용하는 api
+    :param payload: ProductDeliveryInfoCreateSchema
+    :param order_id: 주문 아이디
+    :return:
+    '''
+    if not is_admin(request.auth):  # 어드민 접근 제한
+        raise UserNotAccessDeniedException
+    try:
+        target = get_object_or_404(Order, id=order_id)
+        if target.orderedproductoptions_set:    # 주문한 물건이 상품일 경우 에만
+            if target.product_delivery_info:    # 수정
+                target.product_delivery_info.delete()
+
+            delivery_info = ProductDeliveryInfo.objects.create(**payload.dict())
+            target.product_delivery_info = delivery_info
+            target.save(update_fields=['product_delivery_info'])
+
+    except Exception as e:
+        raise e

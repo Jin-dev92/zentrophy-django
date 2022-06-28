@@ -10,10 +10,9 @@ class OrderState(IntEnum):
     IS_CANCELED = 5
 
 
-# class PaymentType(IntEnum):
-#     PRODUCT = 0
-#     VEHICLE = 1
-#     PERIOD = 2
+class DeliveryCompany(IntEnum):
+    CJ = 0
+    HANJIN = 1
 
 
 class DeliveryMethod(IntEnum):

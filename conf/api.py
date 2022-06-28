@@ -45,7 +45,7 @@ class LoginResponse(Schema):
     token: str
 
 
-api = NinjaAPI(parser=ORJSONParser(), auth=AuthBearer(), csrf=False)
+api = NinjaAPI(parser=ORJSONParser(), auth=AuthBearer())
 
 API_LIST = [
     {

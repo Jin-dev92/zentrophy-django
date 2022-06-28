@@ -69,7 +69,7 @@ class Product(TimeStampModel, SoftDeleteModel):
     is_refundable = models.BooleanField(default=False, help_text="환불 가능 유무")
     product_description = models.TextField(blank=True, default="", help_text="상품 설명")
     shipping_instructions = models.TextField(blank=True, default="", help_text="배송 안내")
-    refund_instructions = models.TextField(blank=True, default="" , help_text="환불 안내")
+    refund_instructions = models.TextField(blank=True, default="", help_text="환불 안내")
 
     def __str__(self):
         return self.product_name
