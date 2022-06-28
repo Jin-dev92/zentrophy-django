@@ -199,6 +199,8 @@ def get_avg_recent_prices(request, prodcd: Prodcd = None):
         'out': 'json',
         'prodcd': prodcd
     }
-    response = requests.get(url=url, params=params, timeout=5)
-
-    return response.json()
+    try:
+        response = requests.get(url=url, params=params, timeout=5)
+        return response.json()
+    except Exception as e:
+        raise e

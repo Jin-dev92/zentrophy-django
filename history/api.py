@@ -5,10 +5,8 @@ from django.db import transaction
 from django.db.models import F, Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router
-from ninja.orm import create_schema
 
-from conf.custom_exception import RefuseMustHaveReasonException, UserNotAccessDeniedException, \
-    PrevEstimateHaveOneException
+from conf.custom_exception import RefuseMustHaveReasonException, UserNotAccessDeniedException
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
 from history.models import AfterService, Refund, Warranty, Cart, RefundLocation, PrevEstimate, InternalCombustionEngine, \
     Expendables, FuelRateByVehicleType, VehicleInfo
@@ -43,7 +41,7 @@ def get_after_service_list(request, status: AfterServiceStatus = None, is_create
     - :param is_created__lte: 기간 지정 검색, 해당 파라 미터 보다 과거 값이 도출 된다.
     """
     params = prepare_for_query(request=request)
-    if request.auth.is_staff and request.auth.is_active:
+    if is_admin(request.auth):
         target = AfterService.objects.get_queryset(**params)
     else:
         target = AfterService.objects.get_queryset(**params, user=request.auth)
