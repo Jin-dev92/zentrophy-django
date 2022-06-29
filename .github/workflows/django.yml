@@ -32,17 +32,3 @@ jobs:
       run: |
         python manage.py makemigrations
         python manage.py migrate
-#   migration:
-#     needs: [build]
-#     runs-on: ubuntu-latest
-#     strategy:
-#       max-parallel: 4
-#       matrix:
-#         python-version: [3.9]
-
-#     steps:
-#     - name: migration
-#       run: |
-#         ./manage.py makemigrations
-#         ./manage.py migrate
-    
