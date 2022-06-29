@@ -6,7 +6,7 @@ from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.models import Subscriptions
 
 
-async def subscription_payment_test(user, merchant_uid: str, data: dict):
+async def subscription_payment_test(user, merchant_uid: str, owned_vehicle_id: int, data: dict):
     customer_uid = data.get('customer_uid')
     issue_billing_data = data.get('customer_uid')
     payment_subscription_data = data.get('payment_subscription')
@@ -18,9 +18,18 @@ async def subscription_payment_test(user, merchant_uid: str, data: dict):
         access_token = get_access_token_task.result()['response'].get('access_token')
         print(access_token)
         if type(access_token) == str:
-            get_billing_key_response = asyncio.create_task(get_billing_key(access_token=access_token, customer_uid=customer_uid, data=issue_billing_data)) #SubscriptionsCreateSchema
-            request_payment_response = asyncio.create_task(request_payment(access_token=access_token, customer_uid=customer_uid, merchant_uid=merchant_uid, user=user, data=payment_subscription_data)) # RequestPaymentSubscriptionsSchema
-            schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription(access_token=access_token, data=schedules_data)) #RequestPaymentSubscriptionsScheduleSchema
+            get_billing_key_response = asyncio.create_task(get_billing_key(
+                access_token=access_token,
+                customer_uid=customer_uid,
+                data=issue_billing_data))
+            request_payment_response = asyncio.create_task(request_payment(access_token=access_token,
+                                                                           customer_uid=customer_uid,
+                                                                           merchant_uid=merchant_uid,
+                                                                           owned_vehicle_id=owned_vehicle_id,
+                                                                           user=user, data=payment_subscription_data))
+            schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription(
+                access_token=access_token,
+                data=schedules_data))
             await get_billing_key_response
             await request_payment_response
             await schedule_subscription_response
@@ -55,7 +64,7 @@ async def get_billing_key(access_token: str, customer_uid: str, data):
     return issue_billing_response.json()
 
 
-async def request_payment(access_token: str, merchant_uid: str, customer_uid: str, user, data):
+async def request_payment(access_token: str, merchant_uid: str, customer_uid: str, owned_vehicle_id: int, user, data):
     request_payment_response = requests.post(
         url=REQUEST_PAYMENT['url'],
         headers={'Authorization': access_token},
@@ -65,6 +74,7 @@ async def request_payment(access_token: str, merchant_uid: str, customer_uid: st
     if int(request_payment_response.json()['code']) == 0:  # 요청이 성공 했을 경우
         # DB에 저장 한다.
         Subscriptions.objects.create(
+            owned_vehicle_id=owned_vehicle_id,
             owner=user,
             merchant_uid=merchant_uid,
             customer_uid=customer_uid
