@@ -81,6 +81,7 @@ class VehicleColorInOwnedVehicleSchema(Schema):
 
 class OwnedVehicleListSchema(Schema):
     vehicle_color: VehicleColorInOwnedVehicleSchema = None
+    subscriptions: create_schema(Subscriptions) = Field(default=None, description="구독(정기 결제) 정보")
     release_number: str = None
 
 
@@ -94,7 +95,7 @@ class MemberListSchema(Schema):
     zipcode: str = Field(default=None, description="우편 번호")
     payment_method: List[PaymentMethodListSchema] = Field(default=[], description="결제 수단")
     owned_vehicle: List[OwnedVehicleListSchema] = Field(default=None, description="유저가 소유 중 인 모터 사이클 목록")
-    subscriptions: create_schema(Subscriptions) = Field(default=None, description="구독(정기 결제) 정보")
+    # subscriptions: create_schema(Subscriptions) = Field(default=None, description="구독(정기 결제) 정보")
     date_joined: datetime = Field(default=None, description="가입한 시간")
     last_login: datetime = Field(default=None, description="마지막 로그인 시간")
 
