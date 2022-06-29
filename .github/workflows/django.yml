@@ -28,6 +28,10 @@ jobs:
     - name: Run Tests
       run: |
         python manage.py test
+    - name: DB Migration
+      run: |
+        python manage.py makemigrations
+        python manage.py migrate
 #   migration:
 #     needs: [build]
 #     runs-on: ubuntu-latest
