@@ -32,17 +32,17 @@ jobs:
       run: |
         python manage.py test
 
-  migration:
-    needs: [build]
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.9]
+#   migration:
+#     needs: [build]
+#     runs-on: ubuntu-latest
+#     strategy:
+#       max-parallel: 4
+#       matrix:
+#         python-version: [3.9]
 
-    steps:
-    - name: migration
-      run: |
-        ./manage.py makemigrations
-        ./manage.py migrate
+#     steps:
+#     - name: migration
+#       run: |
+#         ./manage.py makemigrations
+#         ./manage.py migrate
     
