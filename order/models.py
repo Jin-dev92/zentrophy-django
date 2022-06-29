@@ -115,7 +115,7 @@ class DocumentFormat(TimeStampModel, SoftDeleteModel):
 
 
 class Subscriptions(TimeStampModel, SoftDeleteModel):
-    owner = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
+    # owner = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     owned_vehicle = models.OneToOneField('member.OwnedVehicle', on_delete=models.CASCADE, null=True)
     merchant_uid = models.CharField(max_length=200, null=True, help_text="주문 번호")
     customer_uid = models.CharField(max_length=200, null=True, help_text="사용자 uid")

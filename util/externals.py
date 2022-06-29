@@ -75,7 +75,7 @@ async def request_payment(access_token: str, merchant_uid: str, customer_uid: st
         # DB에 저장 한다.
         Subscriptions.objects.create(
             owned_vehicle_id=owned_vehicle_id,
-            owner=user,
+            # owner=user,
             merchant_uid=merchant_uid,
             customer_uid=customer_uid
         )
@@ -104,7 +104,7 @@ async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_ui
         if status == 'paid':
             # DB에 저장하기.
             Subscriptions.objects.update_or_create(
-                owner=user,
+                # owner=user,
                 merchant_uid=merchant_uid,
                 defaults={
                     'imp_uid': imp_uid,

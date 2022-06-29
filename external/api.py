@@ -110,7 +110,7 @@ def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSc
                 if int(request_payment_response.json()['code']) == 0:  # 요청이 성공 했을 경우
                     # DB에 저장 한다.
                     Subscriptions.objects.create(
-                        owner=request.auth,
+                        # owner=request.auth,
                         merchant_uid=payload.dict()['merchant_uid'],
                         customer_uid=payload.dict()['customer_uid'],
                     )
@@ -166,7 +166,7 @@ def iamport_callback(request, imp_uid: str, merchant_uid: str):
                     if status == 'paid':
                         # DB에 저장하기.
                         Subscriptions.objects.update_or_create(
-                            owner=request.auth,
+                            # owner=request.auth,
                             merchant_uid=merchant_uid,
                             defaults={
                                 'imp_uid': imp_uid,
