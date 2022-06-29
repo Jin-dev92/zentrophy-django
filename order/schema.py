@@ -3,7 +3,6 @@ from typing import List
 
 from ninja import Schema, Field
 
-from member.schema import MemberListSchema
 from order.constant import OrderState, DeliveryMethod, DeliveryCompany
 from product.schema import VehicleColorListSchema, ProductOptionsListSchema
 
@@ -65,7 +64,7 @@ class ProductDeliveryInfoCreateSchema(Schema):
 
 class OrderListSchema(Schema):
     id: int
-    owner: MemberListSchema = None
+    # user: MemberListSchema = None
     ordered_product_options: List[OrderedProductOptionsListSchema] = None
     ordered_vehicle_color: List[OrderedVehicleColorListSchema] = None
     customer_info: CustomerInfoSchema = None

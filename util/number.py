@@ -25,10 +25,6 @@ def generate_release_number():
     registration_number = "".join(random.choices(random_variation, k=6))
     number = datetime.datetime.now().strftime("%y%m%d") + registration_number
     return number
-    # if len(OwnedVehicle.objects.filter(release_number=number)) > 0:
-    #     return generate_release_number
-    # else:
-    #     return number
 
 
 def check_invalid_product_params(params: list[dict]):
