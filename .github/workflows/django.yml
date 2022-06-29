@@ -28,8 +28,7 @@ jobs:
     - name: Run Tests
       run: |
         python manage.py test
-        ls ${{github..workspace}}
-
+        ls
 #   migration:
 #     needs: [build]
 #     runs-on: ubuntu-latest
