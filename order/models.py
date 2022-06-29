@@ -44,7 +44,7 @@ class Order(TimeStampModel, SoftDeleteModel):
     state = models.PositiveSmallIntegerField(default=OrderState.ACCEPT_ORDER)
     customer_info = models.OneToOneField('order.CustomerInfo', on_delete=models.SET_NULL, null=True)
     order_location_info = models.OneToOneField('order.OrderLocationInfo', on_delete=models.SET_NULL, null=True)
-    is_delivery = models.BooleanField(help_text="False = 출고 준비 중 , True = 배송 중", null=True)
+    is_delivery = models.BooleanField(default=False, help_text="False = 출고 준비 중 , True = 배송 중", null=True)
     # 상품 배송 관련
     # product_option_input = models.TextField( help_text="상품이 입력형 일 경우에 텍스트 받는 필드.", null=True)
     product_delivery_info = models.OneToOneField('order.ProductDeliveryInfo', on_delete=models.CASCADE, null=True)
