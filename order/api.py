@@ -209,8 +209,8 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
             params = payload.dict()
             order_params = {k: v for k, v in params.items() if
                             k not in {'ordered_product_options', 'ordered_vehicle_color', 'extra_subside',
-                                      'customer_info',
-                                      'order_location_info'}}
+                                      'customer_info', 'order_location_info'}
+                            }
             order_location_info_params = params['order_location_info']
             customer_info_params = params['customer_info']
             extra_subside_params: list = params.get('extra_subside')

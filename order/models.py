@@ -72,6 +72,7 @@ class DeliveryTo(TimeStampModel):
 class OrderedProductOptions(TimeStampModel):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
     product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE, null=True)
+    product_detail_input = models.TextField(null=True)
     amount = models.IntegerField(default=0)
 
     def __str__(self):

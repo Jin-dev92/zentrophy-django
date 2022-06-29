@@ -37,8 +37,8 @@ class OrderedVehicleColorListSchema(Schema):
 
 class OrderedProductOptionsCreateSchema(Schema):
     product_options_id: int = None
+    product_detail_input: str = Field(None, description="해당 상품 옵션이 입력 형인 경우 텍스트 필드에 그 내용을 담는다.")
     amount: int = Field(None, description="주문 수량")
-
 
 
 class OrderedVehicleColorCreateSchema(Schema):

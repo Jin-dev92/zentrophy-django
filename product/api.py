@@ -8,11 +8,13 @@ from ninja import UploadedFile, Router, File
 import conf.settings
 from conf.custom_exception import DisplayLineExceededSizeException, WrongParameterException, \
     UserNotAccessDeniedException
+
 from product.constant import ProductListSort, ProductLabel
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
     VehicleListSchema, VehicleInsertSchema
+
 from util.params import prepare_for_query
 from util.permission import is_admin
 
@@ -221,20 +223,6 @@ def update_or_create_vehicle(request, payload: VehicleInsertSchema, id: int = No
                 if file_list:
                     for image in file_list:
                         VehicleImage.objects.create(vehicle_color=vc, origin_image=image)
-
-            # color_bulk_create_list = VehicleColor.objects.bulk_create( # 로컬에서는 작동하는데 서버에서는 의도한 대로 작동하지 않아 임시 주석처리
-            #     objs=[VehicleColor(vehicle=vehicle_queryset[0], **color) for color in vehicle_color_params],
-            #     batch_size=vehicle_color_exceed)
-            #
-            # for color in color_bulk_create_list:  # 로컬에서 에러 나지 않지만, 서버에서는 나서 넣은 코드. 디버그모드에서는 에러를 무시 하는 듯
-            #     color.save()
-            #
-            # for idx, color in enumerate(color_bulk_create_list):
-            #     file_list = request.FILES.getlist('color_file_' + str(idx))
-            #     if file_list:
-            #         objs = [VehicleImage(vehicle_color=color, origin_image=image) for image in file_list]
-            #         VehicleImage.objects.bulk_create(objs=objs, batch_size=vehicle_image_exceed)
-            # )  # 최대 25개 생성
 
     except Exception as e:
         raise Exception(e)
