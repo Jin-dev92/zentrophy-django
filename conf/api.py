@@ -46,7 +46,7 @@ class LoginResponse(Schema):
 
 
 api = NinjaAPI(parser=ORJSONParser(), auth=AuthBearer())
-
+# 테스트용 주석
 API_LIST = [
     {
         'prefix': "/member/",
