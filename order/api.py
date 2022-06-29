@@ -183,7 +183,7 @@ def change_is_delivery(request, id: int):
                         release_number = generate_release_number()
                         is_pass = len(OwnedVehicle.objects.filter(release_number__exact=release_number)) == 0
                         if is_pass:
-                            OwnedVehicle.objects.create(user=request.auth,
+                            OwnedVehicle.objects.create(user=target.owner,
                                                         order=target,
                                                         vehicle_color=ordered_vehicle.vehicle_color,
                                                         release_number=release_number)
