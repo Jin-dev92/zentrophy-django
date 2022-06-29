@@ -173,11 +173,12 @@ def change_is_delivery(request, id: int):
     target = get_object_or_404(Order, id=id)
     if target.state != OrderState.PREPARE_DELIVERY:
         raise IncorrectOrderStateException
+    if target.is_delivery:
+        raise IncorrectOrderStateException
     try:
         with transaction.atomic():
             if not target.is_delivery:
                 for ordered_vehicle in target.orderedvehiclecolor_set.all():
-                    print(ordered_vehicle.amount)
                     for i in range(ordered_vehicle.amount):
                         release_number = generate_release_number()
                         is_pass = len(OwnedVehicle.objects.filter(release_number__exact=release_number)) == 0
@@ -187,7 +188,7 @@ def change_is_delivery(request, id: int):
                                                         vehicle_color=ordered_vehicle.vehicle_color,
                                                         release_number=release_number)
 
-            target.is_delivery = not target.is_delivery
+            target.is_delivery = True
             target.save(update_fields=['is_delivery'])
             # 출고 되었을 경우, 유저가 소유한 모터사이클 목록 추가 후 출고 번호를 적어준다.
     except Exception as e:
