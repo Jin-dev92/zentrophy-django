@@ -8,13 +8,11 @@ from ninja import UploadedFile, Router, File
 import conf.settings
 from conf.custom_exception import DisplayLineExceededSizeException, WrongParameterException, \
     UserNotAccessDeniedException
-
 from product.constant import ProductListSort, ProductLabel
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
     VehicleListSchema, VehicleInsertSchema
-
 from util.params import prepare_for_query
 from util.permission import is_admin
 
@@ -52,6 +50,8 @@ def get_product_list(request,
         field_name = 'productoptions__sale_count'
     elif sort == ProductListSort.STOCK_COUNT:
         field_name = 'productoptions__stock_count'
+    elif sort == ProductListSort.DISPLAY_LINE:
+        field_name = 'product_display_line__id'
     else:
         raise WrongParameterException
 
@@ -62,12 +62,12 @@ def get_product_list(request,
             field_name = field_name[1:]
 
     current_product_sort = field_name
-
-    # if product_display_line_id:
-    #     get_object_or_404(ProductDisplayLine, id=product_display_line_id)
-
+    print(current_product_sort)
     if sold_out:
         params['productoptions__stock_count'] = 0
+    else:
+        params['productoptions__stock_count__gt'] = 0
+    print(params)
     products = Product.objects.get_queryset(**params).prefetch_related(
         Prefetch('productoptions_set', to_attr='product_options'),
         Prefetch('productimage_set', to_attr='product_image'),
