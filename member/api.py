@@ -2,7 +2,7 @@ import datetime
 from typing import List
 
 from django.db import transaction
-from django.db.models import Prefetch, Count, Q
+from django.db.models import Prefetch, Count, Q, F
 from django.shortcuts import get_object_or_404
 from ninja import Router, Form
 
@@ -62,8 +62,9 @@ def get_list_member(request,
     return User.objects.filter(**params).prefetch_related(
         Prefetch('paymentmethod_set', to_attr="payment_method"),
         Prefetch('ownedvehicle_set',
-                 queryset=OwnedVehicle.objects.prefetch_related(
-                     Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image')
+                 queryset=OwnedVehicle.objects.annotate(vehicle_name=F('vehicle_color__vehicle__vehicle_name'))
+                 .select_related('order').prefetch_related(
+                     Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image'),
                  ),
                  to_attr="owned_vehicle"),
     ).order_by(field_name)
@@ -101,8 +102,9 @@ def get_member_by_id(request, id: int):
     queryset = target.prefetch_related(
         Prefetch('paymentmethod_set', to_attr="payment_method"),
         Prefetch('ownedvehicle_set',
-                 queryset=OwnedVehicle.objects.prefetch_related(
-                     Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image')
+                 queryset=OwnedVehicle.objects.annotate(vehicle_name=F('vehicle_color__vehicle__vehicle_name'))
+                 .select_related('order').prefetch_related(
+                     Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image'),
                  ),
                  to_attr="owned_vehicle"),
     )

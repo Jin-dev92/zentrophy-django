@@ -8,6 +8,7 @@ from ninja.orm import create_schema
 from conf import settings
 from member.constant import MemberSort
 from order.models import Subscriptions
+from order.schema import OrderListSchema
 
 
 class StatisticsMember(Schema):
@@ -80,8 +81,10 @@ class VehicleColorInOwnedVehicleSchema(Schema):
 
 
 class OwnedVehicleListSchema(Schema):
+    vehicle_name: str = Field(None, description="구매한 모터 사이클 이름")
     vehicle_color: VehicleColorInOwnedVehicleSchema = None
     subscriptions: create_schema(Subscriptions) = Field(default=None, description="구독(정기 결제) 정보")
+    order: OrderListSchema = Field(None, description="해당 모터 사이클 구매한 주문")
     release_number: str = None
 
 
