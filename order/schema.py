@@ -30,6 +30,7 @@ class OrderedProductOptionsListSchema(Schema):
 
 
 class OrderedVehicleColorListSchema(Schema):
+    vehicle_name: str = None
     vehicle_color: VehicleColorListSchema = None
     amount: int = Field(None, description="주문 수량")
 

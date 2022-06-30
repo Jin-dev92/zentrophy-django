@@ -45,12 +45,13 @@ def get_order_list(request):
                  .annotate(product_image=F('product_options__product__productimage__origin_image')),
                  to_attr="ordered_product_options"),
         Prefetch(lookup='orderedvehiclecolor_set',
-                 queryset=OrderedVehicleColor.objects.select_related('vehicle_color')
+                 queryset=OrderedVehicleColor.objects.annotate(vehicle_name=F('vehicle_color__vehicle__vehicle_name'))
+                 .select_related('vehicle_color')
                  .prefetch_related(Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image')),
                  to_attr="ordered_vehicle_color"),
         Prefetch(lookup='documentfile_set', to_attr="files"),
     )
-
+    # vehicle_name
     return queryset
 
 
@@ -74,7 +75,8 @@ def get_order_list_by_id(request, id: int):
                  .annotate(product_image=F('product_options__product__productimage__origin_image')),
                  to_attr="ordered_product_options"),
         Prefetch(lookup='orderedvehiclecolor_set',
-                 queryset=OrderedVehicleColor.objects.select_related('vehicle_color')
+                 queryset=OrderedVehicleColor.objects.annotate(vehicle_name=F('vehicle_color__vehicle__vehicle_name'))
+                 .select_related('vehicle_color')
                  .prefetch_related(Prefetch('vehicle_color__vehicleimage_set', to_attr='vehicle_image')),
                  to_attr="ordered_vehicle_color"),
         Prefetch(lookup='documentfile_set', to_attr="files"),
