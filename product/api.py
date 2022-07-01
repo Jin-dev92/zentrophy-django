@@ -39,7 +39,7 @@ def get_product_list(request,
     두번 호출 시 현재 설정의 역순 으로 호출 된다.
     - :param product_label:  HOT = 0, NEW = 1, SALE = 2, BEST = 3
     - :param sold_out: 재고량 유무
-    - :param product_display_line_id: 진열 라인 id
+    - :param product_display_line: 진열 라인 id
     - :param sort: CREATED_AT(생성순) = 0, SALE_COUNT(판매량 순) = 1, STOCK_COUNT(재고량 순) = 2
     - :return: list
     """
@@ -61,8 +61,7 @@ def get_product_list(request,
             field_name = field_name[1:]
 
     current_product_sort = field_name
-    # print(sold_out)
-    # print(type(sold_out) == bool)
+
     if sold_out and type(sold_out) == bool:
         params['productoptions__stock_count'] = 0
     elif not sold_out and type(sold_out) == bool:
@@ -74,7 +73,7 @@ def get_product_list(request,
     if product_display_line:
         display_line = get_object_or_404(ProductDisplayLine, id=product_display_line)
         params['product_display_line'] = display_line
-    print(params)
+
     products = Product.objects.get_queryset(**params).prefetch_related(
         Prefetch('productoptions_set', to_attr='product_options'),
         Prefetch('productimage_set', to_attr='product_image'),
