@@ -31,7 +31,7 @@ current_product_sort = ProductListSort.CREATED_AT
 def get_product_list(request,
                      product_label: ProductLabel = ProductLabel.NEW,
                      product_display_line: int = None,
-                     sold_out: bool = False,
+                     sold_out: bool = None,
                      sort: ProductListSort = ProductListSort.CREATED_AT
                      ):
     """
@@ -51,8 +51,6 @@ def get_product_list(request,
         field_name = 'productoptions__sale_count'
     elif sort == ProductListSort.STOCK_COUNT:
         field_name = 'productoptions__stock_count'
-    # elif sort == ProductListSort.DISPLAY_LINE:
-    #     field_name = 'product_display_line__id'
     else:
         raise WrongParameterException
 
@@ -63,16 +61,20 @@ def get_product_list(request,
             field_name = field_name[1:]
 
     current_product_sort = field_name
-    if sold_out:
+    # print(sold_out)
+    # print(type(sold_out) == bool)
+    if sold_out and type(sold_out) == bool:
         params['productoptions__stock_count'] = 0
-    else:
+    elif not sold_out and type(sold_out) == bool:
         params['productoptions__stock_count__gt'] = 0
+    else:
+        ...
 
     # if display_line:
     if product_display_line:
         display_line = get_object_or_404(ProductDisplayLine, id=product_display_line)
         params['product_display_line'] = display_line
-
+    print(params)
     products = Product.objects.get_queryset(**params).prefetch_related(
         Prefetch('productoptions_set', to_attr='product_options'),
         Prefetch('productimage_set', to_attr='product_image'),
