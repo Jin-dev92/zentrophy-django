@@ -18,7 +18,7 @@ class ProductListSort(IntEnum):
     CREATED_AT = 0
     SALE_COUNT = 1
     STOCK_COUNT = 2
-    DISPLAY_LINE = 3
+    # DISPLAY_LINE = 3
     # 최신 등록순
     # 나중 등록순
     # 낮은, 높은 판매량 순

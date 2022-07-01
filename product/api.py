@@ -30,7 +30,7 @@ current_product_sort = ProductListSort.CREATED_AT
                     )
 def get_product_list(request,
                      product_label: ProductLabel = ProductLabel.NEW,
-                     # product_display_line_id: int = None,
+                     product_display_line: int = None,
                      sold_out: bool = False,
                      sort: ProductListSort = ProductListSort.CREATED_AT
                      ):
@@ -39,7 +39,8 @@ def get_product_list(request,
     두번 호출 시 현재 설정의 역순 으로 호출 된다.
     - :param product_label:  HOT = 0, NEW = 1, SALE = 2, BEST = 3
     - :param sold_out: 재고량 유무
-    - :param sort: CREATED_AT(생성순) = 0, SALE_COUNT(판매량 순) = 1, STOCK_COUNT(재고량 순) = 2, DISPLAY_LINE(진열 라인 id 순)= 3
+    - :param product_display_line_id: 진열 라인 id
+    - :param sort: CREATED_AT(생성순) = 0, SALE_COUNT(판매량 순) = 1, STOCK_COUNT(재고량 순) = 2
     - :return: list
     """
     global current_product_sort
@@ -50,8 +51,8 @@ def get_product_list(request,
         field_name = 'productoptions__sale_count'
     elif sort == ProductListSort.STOCK_COUNT:
         field_name = 'productoptions__stock_count'
-    elif sort == ProductListSort.DISPLAY_LINE:
-        field_name = 'product_display_line__id'
+    # elif sort == ProductListSort.DISPLAY_LINE:
+    #     field_name = 'product_display_line__id'
     else:
         raise WrongParameterException
 
@@ -67,11 +68,17 @@ def get_product_list(request,
     else:
         params['productoptions__stock_count__gt'] = 0
 
+    # if display_line:
+    if product_display_line:
+        display_line = get_object_or_404(ProductDisplayLine, id=product_display_line)
+        params['product_display_line'] = display_line
+
     products = Product.objects.get_queryset(**params).prefetch_related(
         Prefetch('productoptions_set', to_attr='product_options'),
         Prefetch('productimage_set', to_attr='product_image'),
         'product_display_line',
     ).order_by(current_product_sort)
+
     return products
 
 
