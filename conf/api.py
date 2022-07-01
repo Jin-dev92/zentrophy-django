@@ -220,7 +220,7 @@ def refuse_must_have_reason_exception_handler(request, exec):
 
 
 @api.exception_handler(exc_class=DisplayLineExceededSizeException)
-def refuse_must_have_reason_exception_handler(request, exec):
+def display_line_exceeded_size_exception_handler(request, exec):
     return api.create_response(request,
                                data={'code': DISPLAY_LINE_DONT_EXCEEDED_SIZE['code'],
                                      'desc': DISPLAY_LINE_DONT_EXCEEDED_SIZE['desc']},
