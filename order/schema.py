@@ -4,6 +4,7 @@ from typing import List
 from ninja import Schema, Field
 
 from order.constant import OrderState, DeliveryMethod, DeliveryCompany
+# from member.schema import MemberListSchema
 from product.schema import VehicleColorListSchema, ProductOptionsListSchema
 
 
@@ -63,19 +64,23 @@ class ProductDeliveryInfoCreateSchema(Schema):
     delivery_number: str = Field(None, description="운송장 번호")
 
 
+class MemberListInOrderSchema(Schema):
+    username: str = Field(None, description="이름")
+    email: str = Field(None, description="이메일")
+    phone_number: str = Field(None, description="연락처")
+
+
 class OrderListSchema(Schema):
     id: int
-    # user: MemberListSchema = None
+    owner: MemberListInOrderSchema = None
     ordered_product_options: List[OrderedProductOptionsListSchema] = None
     ordered_vehicle_color: List[OrderedVehicleColorListSchema] = None
     customer_info: CustomerInfoSchema = None
     order_location_info: OrderLocationInfoSchema = None
-    # subside: bool = Field(default=0, title="기본 보조금")
     is_visited: bool = Field(default=False, title="방문 구매 여부")
     total: int = 0
     is_request_submit: bool = Field(default=False, description="서류 재 검토 요청 여부")
     discount_total: int = Field(default=0, description="보조금 할인 총 합계")
-    # product_option_input: str = Field(None, description="주문한 상품이 입력형인 경우 사용자가 넣어 준다.")
     product_delivery_info: ProductDeliveryInfoCreateSchema = Field(None, description="상품 일 경우 택배사 이름과 운송장 번호를 입력 해준다.")
     delivery_method: DeliveryMethod = Field(default=DeliveryMethod.DEPEND_ON, description="배달 방법")
     delivery_to: DeliveryToSchema = Field(default=None, description="탁송 시, 배달지 주소")
