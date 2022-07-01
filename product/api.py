@@ -74,11 +74,11 @@ def get_product_list(request,
         display_line = get_object_or_404(ProductDisplayLine, id=product_display_line)
         params['product_display_line'] = display_line
 
-    products = Product.objects.get_queryset(**params).prefetch_related(
+    products = Product.objects.prefetch_related(
         Prefetch('productoptions_set', to_attr='product_options'),
         Prefetch('productimage_set', to_attr='product_image'),
         'product_display_line',
-    ).order_by(current_product_sort)
+    ).filter(**params, deleted_at__isnull=True).order_by(current_product_sort)
 
     return products
 
