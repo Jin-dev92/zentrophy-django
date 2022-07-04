@@ -6,13 +6,15 @@ from typing import List
 import requests
 from asgiref.sync import sync_to_async
 from django.db import transaction
+from django.shortcuts import get_object_or_404
+
 from ninja import Router
 from ninja.orm import create_schema
 
-from conf.custom_exception import WrongParameterException
+from conf.custom_exception import WrongParameterException, ForgedOrderException
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from external.constant import Prodcd
-from order.models import Payment, Subscriptions
+from order.models import Payment, Subscriptions, Order
 from order.schema import InicisAuthResultSchema, TestSchema, SubscriptionsCreateSchema, \
     RequestPaymentSubscriptionsSchema, RequestPaymentSubscriptionsScheduleSchema
 from util.externals import subscription_payment_test
@@ -23,7 +25,56 @@ external_router = Router()
 
 
 @sync_to_async
-@payment_router.post('/payment_result/{order_id}', description="일반 결제 인증 결과 수신")
+@transaction.atomic(using='default')
+@payment_router.post('/complete/{order_id}')
+def payment_is_complete(request, order_id: int, imp_uid: str, merchant_uid: str = None):
+    '''
+    :param order_id: 주문 아이디
+    :param imp_uid: 결제 아이디
+    :param merchant_uid: 주문 번호 ( 로직 내에서 안 쓸 거 같음. 나중에 삭제 예정 )
+    '''
+    order_target = get_object_or_404(Order, id=order_id)
+    if request.auth != order_target.owner:
+        raise ForgedOrderException
+
+    try:
+        with transaction.atomic():
+            token_response = requests.post(
+                url=GET_TOKEN_INFO['url'],
+                headers=GET_TOKEN_INFO['headers'],
+                json=GET_TOKEN_INFO['data'],
+                timeout=5
+            )
+            token_response_json: dict = token_response.json()
+            if token_response_json and token_response_json.get('response'):
+                access_token = token_response_json.get('response').get('access_token')
+                payment_url = 'https://api.iamport.kr/payments/' + imp_uid
+                payment_response = requests.get(
+                    url=payment_url,
+                    headers={"Authorization": access_token},
+                    timeout=5)
+
+                payment_response_json = payment_response.json()
+                if payment_response_json and payment_response_json.get('response'):
+                    payment_data = payment_response_json.get('response')
+                    status = payment_data.get('status')
+                    amount = payment_data.get('amount')
+                    if order_target.total == int(amount):
+                        Payment.objects.create(order_id=order_id, result=payment_data)
+                        if status == 'ready':   # 가상 계좌 발급
+                            return {'message': '가상 계좌 발급이 완료 되었습니다.'}
+                        elif status == 'paid':  # 일반 결제 완료
+                            return {'message': '일반 결제가 완료 되었습니다.'}
+                        else:   # 결제 금액 불일치
+                            raise ForgedOrderException
+                else:
+                    return payment_response_json
+    except Exception as e:
+        raise e
+
+
+@sync_to_async
+@payment_router.post('/result/{order_id}', description="일반 결제 인증 결과 수신", deprecated=True)
 def response_normal_payment_auth_result(request, order_id: int, payload: InicisAuthResultSchema):
     # 인증 결과를 저장 ( 로그 쌓기 )
     auth_result = payload.dict()
@@ -42,13 +93,10 @@ def response_normal_payment_auth_result(request, order_id: int, payload: InicisA
                 'signature': signature,
                 'format': 'NVP',
             }
-            print(data)
             response = requests.post(url=auth_url, json=data)
             response_json = response.json()
             queryset.approval_result = response_json
             queryset.save(update_fields=['approval_result'])
-            # if response_json['resultCode'] and response_json['resultCode'] == '0000': # 성공
-            # 성공 했을 때 뭔가 해준다.
             return response_json
         except Exception as e:
             raise WrongParameterException
@@ -64,9 +112,12 @@ def get_list_subscriptions(request):
 
 @sync_to_async
 @subscription_router.post('/test', description="나이츠 페이먼츠 정기 결제 테스트")
-def test(request, payload: TestSchema):
-    merchant_uid = payload.dict()['payment_subscription'].get('merchant_uid')
-    response = asyncio.run(subscription_payment_test(user=request.auth, merchant_uid=merchant_uid, data=payload.dict()))
+def test(request, payload: TestSchema, owned_vehicle_id: int):
+    merchant_uid = payload.dict().get('payment_subscription').get('merchant_uid')
+    response = asyncio.run(subscription_payment_test(user=request.auth,
+                                                     merchant_uid=merchant_uid,
+                                                     owned_vehicle_id=owned_vehicle_id,
+                                                     data=payload.dict()))
     return response
 
 

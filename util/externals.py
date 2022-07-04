@@ -11,12 +11,10 @@ async def subscription_payment_test(user, merchant_uid: str, owned_vehicle_id: i
     issue_billing_data = data.get('customer_uid')
     payment_subscription_data = data.get('payment_subscription')
     schedules_data = data.get('schedules')
-    print(schedules_data)
     get_access_token_task = asyncio.create_task(get_iamport_access_token())
     await get_access_token_task
     if get_access_token_task.result()['code'] == 0:
         access_token = get_access_token_task.result()['response'].get('access_token')
-        print(access_token)
         if type(access_token) == str:
             get_billing_key_response = asyncio.create_task(get_billing_key(
                 access_token=access_token,
@@ -43,7 +41,6 @@ async def subscription_payment_test(user, merchant_uid: str, owned_vehicle_id: i
             return get_access_token_task.result()
 
 
-
 async def get_iamport_access_token():
     token_response = requests.post(
         url=GET_TOKEN_INFO['url'],
@@ -51,6 +48,7 @@ async def get_iamport_access_token():
         json=GET_TOKEN_INFO['data'],
         timeout=5
     )
+    print(token_response)
     return token_response.json()
 
 

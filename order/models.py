@@ -46,7 +46,6 @@ class Order(TimeStampModel, SoftDeleteModel):
     order_location_info = models.OneToOneField('order.OrderLocationInfo', on_delete=models.SET_NULL, null=True)
     is_delivery = models.BooleanField(default=False, help_text="False = 출고 준비 중 , True = 배송 중", null=True)
     # 상품 배송 관련
-    # product_option_input = models.TextField( help_text="상품이 입력형 일 경우에 텍스트 받는 필드.", null=True)
     product_delivery_info = models.OneToOneField('order.ProductDeliveryInfo', on_delete=models.CASCADE, null=True)
     # 모터사이클 배송 관련
     delivery_method = models.PositiveSmallIntegerField(default=DeliveryMethod.DEPEND_ON, null=True)
@@ -127,7 +126,5 @@ class Subscriptions(TimeStampModel, SoftDeleteModel):
 
 
 class Payment(TimeStampModel, SoftDeleteModel):
-    owner = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True)
-    auth_result = models.JSONField(null=True)
-    approval_result = models.JSONField(null=True)
+    result = models.JSONField(null=True)

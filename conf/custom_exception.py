@@ -80,3 +80,7 @@ class IncorrectOrderStateException(Exception):
 
 class PrevEstimateHaveOneException(Exception):
     pass
+
+
+class ForgedOrderException(Exception):
+    pass
