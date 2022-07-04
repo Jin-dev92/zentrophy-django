@@ -61,7 +61,7 @@ def payment_is_complete(request, order_id: int, imp_uid: str, merchant_uid: str 
                     status = payment_data.get('status')
                     amount = payment_data.get('amount')
                     if order_target.total == int(amount):
-                        Payment.objects.create(order_id=order_id, result=payment_data)
+                        Payment.objects.create(order_id=order_id, result=payment_data, merchant_uid=merchant_uid)
                         if status == 'ready':   # 가상 계좌 발급
                             return {'message': '가상 계좌 발급이 완료 되었습니다.'}
                         elif status == 'paid':  # 일반 결제 완료

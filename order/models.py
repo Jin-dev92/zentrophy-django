@@ -116,8 +116,8 @@ class DocumentFormat(TimeStampModel, SoftDeleteModel):
 class Subscriptions(TimeStampModel, SoftDeleteModel):
     # owner = models.OneToOneField('member.User', on_delete=models.CASCADE, null=True)
     owned_vehicle = models.OneToOneField('member.OwnedVehicle', on_delete=models.CASCADE, null=True)
-    merchant_uid = models.CharField(max_length=200, null=True, help_text="주문 번호")
-    customer_uid = models.CharField(max_length=200, null=True, help_text="사용자 uid")
+    merchant_uid = models.CharField(max_length=100, null=True, help_text="주문 번호")
+    customer_uid = models.CharField(max_length=100, null=True, help_text="사용자 uid")
     imp_uid = models.CharField(max_length=200, null=True, help_text="결제 번호", unique=True)
     response_raw = models.JSONField(null=True, help_text="api 응답 원문")
 
@@ -127,4 +127,5 @@ class Subscriptions(TimeStampModel, SoftDeleteModel):
 
 class Payment(TimeStampModel, SoftDeleteModel):
     order = models.OneToOneField(Order, on_delete=models.CASCADE, null=True)
-    result = models.JSONField(null=True)
+    merchant_uid = models.CharField(max_length=100, null=True, help_text="주문 번호")
+    result = models.JSONField(null=True, help_text="결제 외부 api 호출 후 response 저장용")
