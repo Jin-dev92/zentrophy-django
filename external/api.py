@@ -29,6 +29,7 @@ external_router = Router()
 @payment_router.post('/complete/{order_id}')
 def payment_is_complete(request, order_id: int, imp_uid: str, merchant_uid: str = None):
     '''
+    일반 결제 후 콜백 함수로 불러 주는 api , 위조 검증 로직 + DB 로그 저장 기능을 한다.
     :param order_id: 주문 아이디
     :param imp_uid: 결제 아이디
     :param merchant_uid: 주문 번호 ( 로직 내에서 안 쓸 거 같음. 나중에 삭제 예정 )
