@@ -41,7 +41,7 @@ def get_order_list(request):
         'customer_info',
         'order_location_info',
         'owner',
-        # Prefetch(lookup='owner', to_attr='owner'),
+        'payment',
         Prefetch(lookup='orderedproductoptions_set',
                  queryset=OrderedProductOptions.objects.select_related('product_options')
                  .annotate(product_image=F('product_options__product__productimage__origin_image')),
@@ -72,6 +72,7 @@ def get_order_list_by_id(request, id: int):
     queryset = target.prefetch_related(
         'customer_info',
         'order_location_info',
+        'payment',
         Prefetch(lookup='orderedproductoptions_set',
                  queryset=OrderedProductOptions.objects.select_related('product_options')
                  .annotate(product_image=F('product_options__product__productimage__origin_image')),
