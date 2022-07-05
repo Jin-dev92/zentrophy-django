@@ -112,19 +112,18 @@ async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_ui
     return payment_response.json()
 
 
-async def iamport_is_complete_payment(imp_uid):
+async def iamport_is_complete_get_payment_data(imp_uid: str):
     get_access_token_task = get_iamport_access_token()
     token_response: dict = asyncio.create_task(get_access_token_task).result()
     access_token = token_response.get('response').get('access_token')
     payment_url = 'https://api.iamport.kr/payments/' + imp_uid
-    payment_response: dict = asyncio.create_task(requests.get(
+    payment_response = asyncio.create_task(requests.get(
         url=payment_url,
         headers={"Authorization": access_token},
         timeout=5).json()).result()
+    await payment_response
     payment_data: dict = payment_response.get('response')
-    status = payment_data.get('status')
-    amount = payment_data.get('amount')
-
+    return payment_data
     # try:
     #     token_response = requests.post(
     #         url=GET_TOKEN_INFO['url'],
