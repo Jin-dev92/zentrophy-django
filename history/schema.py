@@ -3,13 +3,15 @@ from typing import List
 
 from ninja import Field
 from ninja import Schema
+from ninja.orm import create_schema
 
 from history.constant import RefundMethod, RefundStatus, AfterServiceCategory, AfterServiceStatus, DrivingStyle, \
     ExpendablesType, InternalCombustionEngineType
 from member.schema import MemberListSchema
 from order.schema import OrderListSchema
 from placement.schema import PlacementListSchema
-from product.schema import ProductOptionsListSchema
+from product.constant import ProductOptionsLabel
+from product.models import Product
 
 
 class AfterServiceInsertSchema(Schema):
@@ -77,9 +79,28 @@ class WarrantyInsertSchema(Schema):
     is_warranty: bool = Field(title="보증 가능 여부 // True = 보증 가능, False = 보증 제외")
 
 
+class ProductOptionsListSchemaInCart(Schema):
+    id: int
+    product: create_schema(Product) = None
+    option_name: str = Field(default=None,
+                             title="옵션 이름")  # 옵션 이름
+    stock_count: int = Field(default=0,
+                             title="재고 수량")  # 재고 수량
+    sale_count: int = Field(default=0,
+                            title="판매량")  # 재고 수량
+    option_price: int = Field(default=0, description="옵션 단가")
+    option_description: str = Field(default=None,
+                                    title="옵션 설명")  # 옵션 설명
+    is_apply: bool = Field(default=False,
+                           title="옵션 적용 여부")  # 옵션 적용 여부
+    product_options_label: ProductOptionsLabel = Field(default=ProductOptionsLabel.NORMAL,
+                                                       title="상품 옵션 라벨",
+                                                       description="0: 기본형, 1:입력형, 2:옵션없음")  # 기본형, 입력형, 옵션없음
+
+
 class CartListSchema(Schema):
     id: int
-    product_options: ProductOptionsListSchema = Field(None, description="주문한 상품(product_options)")
+    product_options: ProductOptionsListSchemaInCart = Field(None, description="주문한 상품(product_options)")
     product_image: str = Field(None, description="상품 이미지")
     amount: int = Field(description="장 바구니에 담은 상품 갯수")
 
