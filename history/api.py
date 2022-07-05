@@ -2,7 +2,7 @@ from datetime import date
 from typing import List
 
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, F
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
@@ -202,8 +202,7 @@ def delete_warranty(request, id: int):
 
 @cart_router.get('/', description="장바구니 목록 확인", response=List[CartListSchema])
 def get_cart_list(request):
-    queryset = Cart.objects.select_related('product_options__product')
-        # .annotate(product_image=F("product_options__product__productimage__origin_image")).distinct()
+    queryset = Cart.objects.annotate(product_image=F("product_options__product__productimage__origin_image")).select_related('product_options__product')
     return queryset
 
 
