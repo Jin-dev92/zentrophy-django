@@ -1,7 +1,6 @@
 from django.db import models
 
-from member.models import User, OwnedVehicle
-from order.constant import OrderState, DeliveryMethod, DeliveryCompany
+from order.constant import OrderState, DeliveryMethod
 from product.models import ProductOptions, VehicleColor
 from util.models import TimeStampModel, SoftDeleteModel
 

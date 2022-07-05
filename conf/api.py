@@ -13,7 +13,7 @@ from conf import settings
 from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExceededSizeException, \
     LoginRequiredException, FormatNotSupportedException, WrongParameterException, WrongUserInfoException, \
     WrongTokenException, NotEnoughStockException, UserNotAccessDeniedException, OrderStateCantChangeException, \
-    IncorrectTotalAmountException, MustHaveDeliveryToException
+    IncorrectTotalAmountException, MustHaveDeliveryToException, ForgedOrderException
 from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
 from external.api import subscription_router, payment_router, external_router
 from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
@@ -29,7 +29,7 @@ from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
     FORMAT_NOT_SUPPORTED, WRONG_PARAMETER, WRONG_TOKEN, WRONG_USER_INFO, NOT_ENOUGH_STOCK, USER_NOT_ACCESS_DENIED, \
-    CANT_CHANGE_ORDER_STATE, INCORRECT_TOTAL_AMOUNT, MUST_HAVE_DELIVERY_TO, EXPIRED_SIGNATURE
+    CANT_CHANGE_ORDER_STATE, INCORRECT_TOTAL_AMOUNT, MUST_HAVE_DELIVERY_TO, EXPIRED_SIGNATURE, FORGED_ORDER
 from util.permission import is_valid_token, get_jwt_token
 from util.util import ORJSONParser
 
@@ -318,3 +318,14 @@ def expired_signature_exception_handler(request, exec):
                                      'desc': EXPIRED_SIGNATURE['desc']},
                                status=EXPIRED_SIGNATURE['status']
                                )
+
+
+@api.exception_handler(exc_class=ForgedOrderException)
+def forged_order_exception_handler(request, exec):
+    return api.create_response(request,
+                               data={'code': FORGED_ORDER['code'],
+                                     'desc': FORGED_ORDER['desc']},
+                               status=FORGED_ORDER['status']
+                               )
+
+# ForgedOrderException

@@ -2,19 +2,6 @@ from conf import settings
 from history.constant import RefundStatus
 
 # common error message
-LOGIN_REQUIRED = {
-    'code': 4010000,
-    'desc': '로그인이 필요합니다.',
-    'status': 401
-}
-DB_ERROR = 'DB ORM Error'
-FILE_ERROR = 'File I/O Error'
-# member
-WRONG_BUSINESS_NUMBER = '잘못된 사업자 번호 입니다.'
-WRONG_BIRTH_NUMBER = '잘못된 생년월일 입니다.'
-ACCESS_DENIED = '이메일 혹은 비밀번호가 틀립니다.'
-# product
-CANT_APPLY_PERIOD_PAYMENT = '정기 결제 에는 적용할 수 없습니다.'
 DISPLAY_LINE_DONT_EXCEEDED_SIZE = {
     'code': 4000001,
     'desc': "상품 진열은 {count}개를 초과할 수 없습니다.".format(count=settings.MAX_DISPLAY_LINE_COUNT)
@@ -44,6 +31,7 @@ WRONG_PARAMETER = {
     'desc': "잘못된 파라미터 입니다. 데이터를 확인하세요",
     'status': 400
 }
+
 NOT_ENOUGH_STOCK = {
     'code': 4000007,
     'desc': "재고량이 부족합니다.",
@@ -68,6 +56,12 @@ MUST_HAVE_DELIVERY_TO = {
     'status': 400
 }
 
+LOGIN_REQUIRED = {
+    'code': 4010000,
+    'desc': '로그인이 필요합니다.',
+    'status': 401
+}
+
 WRONG_TOKEN = {
     'code': 4010001,
     'desc': "잘못된 토큰 입니다. 데이터를 확인하세요",
@@ -88,5 +82,11 @@ USER_NOT_ACCESS_DENIED = {
 EXPIRED_SIGNATURE = {
     'code': 4010004,
     'desc': "만료된 토큰 입니다. 다시 로그인 해주세요.",
+    'status': 401
+}
+
+FORGED_ORDER = {
+    'code': 4010005,
+    'desc': "위조된 주문 입니다.",
     'status': 401
 }

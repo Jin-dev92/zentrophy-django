@@ -112,7 +112,7 @@ def delivery_method_input(request, id: int, payload: DeliveryMethodInputSchema):
         target.place_remote_pk = place_remote_pk
 
     target.save(update_fields=['delivery_method', 'delivery_to', 'place_remote_pk'])
-
+    print(target.__dict__)
 
 @router.post('/apply_subsides/{id}')
 def apply_subsides_to_order(request, payload: ApplySubSideSchema, id: int):
