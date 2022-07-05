@@ -32,6 +32,7 @@ class ProductOptions(SoftDeleteModel):
     id = models.AutoField(primary_key=True)
     product = models.ForeignKey("product.Product", on_delete=models.CASCADE, null=True)
     option_name = models.CharField(max_length=200, blank=True)
+    option_price = models.IntegerField(default=0)
     option_description = models.TextField(blank=True, help_text="옵션 설명")
     is_apply = models.BooleanField(default=False, help_text="옵션 적용 여부")
     product_options_label = models.PositiveSmallIntegerField(

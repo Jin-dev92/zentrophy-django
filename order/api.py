@@ -256,7 +256,7 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
                 acc_total = 0   # 가격 검증을 위한 변수
                 for index, po in enumerate(ordered_product_options):    # 상품 주문 생성 시 판매량, 재고량 조절
                     po_target = get_object_or_404(ProductOptions, id=po.get('product_options_id'))
-                    acc_total += po_target.product.product_price * po.get('amount')
+                    acc_total += (po_target.product.product_price + po_target.option_price) * po.get('amount')
                     if po.get('amount') > po_target.stock_count:
                         raise NotEnoughStockException
                     po_target.sale_count = po_target.sale_count + po.get('amount')

@@ -38,6 +38,7 @@ class ProductOptionsListSchema(Schema):
                              title="재고 수량")  # 재고 수량
     sale_count: int = Field(default=0,
                              title="판매량")  # 재고 수량
+    option_price: int = Field(default=0, description="옵션 단가")
     option_description: str = Field(default=None,
                                     title="옵션 설명")  # 옵션 설명
     is_apply: bool = Field(default=False,
@@ -50,6 +51,7 @@ class ProductOptionsListSchema(Schema):
 class ProductOptionsInsertSchema(Schema):
     option_name: str  # 옵션 이름
     stock_count: int  # 재고 수량
+    option_price: int = Field(default=0, description="옵션 단가")
     option_description: str = None  # 옵션 설명
     is_apply: bool = False  # 옵션 적용 여부
     product_options_label: ProductOptionsLabel = Field(default=ProductOptionsLabel.NORMAL,
