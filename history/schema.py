@@ -3,7 +3,6 @@ from typing import List
 
 from ninja import Field
 from ninja import Schema
-from ninja.orm import create_schema
 
 from history.constant import RefundMethod, RefundStatus, AfterServiceCategory, AfterServiceStatus, DrivingStyle, \
     ExpendablesType, InternalCombustionEngineType
@@ -11,7 +10,7 @@ from member.schema import MemberListSchema
 from order.schema import OrderListSchema
 from placement.schema import PlacementListSchema
 from product.constant import ProductOptionsLabel
-from product.models import Product
+from product.schema import ProductListSchema
 
 
 class AfterServiceInsertSchema(Schema):
@@ -81,7 +80,7 @@ class WarrantyInsertSchema(Schema):
 
 class ProductOptionsListSchemaInCart(Schema):
     id: int
-    product: create_schema(Product) = None
+    product: ProductListSchema = None
     option_name: str = Field(default=None,
                              title="옵션 이름")  # 옵션 이름
     stock_count: int = Field(default=0,
@@ -101,7 +100,7 @@ class ProductOptionsListSchemaInCart(Schema):
 class CartListSchema(Schema):
     id: int
     product_options: ProductOptionsListSchemaInCart = Field(None, description="주문한 상품(product_options)")
-    product_image: str = Field(None, description="상품 이미지")
+    # product_image: ProductImageListSchema = Field(None, description="상품 이미지")
     amount: int = Field(description="장 바구니에 담은 상품 갯수")
 
 

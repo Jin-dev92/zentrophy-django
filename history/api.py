@@ -202,7 +202,9 @@ def delete_warranty(request, id: int):
 
 @cart_router.get('/', description="장바구니 목록 확인", response=List[CartListSchema])
 def get_cart_list(request):
-    queryset = Cart.objects.select_related('product_options__product')
+    queryset = Cart.objects.select_related('product_options__product').prefetch_related(
+        Prefetch('product_options__product__productimage_set', to_attr='product_image')
+    )
     return queryset
 
 
