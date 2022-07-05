@@ -7,7 +7,6 @@ import requests
 from asgiref.sync import sync_to_async
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-
 from ninja import Router
 from ninja.orm import create_schema
 
@@ -113,7 +112,7 @@ def get_list_subscriptions(request):
 
 @sync_to_async
 @subscription_router.post('/test', description="나이츠 페이먼츠 정기 결제 테스트")
-def test(request, payload: TestSchema, owned_vehicle_id: int):
+def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: int):
     merchant_uid = payload.dict().get('payment_subscription').get('merchant_uid')
     response = asyncio.run(subscription_payment_test(user=request.auth,
                                                      merchant_uid=merchant_uid,
