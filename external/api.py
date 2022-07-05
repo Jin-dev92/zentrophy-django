@@ -36,20 +36,52 @@ def payment_is_complete(request, order_id: int, imp_uid: str, merchant_uid: str 
     if request.auth != order_target.owner:
         raise ForgedOrderException
     payment_data = asyncio.run(iamport_is_complete_get_payment_data(imp_uid=imp_uid))
-    if payment_data:
-        status = payment_data.get('status')
-        amount = payment_data.get('amount')
-        if order_target.total == int(amount):
-            print("payment 생ㅅ어")
-            Payment.objects.create(order_id=order_id, result=payment_data, merchant_uid=merchant_uid)
-        if status == 'ready':   # 가상 계좌 발급
-            return {'message': '가상 계좌 발급이 완료 되었습니다.'}
-        elif status == 'paid':  # 일반 결제 완료
-            return {'message': '일반 결제가 완료 되었습니다.'}
-        else:   # 결제 금액 불일치
-            raise ForgedOrderException
-    else:
-        raise Exception("결제 실패")
+    print(payment_data)
+    status = payment_data.get('status')
+    amount = payment_data.get('amount')
+    if order_target.total == int(amount):
+        print("payment 생ㅅ어")
+        Payment.objects.create(order_id=order_id, result=payment_data, merchant_uid=merchant_uid)
+    if status == 'ready':   # 가상 계좌 발급
+        return {'message': '가상 계좌 발급이 완료 되었습니다.'}
+    elif status == 'paid':  # 일반 결제 완료
+        return {'message': '일반 결제가 완료 되었습니다.'}
+    else:   # 결제 금액 불일치
+        raise ForgedOrderException
+    # try:
+    #     token_response = requests.post(
+    #         url=GET_TOKEN_INFO['url'],
+    #         headers=GET_TOKEN_INFO['headers'],
+    #         json=GET_TOKEN_INFO['data'],
+    #         timeout=5
+    #     )
+    #     token_response_json: dict = token_response.json()
+    #     if token_response_json and token_response_json.get('response'):
+    #         access_token = token_response_json.get('response').get('access_token')
+    #         payment_url = 'https://api.iamport.kr/payments/' + imp_uid
+    #         payment_response = requests.get(
+    #             url=payment_url,
+    #             headers={"Authorization": access_token},
+    #             timeout=5)
+    #
+    #         payment_response_json = payment_response.json()
+    #         if payment_response_json and payment_response_json.get('response'):
+    #             payment_data = payment_response_json.get('response')
+    #             status = payment_data.get('status')
+    #             amount = payment_data.get('amount')
+    #             if order_target.total == int(amount):
+    #                 Payment.objects.create(order_id=order_id, result=payment_data, merchant_uid=merchant_uid)
+    #                 if status == 'ready':   # 가상 계좌 발급
+    #                     return {'message': '가상 계좌 발급이 완료 되었습니다.'}
+    #                 elif status == 'paid':  # 일반 결제 완료
+    #                     return {'message': '일반 결제가 완료 되었습니다.'}
+    #                 else:   # 결제 금액 불일치
+    #                     raise ForgedOrderException
+    #         else:
+    #             return payment_response_json
+    # except Exception as e:
+    #     raise e
+
 
 @sync_to_async
 @payment_router.post('/result/{order_id}', description="일반 결제 인증 결과 수신", deprecated=True)

@@ -113,12 +113,47 @@ async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_ui
 
 
 async def iamport_is_complete_get_payment_data(imp_uid: str):
-    token_response = await get_iamport_access_token()
+    get_access_token_task = get_iamport_access_token()
+    token_response: dict = asyncio.create_task(get_access_token_task).result()
     access_token = token_response.get('response').get('access_token')
     payment_url = 'https://api.iamport.kr/payments/' + imp_uid
-    payment_response = requests.get(
+    payment_response = asyncio.create_task(requests.get(
         url=payment_url,
         headers={"Authorization": access_token},
-        timeout=5).json()
+        timeout=5).json()).result()
+    await payment_response
     payment_data: dict = payment_response.get('response')
     return payment_data
+    # try:
+    #     token_response = requests.post(
+    #         url=GET_TOKEN_INFO['url'],
+    #         headers=GET_TOKEN_INFO['headers'],
+    #         json=GET_TOKEN_INFO['data'],
+    #         timeout=5
+    #     )
+    #     token_response_json: dict = token_response.json()
+    #     if token_response_json and token_response_json.get('response'):
+    #         access_token = token_response_json.get('response').get('access_token')
+    #         payment_url = 'https://api.iamport.kr/payments/' + imp_uid
+    #         payment_response = requests.get(
+    #             url=payment_url,
+    #             headers={"Authorization": access_token},
+    #             timeout=5)
+    #
+    #         payment_response_json = payment_response.json()
+    #         if payment_response_json and payment_response_json.get('response'):
+    #             payment_data = payment_response_json.get('response')
+    #             status = payment_data.get('status')
+    #             amount = payment_data.get('amount')
+    #             if order_target.total == int(amount):
+    #                 Payment.objects.create(order_id=order_id, result=payment_data, merchant_uid=merchant_uid)
+    #                 if status == 'ready':   # 가상 계좌 발급
+    #                     return {'message': '가상 계좌 발급이 완료 되었습니다.'}
+    #                 elif status == 'paid':  # 일반 결제 완료
+    #                     return {'message': '일반 결제가 완료 되었습니다.'}
+    #                 else:   # 결제 금액 불일치
+    #                     raise ForgedOrderException
+    #         else:
+    #             return payment_response_json
+    # except Exception as e:
+    #     raise e
