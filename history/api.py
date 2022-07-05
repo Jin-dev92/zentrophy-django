@@ -6,7 +6,7 @@ from django.db.models import F, Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
-from conf.custom_exception import RefuseMustHaveReasonException, UserNotAccessDeniedException
+from conf.custom_exception import RefuseMustHaveReasonException, UserNotAccessDeniedException, WrongParameterException
 from history.constant import AfterServiceStatus, RefundMethod, RefundStatus
 from history.models import AfterService, Refund, Warranty, Cart, RefundLocation, PrevEstimate, InternalCombustionEngine, \
     Expendables, FuelRateByVehicleType, VehicleInfo
@@ -202,11 +202,6 @@ def delete_warranty(request, id: int):
 
 @cart_router.get('/', description="장바구니 목록 확인", response=List[CartListSchema])
 def get_cart_list(request):
-    # queryset = Cart.objects.filter(owner=request.auth) \
-    #     .select_related('product_options__product') \
-    #     .annotate(
-    #     product_image=F("product_options__product__productimage__origin_image")
-    # )
     queryset = Cart.objects.filter(owner=request.auth).select_related('product_options').annotate(
         product_image=F("product_options__product__productimage__origin_image")
     )
@@ -224,10 +219,22 @@ def create_cart(request, payload: CartCreateSchema):
     )
 
 
-@cart_router.delete('/', description="장바구니 삭제")
-def delete_cart(request, id: int):
-    queryset = get_object_or_404(Cart, id=id, owner=request.auth).delete()
-    return queryset
+@cart_router.delete('/')
+def delete_cart(request, id: int = None, is_delete_all: bool = False):
+    '''
+    :param id: 카트 아이디
+    :param is_delete_all: 전체 삭제 기능 default는 False 이며, True 시 유저가 갖고 있는 전체 장 바구니 목록을 가져 와서 삭제 한다.
+    :return:
+    '''
+    if is_delete_all:
+        target = Cart.objects.filter(owner=request.auth)
+        target.delete()
+    else:
+        if id and id > 0:
+            target = get_object_or_404(Cart, id=id, owner=request.auth)
+            target.delete()
+        else:
+            raise WrongParameterException
 
 
 @prev_estimate_router.get('/', response=List[PrevEstimateListSchema])
