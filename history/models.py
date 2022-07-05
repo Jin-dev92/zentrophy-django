@@ -40,7 +40,7 @@ class Warranty(TimeStampModel, SoftDeleteModel):
 
 
 class Cart(TimeStampModel):
-    product_options = models.OneToOneField(ProductOptions, on_delete=models.CASCADE, null=True)
+    product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE, null=True)
     owner = models.ForeignKey('member.User', on_delete=models.CASCADE, null=True)
     amount = models.IntegerField(default=0)
 
@@ -68,7 +68,6 @@ class VehicleInfo(TimeStampModel):  # "평균 유루비, 가솔린 계수, 차�
                                          on_delete=models.CASCADE,
                                          null=True,
                                          )
-    # avg_fuel_price = models.FloatField(default=0, help_text="평균 유루비")
     gasoline_calc = models.FloatField(default=0, help_text="가솔린 계수")
     electric_fuel_rate = models.FloatField(default=0, help_text="전비")
 
