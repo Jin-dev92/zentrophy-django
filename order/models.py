@@ -2,7 +2,7 @@ from django.db import models
 
 from order.constant import OrderState, DeliveryMethod
 from product.models import ProductOptions, VehicleColor
-from util.models import TimeStampModel, SoftDeleteModel
+from util.models import TimeStampModel, SoftDeleteModel, FileExistModel
 
 
 class OrderDetail(SoftDeleteModel):
@@ -12,7 +12,7 @@ class OrderDetail(SoftDeleteModel):
     amount = models.IntegerField(default=0)
 
 
-class DocumentFile(TimeStampModel):
+class DocumentFile(TimeStampModel, FileExistModel):
     id = models.AutoField(primary_key=True)
     file = models.FileField(upload_to="order/%Y/%M", )
     order = models.ForeignKey('order.Order', on_delete=models.CASCADE)
@@ -108,7 +108,7 @@ class OrderLocationInfo(TimeStampModel):
         return str(self.address_1) + str(self.address_2)
 
 
-class DocumentFormat(TimeStampModel, SoftDeleteModel):
+class DocumentFormat(TimeStampModel, SoftDeleteModel, FileExistModel):
     file = models.FileField(upload_to="order/%Y/%M")
 
 

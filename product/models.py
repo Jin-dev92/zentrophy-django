@@ -21,7 +21,7 @@ class ProductImage(TimeStampModel, SoftDeleteModel):
     origin_image = ImageField(upload_to="product/%Y/%M", null=True)
 
 
-class VehicleImage(TimeStampModel, SoftDeleteModel):
+class VehicleImage(TimeStampModel, SoftDeleteModel, FileExistModel):
     id = models.AutoField(primary_key=True)
     vehicle_color = models.ForeignKey('product.VehicleColor', on_delete=models.CASCADE, null=True)
     origin_image = ImageField(upload_to="vehicle/%Y/%M", null=True)
@@ -62,7 +62,7 @@ class VehicleColor(SoftDeleteModel):
         return self.color_name
 
 
-class Product(TimeStampModel, SoftDeleteModel):
+class Product(TimeStampModel, SoftDeleteModel, FileExistModel):
     id = models.AutoField(primary_key=True)
     product_name = models.CharField(max_length=200, null=False)
     product_price = models.IntegerField(default=0)

@@ -1,9 +1,12 @@
+import os
+
 from django.db import models
-from django.db.models.fields.files import ImageFileDescriptor, FileDescriptor, FileField
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
+from sorl.thumbnail import ImageField
+from django.db.models import FileField
 
 class TimeStampModel(models.Model):
     is_created = models.DateTimeField(auto_now_add=True)  # 처음에 추가될때 생성된다.
@@ -37,17 +40,24 @@ class SoftDeleteModel(models.Model):
         self.save(update_fields=['deleted_at'])
 
 
-class FileExistModel():
+class FileExistModel(): # 해당 클래스 상속 시, 해당 객체 삭제할 경우, 실제 서버의 파일도 함께 삭제 된다.
     # class Meta:
     #     proxy = True  # 상속 할수 있게
 
     @receiver(pre_delete)
     def delete_receiver(sender, instance, **kwargs):
+        try:
+            sender.objects.get(id=instance.id)
+        except sender.DoesNotExist:
+            return False
+
         for field in sender._meta.fields:
-            # print(FileField.__class__)
-            if field == FileField.__class__:
-                print("통과")
-            if issubclass(field, FileField.__class__):
-                print("통과")
-        raise Exception("xptmxm")
-        instance.origin_image.delete()
+            if type(field) == ImageField:   # 이미지 인 경우
+                image_field: ImageField = field
+                image_field.delete_file(instance=instance, sender=sender, **kwargs)
+                print(instance.origin_image.name + " is deleted")
+            elif type(field) == FileField:  # 파일 인 경우
+                file = instance.file
+                if os.path.isfile(file.path):
+                    os.remove(file.path)
+                print(file.path + " is deleted")
