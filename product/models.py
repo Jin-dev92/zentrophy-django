@@ -5,7 +5,7 @@ from django.dispatch import receiver
 from sorl.thumbnail import ImageField
 
 from product.constant import ProductOptionsLabel
-from util.models import TimeStampModel, SoftDeleteModel
+from util.models import TimeStampModel, SoftDeleteModel, FileExistModel
 
 
 class ProductDisplayLine(SoftDeleteModel):  # 상품 진열 라인
@@ -98,7 +98,7 @@ def model_delete(sender, instance, **kwargs):
     file.delete(False)
 
 
-@receiver(pre_delete, sender=ProductImage)
-def model_delete(sender, instance, **kwargs):
-    file = instance.origin_image
-    file.delete(False)
+# @receiver(pre_delete, sender=ProductImage)
+# def model_delete(sender, instance, **kwargs):
+#     file = instance.origin_image
+#     file.delete(False)

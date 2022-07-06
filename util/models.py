@@ -1,4 +1,7 @@
 from django.db import models
+from django.db.models.fields.files import ImageFileDescriptor, FileDescriptor, FileField
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 from django.utils import timezone
 
 
@@ -35,10 +38,16 @@ class SoftDeleteModel(models.Model):
 
 
 class FileExistModel():
-    class Meta:
-        proxy = True  # 상속 할수 있게
+    # class Meta:
+    #     proxy = True  # 상속 할수 있게
 
-    # @receiver(pre_delete)
-    # def delete_receiver(self, sender, instance, **kwargs):
-    #
-    #     ...
+    @receiver(pre_delete)
+    def delete_receiver(sender, instance, **kwargs):
+        for field in sender._meta.fields:
+            # print(FileField.__class__)
+            if field == FileField.__class__:
+                print('sex')
+            if issubclass(field, FileField.__class__):
+                print('sex')
+        raise Exception("xptmxm")
+        instance.origin_image.delete()
