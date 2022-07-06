@@ -46,8 +46,8 @@ class FileExistModel():
         for field in sender._meta.fields:
             # print(FileField.__class__)
             if field == FileField.__class__:
-                print('sex')
+                print("통과")
             if issubclass(field, FileField.__class__):
-                print('sex')
+                print("통과")
         raise Exception("xptmxm")
         instance.origin_image.delete()
