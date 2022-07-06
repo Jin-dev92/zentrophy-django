@@ -34,30 +34,11 @@ class SoftDeleteModel(models.Model):
         self.save(update_fields=['deleted_at'])
 
 
-# class ImageModel(models.Model):
-#     origin_image = ImageField(upload_to="image/%Y/%m/%d", null=True)
-#
-#     def image_tag(self):
-#         from django.utils.html import escape
-#         return u'<img src="%s" />' % escape(self.origin_image)
-#
-#     image_tag.short_description = 'Image'
-#     image_tag.allow_tags = True
-#
-#
-# class FileModel(models.Model):
-#     file = models.FileField(upload_to="file/%Y/%m/%d", null=True)
+class FileExistModel():
+    class Meta:
+        proxy = True  # 상속 할수 있게
 
-    # def auto_delete_file_on_delete(self):
-    #     if self.file:
-    #         if os.path.isfile(self.file.path):  # 해당 경로에 파일이 있다면
-    #             os.remove(self.file.path)
+    # @receiver(pre_delete)
+    # def delete_receiver(self, sender, instance, **kwargs):
     #
-    # def auto_delete_file_on_change(self):
-    #     try:
-    #         obj = FileModel.objects.get(id=self.id)
-    #     except FileModel.DoesNotExist:
-    #         return
-    #
-    #     if obj.file and self.file and obj.file != self.file:
-    #         obj.file.delete()
+    #     ...

@@ -4,7 +4,8 @@ from history.constant import RefundStatus
 # common error message
 DISPLAY_LINE_DONT_EXCEEDED_SIZE = {
     'code': 4000001,
-    'desc': "상품 진열은 {count}개를 초과할 수 없습니다.".format(count=settings.MAX_DISPLAY_LINE_COUNT)
+    'desc': "상품 진열은 {count}개를 초과할 수 없습니다.".format(count=settings.MAX_DISPLAY_LINE_COUNT),
+    'status': 400
 }
 
 # history
