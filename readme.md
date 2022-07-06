@@ -56,8 +56,9 @@
     * `util` - 분류 하기 힘들 거나 애매한 함수를 모아둔 파일
 ---
 # Exception response 코드에 관한 내용
-  * 모든 exception 에는 `code` 와 `desc` 값을 가진다.
+  * 모든 custom exception 에는 `code`, `desc`, `status` 값을 가진다.
   * `code` 는 상태 코드 (3자리) + 에러 종류 코드 (4자리)로 구분 된다.
   * `desc` 에는 에러에 관한 내용이 적혀 있다.
+  * `status` 에는 에러에 관한 상태 값(int)이 적혀 있다.
   * 자세한 내용은 `util/exception/constant.py` 파일에 명시 되어 있음.
 
