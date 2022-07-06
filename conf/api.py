@@ -16,7 +16,7 @@ from conf.custom_exception import RefuseMustHaveReasonException, DisplayLineExce
     IncorrectTotalAmountException, MustHaveDeliveryToException, ForgedOrderException
 from conf.settings import SECRET_KEY, JWT_ENCRYPTION_ALG
 from external.api import subscription_router, payment_router, external_router
-from history.api import after_service_router as after_service_router, refund_router, warranty_router, battery_router, \
+from history.api import after_service_router as after_service_router, refund_router, warranty_router, \
     cart_router, prev_estimate_router
 from member.api import router as member_router, payment_method_router
 from member.models import RemoteToken, User
@@ -46,7 +46,7 @@ class LoginResponse(Schema):
 
 
 api = NinjaAPI(parser=ORJSONParser(), auth=AuthBearer())
-# 테스트용 주석
+
 API_LIST = [
     {
         'prefix': "/member/",
@@ -124,11 +124,6 @@ API_LIST = [
         'tags': ["보증 내역"]
     },
     {
-        'prefix': "/battery/",
-        'router': battery_router,
-        'tags': ["배터리 교환 내역"]
-    },
-    {
         'prefix': "/faq/",
         'router': faq_router,
         'tags': ["FAQ"]
@@ -191,7 +186,7 @@ def member_login(request, token_info: TokenSchema = Form(...),
     except Exception as e:
         raise e
 
-    login(request, user)    # 로그인
+    login(request, user)  # 로그인
     return get_jwt_token(user.id)
 
 
@@ -203,6 +198,7 @@ def get_request_refresh_token(request):
     if not request.auth:
         raise LoginRequiredException
     return get_jwt_token(request.auth.id)
+
 
 # 에러 핸들링
 @api.exception_handler(exc_class=UserNotAccessDeniedException)
@@ -327,5 +323,3 @@ def forged_order_exception_handler(request, exec):
                                      'desc': FORGED_ORDER['desc']},
                                status=FORGED_ORDER['status']
                                )
-
-# ForgedOrderException

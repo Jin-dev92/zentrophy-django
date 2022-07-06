@@ -23,7 +23,6 @@ from util.permission import is_admin
 refund_router = Router()
 after_service_router = Router()
 warranty_router = Router()
-battery_router = Router()
 cart_router = Router()
 prev_estimate_router = Router()
 
