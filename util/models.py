@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils import timezone
-from sorl.thumbnail import ImageField
 
 
 class TimeStampModel(models.Model):

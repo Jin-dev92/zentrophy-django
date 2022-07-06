@@ -1,5 +1,7 @@
 from colorfield.fields import ColorField
 from django.db import models
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 from sorl.thumbnail import ImageField
 
 from product.constant import ProductOptionsLabel
@@ -88,3 +90,15 @@ class Vehicle(SoftDeleteModel):
 
     def __str__(self):
         return self.vehicle_name
+
+
+@receiver(pre_delete, sender=VehicleImage)
+def model_delete(sender, instance, **kwargs):
+    file = instance.origin_image
+    file.delete(False)
+
+
+@receiver(pre_delete, sender=ProductImage)
+def model_delete(sender, instance, **kwargs):
+    file = instance.origin_image
+    file.delete(False)
