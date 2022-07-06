@@ -100,12 +100,13 @@ class ProductOptionsListSchemaInCart(Schema):
 class CartListSchema(Schema):
     id: int
     product_options: ProductOptionsListSchemaInCart = Field(None, description="주문한 상품(product_options)")
-    # product_image: ProductImageListSchema = Field(None, description="상품 이미지")
+    product_detail_input: str = Field(None, description="해당 상품 옵션이 입력 형인 경우 텍스트 필드에 그 내용을 담는다.")
     amount: int = Field(description="장 바구니에 담은 상품 갯수")
 
 
 class CartCreateSchema(Schema):
     product_options_id: int = Field(title="상품 product_options_id")
+    product_detail_input: str = Field(None, description="해당 상품 옵션이 입력 형인 경우 텍스트 필드에 그 내용을 담는다.")
     amount: int = Field(title="상품 수량")
 
 

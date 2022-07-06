@@ -43,6 +43,7 @@ class Cart(TimeStampModel):
     product_options = models.ForeignKey(ProductOptions, on_delete=models.CASCADE, null=True)
     owner = models.ForeignKey('member.User', on_delete=models.CASCADE, null=True)
     amount = models.IntegerField(default=0)
+    product_detail_input = models.TextField(null=True, help_text="입력형 상품 일 경우, 고객이 적어준다.")
 
     def __str__(self):
         return self.product_options.option_name + "//" + str(self.amount) + self.owner.email

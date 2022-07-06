@@ -211,10 +211,12 @@ def get_cart_list(request):
 def create_cart(request, payload: CartCreateSchema):
     product_options_id = payload.dict()['product_options_id']
     amount = payload.dict()['amount']
+    product_detail_input = payload.dict()['product_detail_input']
     queryset = Cart.objects.create(
         product_options=get_object_or_404(ProductOptions, id=product_options_id),
         owner=request.auth,
-        amount=amount
+        amount=amount,
+        product_detail_input=product_detail_input
     )
 
 
