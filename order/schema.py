@@ -170,14 +170,8 @@ class SubscriptionsSchema(Schema):
     pwd_2digit: str = Field(description="카드 비밀번호 앞 두자리")
 
 
-class SubscriptionsCreateSchema(SubscriptionsSchema):
+class SubscriptionsCreateSchema(SubscriptionsSchema): # 삭제 예정
     customer_uid: str
-
-
-class RequestPaymentSubscriptionsSchema(Schema):
-    customer_uid: str
-    amount: int
-    name: str
 
 
 class Schedule(Schema):
@@ -190,14 +184,12 @@ class Schedule(Schema):
     # buyer_email: str
 
 
-class RequestPaymentSubscriptionsScheduleSchema(Schema):
+class RequestPaymentSubscriptionsScheduleSchema(Schema): # 삭제 예정
     customer_uid: str
     schedules: List[Schedule]
 
 
 class TestSchema(Schema):
-    customer_uid: str
-    merchant_uid: str
-    issue_billing: SubscriptionsSchema = None
-    # payment_subscription: RequestPaymentSubscriptionsSchema = None
-    # schedules: RequestPaymentSubscriptionsScheduleSchema = None
+    customer_uid: str = Field(None, description="pg 에서 가져 오는 uid")
+    merchant_uid: str = Field(None, description="구독 상품 uid")
+    issue_billing: SubscriptionsSchema = Field(None, description="빌링키 생성 시 필요한 파라 미터")

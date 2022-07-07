@@ -11,11 +11,11 @@ from ninja import Router
 from ninja.orm import create_schema
 
 from conf.custom_exception import WrongParameterException, ForgedOrderException
-from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT, DEBUG
+from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, DEBUG
 from external.constant import Prodcd
 from order.models import Payment, Subscriptions, Order
 from order.schema import InicisAuthResultSchema, TestSchema, SubscriptionsCreateSchema, \
-    RequestPaymentSubscriptionsSchema, RequestPaymentSubscriptionsScheduleSchema
+    RequestPaymentSubscriptionsScheduleSchema
 from product.models import SubscriptionProduct
 from util.externals import subscription_payment, iamport_is_complete_get_payment_data
 
@@ -153,34 +153,34 @@ def create_subscription(request, payload: SubscriptionsCreateSchema):
         raise e
 
 
-@transaction.atomic(using='default')
-@sync_to_async
-@subscription_router.post('/payment', deprecated=True)
-def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSchema):
-    try:
-        with transaction.atomic():
-            token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'], timeout=5)
-            token_response_json = token_response.json()
-            if int(token_response_json['code']) == 0:
-                access_token = token_response_json['response'].get('access_token')
-                request_payment_response = requests.post(
-                    url=REQUEST_PAYMENT['url'],
-                    headers={'Authorization': access_token},
-                    json=payload.json(),
-                    timeout=5
-                )
-                if int(request_payment_response.json()['code']) == 0:  # 요청이 성공 했을 경우
-                    # DB에 저장 한다.
-                    Subscriptions.objects.create(
-                        # owner=request.auth,
-                        merchant_uid=payload.dict()['merchant_uid'],
-                        customer_uid=payload.dict()['customer_uid'],
-                    )
-                return request_payment_response.json()
-            else:
-                return token_response_json
-    except Exception as e:
-        raise e
+# @transaction.atomic(using='default')
+# @sync_to_async
+# @subscription_router.post('/payment', deprecated=True)
+# def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSchema):
+#     try:
+#         with transaction.atomic():
+#             token_response = requests.post(url=GET_TOKEN_INFO['url'], headers=GET_TOKEN_INFO['headers'], json=GET_TOKEN_INFO['data'], timeout=5)
+#             token_response_json = token_response.json()
+#             if int(token_response_json['code']) == 0:
+#                 access_token = token_response_json['response'].get('access_token')
+#                 request_payment_response = requests.post(
+#                     url=REQUEST_PAYMENT['url'],
+#                     headers={'Authorization': access_token},
+#                     json=payload.json(),
+#                     timeout=5
+#                 )
+#                 if int(request_payment_response.json()['code']) == 0:  # 요청이 성공 했을 경우
+#                     # DB에 저장 한다.
+#                     Subscriptions.objects.create(
+#                         # owner=request.auth,
+#                         merchant_uid=payload.dict()['merchant_uid'],
+#                         customer_uid=payload.dict()['customer_uid'],
+#                     )
+#                 return request_payment_response.json()
+#             else:
+#                 return token_response_json
+#     except Exception as e:
+#         raise e
 
 
 @transaction.atomic(using='default')
