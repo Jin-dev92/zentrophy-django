@@ -1,24 +1,27 @@
 from typing import List
 
 from django.db import transaction
+from django.db import IntegrityError
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, Router, File
+from ninja.orm import create_schema
 
 import conf.settings
 from conf.custom_exception import DisplayLineExceededSizeException, WrongParameterException, \
     UserNotAccessDeniedException
 from product.constant import ProductListSort, ProductLabel
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
-    VehicleImage
+    VehicleImage, SubscriptionProduct
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
-    VehicleListSchema, VehicleInsertSchema
+    VehicleListSchema, VehicleInsertSchema, SubscriptionProductCreateSchema
 from util.params import prepare_for_query
 from util.permission import is_admin
 
 product_router = Router()
 vehicle_router = Router()
 display_line_router = Router()
+subscription_product_router = Router()
 
 current_product_sort = ProductListSort.CREATED_AT
 
@@ -240,3 +243,31 @@ def delete_vehicle(request, id: int):
     if not is_admin(request.auth):  # 어드민 접근 제한
         raise UserNotAccessDeniedException
     get_object_or_404(Vehicle, id=id).soft_delete()
+
+
+@subscription_product_router.get('/', response=List[create_schema(SubscriptionProduct)], description="구독 상품 리스트")
+def get_subscription_product_list(request):
+    queryset = SubscriptionProduct.objects.get_queryset()
+    return queryset
+
+
+@subscription_product_router.post('/')
+def update_or_create_subscription_product_list(request, payload: SubscriptionProductCreateSchema, merchant_uid: str = None):
+    if not is_admin(request.auth):
+        raise UserNotAccessDeniedException
+    """
+    구독 상품 생성 or 수정 하는 API
+    수정을 원할 시 merchant_uid 파라 미터에 넣어 준다.
+    :param payload: SubscriptionProductCreateSchema
+    :param merchant_uid: SubscriptionProduct의 unique key
+    :return:
+    """
+    SubscriptionProduct.objects.update_or_create(merchant_uid=merchant_uid, defaults=payload.dict())
+
+
+@subscription_product_router.delete('/', description="구독 상품 삭제")
+def delete_subscription_product_list(request, merchant_uid: str):
+    if not is_admin(request.auth):
+        raise UserNotAccessDeniedException
+    target = get_object_or_404(SubscriptionProduct, merchant_uid=merchant_uid)
+    target.soft_delete()

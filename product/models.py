@@ -92,13 +92,10 @@ class Vehicle(SoftDeleteModel):
         return self.vehicle_name
 
 
-@receiver(pre_delete, sender=VehicleImage)
-def model_delete(sender, instance, **kwargs):
-    file = instance.origin_image
-    file.delete(False)
+class SubscriptionProduct(TimeStampModel, SoftDeleteModel):  # 정기 구독 상품
+    name = models.CharField(max_length=200)
+    price = models.IntegerField(default=0)
+    merchant_uid = models.CharField(max_length=200, unique=True)
 
-
-# @receiver(pre_delete, sender=ProductImage)
-# def model_delete(sender, instance, **kwargs):
-#     file = instance.origin_image
-#     file.delete(False)
+    def __str__(self):
+        return self.name + self.merchant_uid

@@ -176,7 +176,6 @@ class SubscriptionsCreateSchema(SubscriptionsSchema):
 
 class RequestPaymentSubscriptionsSchema(Schema):
     customer_uid: str
-    merchant_uid: str
     amount: int
     name: str
 
@@ -186,9 +185,9 @@ class Schedule(Schema):
     schedule_at: int = Field(description="결제 시도 시각, 타임스탬프로 보내기")
     amount: int
     name: str
-    buyer_name: str
-    buyer_tel: str
-    buyer_email: str
+    # buyer_name: str
+    # buyer_tel: str
+    # buyer_email: str
 
 
 class RequestPaymentSubscriptionsScheduleSchema(Schema):
@@ -198,6 +197,7 @@ class RequestPaymentSubscriptionsScheduleSchema(Schema):
 
 class TestSchema(Schema):
     customer_uid: str
+    merchant_uid: str
     issue_billing: SubscriptionsSchema = None
-    payment_subscription: RequestPaymentSubscriptionsSchema = None
-    schedules: RequestPaymentSubscriptionsScheduleSchema = None
+    # payment_subscription: RequestPaymentSubscriptionsSchema = None
+    # schedules: RequestPaymentSubscriptionsScheduleSchema = None

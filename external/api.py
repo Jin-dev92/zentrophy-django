@@ -11,12 +11,13 @@ from ninja import Router
 from ninja.orm import create_schema
 
 from conf.custom_exception import WrongParameterException, ForgedOrderException
-from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
+from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT, DEBUG
 from external.constant import Prodcd
 from order.models import Payment, Subscriptions, Order
 from order.schema import InicisAuthResultSchema, TestSchema, SubscriptionsCreateSchema, \
     RequestPaymentSubscriptionsSchema, RequestPaymentSubscriptionsScheduleSchema
-from util.externals import subscription_payment_test, iamport_is_complete_get_payment_data
+from product.models import SubscriptionProduct
+from util.externals import subscription_payment, iamport_is_complete_get_payment_data
 
 subscription_router = Router()
 payment_router = Router()
@@ -121,18 +122,18 @@ def get_list_subscriptions(request):
 
 
 @sync_to_async
-@subscription_router.post('/test', description="나이츠 페이먼츠 정기 결제 테스트")
+@subscription_router.post('/one_time', description="나이츠 페이먼츠 정기 결제 테스트", response=dict)
 def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: int):
-    merchant_uid = payload.dict().get('payment_subscription').get('merchant_uid')
-    response = asyncio.run(subscription_payment_test(user=request.auth,
-                                                     merchant_uid=merchant_uid,
-                                                     owned_vehicle_id=owned_vehicle_id,
-                                                     data=payload.dict()))
+    product = get_object_or_404(SubscriptionProduct, merchant_uid=payload.dict().get('merchant_uid'))
+    response = asyncio.run(subscription_payment(owned_vehicle_id=owned_vehicle_id,
+                                                data=payload.dict(),
+                                                product=product),
+                           debug=DEBUG)
     return response
 
 
 @sync_to_async
-@subscription_router.post('/issue_billing', description="나이츠 페이먼츠 정기 결제")
+@subscription_router.post('/issue_billing', description="나이츠 페이먼츠 정기 결제", deprecated=True)
 def create_subscription(request, payload: SubscriptionsCreateSchema):
     params = payload.dict()
     data = {k: v for k, v in payload.dict().items() if k not in {'customer_uid'}}
@@ -154,7 +155,7 @@ def create_subscription(request, payload: SubscriptionsCreateSchema):
 
 @transaction.atomic(using='default')
 @sync_to_async
-@subscription_router.post('/payment')
+@subscription_router.post('/payment', deprecated=True)
 def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSchema):
     try:
         with transaction.atomic():
@@ -184,7 +185,7 @@ def request_payment_subscription(request, payload: RequestPaymentSubscriptionsSc
 
 @transaction.atomic(using='default')
 @sync_to_async
-@subscription_router.post('/payment/schedule')
+@subscription_router.post('/payment/schedule', deprecated=True)
 def request_payment_schedule_subscription(request, payload: RequestPaymentSubscriptionsScheduleSchema):
     schedules = payload.dict()['schedules']
     try:
@@ -208,7 +209,7 @@ def request_payment_schedule_subscription(request, payload: RequestPaymentSubscr
 
 
 @sync_to_async
-@subscription_router.get('/iamport_callback/schedule')
+@subscription_router.get('/iamport_callback/schedule', deprecated=True)
 def iamport_callback(request, imp_uid: str, merchant_uid: str):
     try:
         with transaction.atomic():

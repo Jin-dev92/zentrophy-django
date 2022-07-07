@@ -24,7 +24,7 @@ from member.schema import TokenSchema
 from order.api import router as order_router, subside_router, file_router
 from placement.api import router as placement_router
 from post.api import faq_router, notice_router, faq_category_router
-from product.api import display_line_router as display_line_router
+from product.api import display_line_router as display_line_router, subscription_product_router
 from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
@@ -147,6 +147,11 @@ API_LIST = [
         'prefix': "/external/",
         'router': external_router,
         'tags': ["외부 API"]
+    },
+    {
+        'prefix': "/subscription_product/",
+        'router': subscription_product_router,
+        'tags': ["구독 상품"]
     },
 ]
 

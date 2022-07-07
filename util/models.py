@@ -41,8 +41,8 @@ class SoftDeleteModel(models.Model):
 
 
 class FileExistModel(): # 해당 클래스 상속 시, 해당 객체 삭제할 경우, 실제 서버의 파일도 함께 삭제 된다.
-    # class Meta:
-    #     proxy = True  # 상속 할수 있게
+    class Meta:
+        proxy = True  # 상속 할수 있게
 
     @receiver(pre_delete)
     def delete_receiver(sender, instance, **kwargs):

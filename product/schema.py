@@ -145,3 +145,9 @@ class ProductListSchema(Schema):
     product_image: List[ProductImageListSchema] = None
     is_created: datetime = None
     is_updated: datetime = None
+
+
+class SubscriptionProductCreateSchema(Schema):
+    name: str
+    price: int
+    merchant_uid: str

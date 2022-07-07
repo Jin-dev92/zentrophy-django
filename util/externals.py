@@ -1,44 +1,61 @@
 import asyncio
+import datetime
 
 import requests
 
+
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.models import Subscriptions
+from order.schema import TestSchema
 
 
-async def subscription_payment_test(user, merchant_uid: str, owned_vehicle_id: int, data: dict):
+async def subscription_payment(owned_vehicle_id: int, data: TestSchema, product):
     customer_uid = data.get('customer_uid')
-    issue_billing_data = data.get('customer_uid')
-    payment_subscription_data = data.get('payment_subscription')
-    schedules_data = data.get('schedules')
-    get_access_token_task = asyncio.create_task(get_iamport_access_token())
-    await get_access_token_task
-    if get_access_token_task.result()['code'] == 0:
-        access_token = get_access_token_task.result()['response'].get('access_token')
-        if type(access_token) == str:
-            get_billing_key_response = asyncio.create_task(get_billing_key(
-                access_token=access_token,
-                customer_uid=customer_uid,
-                data=issue_billing_data))
-            request_payment_response = asyncio.create_task(request_payment(access_token=access_token,
-                                                                           customer_uid=customer_uid,
-                                                                           merchant_uid=merchant_uid,
-                                                                           owned_vehicle_id=owned_vehicle_id,
-                                                                           user=user, data=payment_subscription_data))
-            schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription(
-                access_token=access_token,
-                data=schedules_data))
-            await get_billing_key_response
-            await request_payment_response
-            await schedule_subscription_response
-            return {
-                'get_access_token_response': get_access_token_task.result(),
-                'get_billing_key_response': get_billing_key_response.result(),
-                'request_payment_response': request_payment_response.result(),
-                'schedule_subscription_response': schedule_subscription_response.result(),
-            }
-        else:
-            return get_access_token_task.result()
+    merchant_uid = data.get('merchant_uid')
+
+    try:
+        get_access_token_task = asyncio.create_task(get_iamport_access_token())
+        await get_access_token_task
+
+        if get_access_token_task.result()['code'] == 0:
+            access_token = get_access_token_task.result().get('response').get('access_token')
+            if access_token:
+                get_billing_key_response = asyncio.create_task(get_billing_key(
+                    access_token=access_token,
+                    customer_uid=customer_uid,
+                ))
+
+                request_payment_response = asyncio.create_task(request_payment(access_token=access_token,
+                                                                               customer_uid=customer_uid,
+                                                                               merchant_uid=merchant_uid,
+                                                                               amount=product.price,
+                                                                               name=product.name,
+                                                                               owned_vehicle_id=owned_vehicle_id,
+                                                                               )
+                                                               )
+
+                schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription(
+                    access_token=access_token,
+                    customer_uid=customer_uid,
+                    amount=product.price,
+                    name=product.name,
+                    merchant_uid=merchant_uid,
+                    ))
+
+                await get_billing_key_response
+                await request_payment_response
+                await schedule_subscription_response
+
+                return {
+                    'get_access_token_response': get_access_token_task.result(),
+                    'get_billing_key_response': get_billing_key_response.result(),
+                    'request_payment_response': request_payment_response.result(),
+                    'schedule_subscription_response': schedule_subscription_response.result(),
+                }
+            else:
+                return get_access_token_task.result()
+    except Exception as e:
+        raise e
 
 
 async def get_iamport_access_token():
@@ -51,46 +68,69 @@ async def get_iamport_access_token():
     return token_response.json()
 
 
-async def get_billing_key(access_token: str, customer_uid: str, data):
+async def get_billing_key(access_token: str, customer_uid: str):
     issue_billing_response = requests.post(
         url=ISSUE_BILLING_INFO['url'] + customer_uid,
         headers={'Authorization': access_token},
-        json=data,  # SubscriptionsCreateSchema
         timeout=5
     )
     return issue_billing_response.json()
 
 
-async def request_payment(access_token: str, merchant_uid: str, customer_uid: str, owned_vehicle_id: int, user, data):
+async def request_payment(access_token: str, merchant_uid: str, customer_uid: str, owned_vehicle_id: int, name: str, amount: int):
     request_payment_response = requests.post(
         url=REQUEST_PAYMENT['url'],
         headers={'Authorization': access_token},
-        json=data,
+        json={
+            'customer_uid': customer_uid,
+            'merchant_uid': merchant_uid,
+            'name': name,
+            'amount': amount,
+
+        },
         timeout=5
     )
-    if int(request_payment_response.json()['code']) == 0:  # 요청이 성공 했을 경우
+    if request_payment_response.json()['code'] == '0':  # 요청이 성공 했을 경우
         # DB에 저장 한다.
         Subscriptions.objects.create(
             owned_vehicle_id=owned_vehicle_id,
-            # owner=user,
             merchant_uid=merchant_uid,
             customer_uid=customer_uid
         )
     return request_payment_response.json()
 
 
-async def request_payment_schedule_subscription(access_token: str, data):
+async def request_payment_schedule_subscription(access_token: str, customer_uid: str, amount: int, name: str, merchant_uid: str):
+    # data: RequestPaymentSubscriptionsScheduleSchema
+    # data['customer_uid'] = customer_uid
+    # data['schedules'] = [
+    #     {
+    #         'merchant_uid': merchant_uid,
+    #         'amount': amount,
+    #         'name': name,
+    #         'schedule_at': datetime.datetime.now() + datetime.timedelta(days=1)
+    #     }
+    # ]
     request_payment_schedule_response = requests.post(
         url='https://api.iamport.kr/subscribe/payments/schedule',
         headers={'Authorization': access_token},
-        json=data,
+        json={
+            'customer_uid': customer_uid,
+            'schedules': [
+                {
+                    'merchant_uid': merchant_uid,
+                    'amount': amount,
+                    'name': name,
+                    'schedule_at': (datetime.datetime.now() + datetime.timedelta(days=1)).timestamp()
+                }
+            ]
+        },
         timeout=5
     )
-
     return request_payment_schedule_response.json()
 
 
-async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_uid: str, user):
+async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_uid: str):
     # imp_uid 로 아임포트 서버에서 결제 정보 조회
     payment_response = requests.post(
                     url='https://api.iamport.kr/payments/' + imp_uid,
@@ -101,7 +141,6 @@ async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_ui
         if status == 'paid':
             # DB에 저장하기.
             Subscriptions.objects.update_or_create(
-                # owner=user,
                 merchant_uid=merchant_uid,
                 defaults={
                     'imp_uid': imp_uid,
