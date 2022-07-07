@@ -3,13 +3,11 @@ import datetime
 
 import requests
 
-
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from order.models import Subscriptions
-from order.schema import TestSchema
 
 
-async def subscription_payment(owned_vehicle_id: int, data: TestSchema, product):
+async def subscription_payment(owned_vehicle_id: int, data: dict, product):
     customer_uid = data.get('customer_uid')
     merchant_uid = data.get('merchant_uid')
 
@@ -24,29 +22,34 @@ async def subscription_payment(owned_vehicle_id: int, data: TestSchema, product)
                     access_token=access_token,
                     customer_uid=customer_uid,
                 ))
-
-                request_payment_response = asyncio.create_task(request_payment(access_token=access_token,
-                                                                               customer_uid=customer_uid,
-                                                                               merchant_uid=merchant_uid,
-                                                                               amount=product.price,
-                                                                               name=product.name,
-                                                                               owned_vehicle_id=owned_vehicle_id,
-                                                                               )
-                                                               )
-
-                schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription(
-                    access_token=access_token,
-                    customer_uid=customer_uid,
-                    amount=product.price,
-                    name=product.name,
-                    merchant_uid=merchant_uid,
-                    ))
-
                 await get_billing_key_response
-                await request_payment_response
-                await schedule_subscription_response
+                if get_billing_key_response and get_billing_key_response.result().get('code') == 0:
+                    request_payment_response = asyncio.create_task(request_payment(access_token=access_token,
+                                                                                   customer_uid=customer_uid,
+                                                                                   merchant_uid=merchant_uid,
+                                                                                   amount=product.price,
+                                                                                   name=product.name,
+                                                                                   owned_vehicle_id=owned_vehicle_id,
+                                                                                   )
+                                                                   )
+                    await request_payment_response
 
-                return {
+                    if request_payment_response and request_payment_response.result().get('code') == 0:
+                        schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription(
+                            access_token=access_token,
+                            customer_uid=customer_uid,
+                            amount=product.price,
+                            name=product.name,
+                            merchant_uid=merchant_uid,
+                        ))
+
+                        await schedule_subscription_response
+                    else:
+                        return request_payment_response.result()
+                else:
+                    return get_billing_key_response.result()
+
+                return {  # 정기 결제 로직이 모두 성공 했을 때 성공 했을 때
                     'get_access_token_response': get_access_token_task.result(),
                     'get_billing_key_response': get_billing_key_response.result(),
                     'request_payment_response': request_payment_response.result(),
@@ -77,7 +80,8 @@ async def get_billing_key(access_token: str, customer_uid: str):
     return issue_billing_response.json()
 
 
-async def request_payment(access_token: str, merchant_uid: str, customer_uid: str, owned_vehicle_id: int, name: str, amount: int):
+async def request_payment(access_token: str, merchant_uid: str, customer_uid: str, owned_vehicle_id: int, name: str,
+                          amount: int):
     request_payment_response = requests.post(
         url=REQUEST_PAYMENT['url'],
         headers={'Authorization': access_token},
@@ -100,7 +104,8 @@ async def request_payment(access_token: str, merchant_uid: str, customer_uid: st
     return request_payment_response.json()
 
 
-async def request_payment_schedule_subscription(access_token: str, customer_uid: str, amount: int, name: str, merchant_uid: str):
+async def request_payment_schedule_subscription(access_token: str, customer_uid: str, amount: int, name: str,
+                                                merchant_uid: str):
     # data: RequestPaymentSubscriptionsScheduleSchema
     # data['customer_uid'] = customer_uid
     # data['schedules'] = [
@@ -133,9 +138,9 @@ async def request_payment_schedule_subscription(access_token: str, customer_uid:
 async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_uid: str):
     # imp_uid 로 아임포트 서버에서 결제 정보 조회
     payment_response = requests.post(
-                    url='https://api.iamport.kr/payments/' + imp_uid,
-                    headers={'Authorization': access_token}
-                )
+        url='https://api.iamport.kr/payments/' + imp_uid,
+        headers={'Authorization': access_token}
+    )
     if int(payment_response.json()['code']) == 0 and payment_response.json()['data']:
         status = payment_response.json()['data']['response']['status']
         if status == 'paid':
