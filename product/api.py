@@ -1,6 +1,7 @@
 from typing import List
 
 from django.db import transaction
+from django.db import IntegrityError
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, Router, File
