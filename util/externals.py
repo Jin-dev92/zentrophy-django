@@ -156,11 +156,13 @@ async def request_payment_schedule_subscription(access_token: str, customer_uid:
 
 async def iamport_schedule_callback(access_token: str, imp_uid: str):
     # imp_uid 로 아임포트 서버에서 결제 정보 조회, 일반 결제, 정기 결제 둘다 쓰는듯?
+    print("imp_uid: " + imp_uid)
+    print("access_token: " + access_token)
     payment_response = requests.get(
         url='https://api.iamport.kr/payments/' + imp_uid,
         headers={'Authorization': access_token}
     )
-
+    print(payment_response.json())
     return payment_response.json()
 
 
