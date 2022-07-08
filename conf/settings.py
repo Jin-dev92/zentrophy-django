@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 import datetime
 import os
 from pathlib import Path
+
 from conf.contant import Env
 
 ENV = Env.DEVELOPMENT
@@ -171,8 +172,8 @@ GET_TOKEN_INFO = {
         "Content-Type": "application/json"
     },
     'data': {
-        "imp_key": "0244250463245442",
-        "imp_secret": "Sgx2eRjh5IHkiIMZ14uCxUUITlUvPo3HFBJUs3byMSS4AE4CIyffs9XmuSRkgV2WxLQZP2yBVqGw5L8N"
+        "imp_key": "6404911984487519",
+        "imp_secret": "fa419bae25012c4120dc0a1c975aa641617781539108f37a9f474f68ea0ee86922ed4baa72809e7e"
     }
 }
 
