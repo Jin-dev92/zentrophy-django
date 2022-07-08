@@ -1,4 +1,5 @@
 import asyncio
+import calendar
 import datetime
 
 import requests
@@ -118,7 +119,7 @@ async def request_payment_schedule_subscription(access_token: str, customer_uid:
                     'merchant_uid': merchant_uid,
                     'amount': amount,
                     'name': name,
-                    'schedule_at': (current + datetime.timedelta(days=30)).timestamp()
+                    'schedule_at': (current + datetime.timedelta(days=calendar.monthrange(current.year, current.month)[1])).timestamp()
                 }
             ]
         },
