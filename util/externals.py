@@ -15,7 +15,8 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
     try:
         get_access_token_task = asyncio.create_task(get_iamport_access_token())
         await get_access_token_task
-
+        print("log test@@@@@@")
+        print(type(get_access_token_task.result()))
         if get_access_token_task.result()['code'] == 0:
             access_token = get_access_token_task.result().get('response').get('access_token')   # 토큰 획득
             if access_token:
@@ -177,8 +178,10 @@ async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_ui
 
 async def iamport_is_complete_get_payment_data(imp_uid: str):
     get_access_token_task = get_iamport_access_token()
-    # token_response = asyncio.create_task(get_access_token_task).result()
-    access_token = get_access_token_task.get('response').get('access_token')
+    token_response = asyncio.create_task(get_access_token_task).result()
+    print('token_response')
+    print(token_response)
+    access_token = token_response.get('response').get('access_token')
     payment_url = 'https://api.iamport.kr/payments/' + imp_uid
     # payment_response = asyncio.create_task(requests.get(
     #     url=payment_url,
