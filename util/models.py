@@ -45,7 +45,7 @@ class FileExistModel(): # 해당 클래스 상속 시, 해당 객체 삭제할 �
         proxy = True  # 상속 할수 있게
 
     @receiver(signal=pre_delete)
-    def delete_receiver(self, signal, sender, instance, **kwargs):
+    def delete_receiver(sender, instance, **kwargs):
         try:
             sender.objects.get(id=instance.id)
         except sender.DoesNotExist:
