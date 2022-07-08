@@ -36,8 +36,8 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                     await request_payment_response  # 실제 결제
 
                     if request_payment_response and request_payment_response.result().get('code') == 0:
-                        if request_payment_response.json()['code'] == '0':
-                            imp_uid = request_payment_response.json()['response']['imp_uid']
+                        if request_payment_response.result()['code'] == '0':
+                            imp_uid = request_payment_response.result()['response']['imp_uid']
                             callback_response = await iamport_schedule_callback(merchant_uid=merchant_uid,
                                                                                 access_token=access_token,
                                                                                 imp_uid=imp_uid)
@@ -58,6 +58,8 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                                 ))
 
                                 await schedule_subscription_response
+                                if schedule_subscription_response.result()['code'] != 0:
+                                    return schedule_subscription_response.result()
                             else:
                                 return callback_response.json()
                     else:
@@ -65,12 +67,12 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                 else:
                     return get_billing_key_response.result()
 
-                return {  # 정기 결제 로직이 모두 성공 했을 때 성공 했을 때
-                    'get_access_token_response': get_access_token_task.result(),
-                    'get_billing_key_response': get_billing_key_response.result(),
-                    'request_payment_response': request_payment_response.result(),
-                    'schedule_subscription_response': schedule_subscription_response.result(),
-                }
+                # return {  # 정기 결제 로직이 모두 성공 했을 때 성공 했을 때
+                #     'get_access_token_response': get_access_token_task.result(),
+                #     'get_billing_key_response': get_billing_key_response.result(),
+                #     'request_payment_response': request_payment_response.result(),
+                #     'schedule_subscription_response': schedule_subscription_response.result(),
+                # }
             else:
                 return get_access_token_task.result()
     except Exception as e:
