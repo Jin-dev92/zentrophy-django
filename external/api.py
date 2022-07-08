@@ -179,7 +179,7 @@ def request_payment_schedule_subscription(request, payload: RequestPaymentSubscr
 
 
 @sync_to_async
-@subscription_router.get('/iamport_callback/schedule')
+@subscription_router.get('/iamport_callback/schedule', deprecated=True)
 def iamport_callback(request, imp_uid: str, merchant_uid: str):
     try:
         with transaction.atomic():
