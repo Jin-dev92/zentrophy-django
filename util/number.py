@@ -4,8 +4,7 @@ import string
 
 from conf.settings import LICENSE_NUMBER_LENGTH
 from history.models import AfterService
-
-# from member.models import OwnedVehicle
+from product.models import SubscriptionProduct
 
 random_variation = string.digits + string.ascii_uppercase
 
@@ -31,7 +30,17 @@ def check_invalid_product_params(params: list[dict]):
     for param in params:
         filtered_dict = {k: v for k, v in param.items() if not v <= 0}
         if len(filtered_dict) == 0:
-            print("check_invalid_product_params")
-            print(filtered_dict)
             return False
     return True
+
+
+def generate_merchant_uid():
+    uid = "ZENTROPY_" + generate_release_number()
+    try:
+        length = len(SubscriptionProduct.objects.filter(merchant_uid=uid))    # uid 중복이 되어 있는지?
+        if length == 0:
+            return uid
+        else:
+            generate_merchant_uid()
+    except Exception as e:
+        raise e

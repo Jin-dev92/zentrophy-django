@@ -1,7 +1,6 @@
 from typing import List
 
 from django.db import transaction
-from django.db import IntegrityError
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, Router, File
@@ -15,6 +14,7 @@ from product.models import Product, ProductDisplayLine, ProductOptions, ProductI
     VehicleImage, SubscriptionProduct
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
     VehicleListSchema, VehicleInsertSchema, SubscriptionProductCreateSchema
+from util.number import generate_merchant_uid
 from util.params import prepare_for_query
 from util.permission import is_admin
 
@@ -262,7 +262,9 @@ def update_or_create_subscription_product_list(request, payload: SubscriptionPro
     :param merchant_uid: SubscriptionProduct의 unique key
     :return:
     """
-    SubscriptionProduct.objects.update_or_create(merchant_uid=merchant_uid, defaults=payload.dict())
+    params = payload.dict()
+    params['merchant_uid'] = generate_merchant_uid()
+    SubscriptionProduct.objects.update_or_create(merchant_uid=merchant_uid, defaults=params)
 
 
 @subscription_product_router.delete('/', description="구독 상품 삭제")

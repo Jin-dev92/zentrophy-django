@@ -1,7 +1,5 @@
 from colorfield.fields import ColorField
 from django.db import models
-from django.db.models.signals import pre_delete
-from django.dispatch import receiver
 from sorl.thumbnail import ImageField
 
 from product.constant import ProductOptionsLabel
@@ -95,6 +93,7 @@ class Vehicle(SoftDeleteModel):
 class SubscriptionProduct(TimeStampModel, SoftDeleteModel):  # 정기 구독 상품
     name = models.CharField(max_length=200)
     price = models.IntegerField(default=0)
+    description = models.TextField(null=True)
     merchant_uid = models.CharField(max_length=200, unique=True)
 
     def __str__(self):

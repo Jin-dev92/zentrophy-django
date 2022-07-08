@@ -150,4 +150,4 @@ class ProductListSchema(Schema):
 class SubscriptionProductCreateSchema(Schema):
     name: str
     price: int
-    merchant_uid: str
+    description: str
