@@ -1,12 +1,12 @@
 import os
 
 from django.db import models
+from django.db.models import FileField
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
-
 from sorl.thumbnail import ImageField
-from django.db.models import FileField
+
 
 class TimeStampModel(models.Model):
     is_created = models.DateTimeField(auto_now_add=True)  # 처음에 추가될때 생성된다.
@@ -45,7 +45,7 @@ class FileExistModel(): # 해당 클래스 상속 시, 해당 객체 삭제할 �
         proxy = True  # 상속 할수 있게
 
     @receiver(pre_delete)
-    def delete_receiver(sender, instance, **kwargs):
+    def delete_receiver(self, sender, instance, **kwargs):
         try:
             sender.objects.get(id=instance.id)
         except sender.DoesNotExist:

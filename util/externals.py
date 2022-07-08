@@ -37,8 +37,7 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                 if request_payment_response and request_payment_response.result().get('code') == 0:
                     if request_payment_response.result()['code'] == '0':
                         imp_uid = request_payment_response.result()['response']['imp_uid']
-                        callback_response = await iamport_schedule_callback(merchant_uid=merchant_uid,
-                                                                            access_token=access_token,
+                        callback_response = await iamport_schedule_callback(access_token=access_token,
                                                                             imp_uid=imp_uid)
                         if callback_response.json()['code'] == 0 and callback_response.json()['status'] == 'paid': # 결제 유효성 검사 및 DB 로그 저장
                             Subscriptions.objects.create(
@@ -116,7 +115,7 @@ async def request_payment(access_token: str, merchant_uid: str, customer_uid: st
     if request_payment_response.json()['code'] == '0':  # @todo 요청이 성공 했을 경우 callback 을 통해 해줘야 할듯?
         # DB에 저장 한다.
         imp_uid = request_payment_response.json()['response']['imp_uid']
-        callback_response = await iamport_schedule_callback(merchant_uid=merchant_uid,
+        callback_response = await iamport_schedule_callback(
                                                       access_token=access_token,
                                                       imp_uid=imp_uid)
         if callback_response.json()['code'] == 0 and callback_response:
@@ -155,7 +154,7 @@ async def request_payment_schedule_subscription(access_token: str, customer_uid:
     return request_payment_schedule_response.json()
 
 
-async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_uid: str):
+async def iamport_schedule_callback(access_token: str, imp_uid: str):
     # imp_uid 로 아임포트 서버에서 결제 정보 조회, 일반 결제, 정기 결제 둘다 쓰는듯?
     payment_response = requests.get(
         url='https://api.iamport.kr/payments/' + imp_uid,
@@ -165,15 +164,14 @@ async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_ui
     return payment_response.json()
 
 
-async def iamport_is_complete_get_payment_data(imp_uid: str, merchant_uid: str):
+async def iamport_is_complete_get_payment_data(imp_uid: str):
     get_access_token_task = get_iamport_access_token()
     token_response = asyncio.create_task(get_access_token_task)
     await token_response
     print(token_response.result())
     access_token = token_response.result().get('response').get('access_token')
     payment_response = asyncio.create_task(iamport_schedule_callback(access_token=access_token,
-                                                                     imp_uid=imp_uid,
-                                                                     merchant_uid=merchant_uid))
+                                                                     imp_uid=imp_uid))
     await payment_response
     print(payment_response.result())
     if payment_response.result().get('code') == 0:

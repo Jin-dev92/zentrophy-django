@@ -38,9 +38,9 @@ def payment_is_complete(request, order_id: int, imp_uid: str):
     if request.auth != order_target.owner:
         print("1")
         raise ForgedOrderException
-    payment_data = asyncio.run(iamport_is_complete_get_payment_data(imp_uid=imp_uid,
-                                                                    merchant_uid=generate_merchant_uid(type=MerchantUIDType.PRODUCT)))
+    payment_data = asyncio.run(iamport_is_complete_get_payment_data(imp_uid=imp_uid))
     if not payment_data:
+        print("2")
         raise ForgedOrderException
 
     status = payment_data.get('status')
