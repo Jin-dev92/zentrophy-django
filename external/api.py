@@ -52,9 +52,7 @@ def payment_is_complete(request, order_id: int, imp_uid: str):
     elif status == 'paid':  # 일반 결제 완료
         return {'message': '일반 결제가 완료 되었습니다.'}
     else:   # 결제 금액 불일치
-        print("3")
         raise ForgedOrderException
-
 
 @sync_to_async
 @payment_router.post('/result/{order_id}', description="일반 결제 인증 결과 수신", deprecated=True)

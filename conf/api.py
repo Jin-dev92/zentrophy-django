@@ -3,6 +3,7 @@
 import jwt
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from jwt import ExpiredSignatureError
 from ninja import NinjaAPI, Form, Schema
@@ -29,7 +30,8 @@ from product.api import product_router as product_router
 from product.api import vehicle_router as vehicle_router
 from util.exception.constant import REFUSE_MUST_HAVE_REASON, DISPLAY_LINE_DONT_EXCEEDED_SIZE, LOGIN_REQUIRED, \
     FORMAT_NOT_SUPPORTED, WRONG_PARAMETER, WRONG_TOKEN, WRONG_USER_INFO, NOT_ENOUGH_STOCK, USER_NOT_ACCESS_DENIED, \
-    CANT_CHANGE_ORDER_STATE, INCORRECT_TOTAL_AMOUNT, MUST_HAVE_DELIVERY_TO, EXPIRED_SIGNATURE, FORGED_ORDER
+    CANT_CHANGE_ORDER_STATE, INCORRECT_TOTAL_AMOUNT, MUST_HAVE_DELIVERY_TO, EXPIRED_SIGNATURE, FORGED_ORDER, \
+    DB_UNIQUE_CONSTRAINT
 from util.permission import is_valid_token, get_jwt_token
 from util.util import ORJSONParser
 
@@ -327,4 +329,13 @@ def forged_order_exception_handler(request, exec):
                                data={'code': FORGED_ORDER['code'],
                                      'desc': FORGED_ORDER['desc']},
                                status=FORGED_ORDER['status']
+                               )
+
+
+@api.exception_handler(exc_class=IntegrityError)
+def integrity_error_exception_handler(request, exec):
+    return api.create_response(request,
+                               data={'code': DB_UNIQUE_CONSTRAINT['code'],
+                                     'desc': DB_UNIQUE_CONSTRAINT['desc']},
+                               status=DB_UNIQUE_CONSTRAINT['status']
                                )
