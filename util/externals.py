@@ -1,6 +1,6 @@
 import asyncio
-import calendar
 import datetime
+
 import requests
 
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
@@ -107,6 +107,7 @@ async def request_payment(access_token: str, merchant_uid: str, customer_uid: st
 async def request_payment_schedule_subscription(access_token: str, customer_uid: str, amount: int, name: str,
                                                 merchant_uid: str):
     current = datetime.datetime.now()
+
     request_payment_schedule_response = requests.post(
         url='https://api.iamport.kr/subscribe/payments/schedule',
         headers={'Authorization': access_token},
@@ -117,7 +118,7 @@ async def request_payment_schedule_subscription(access_token: str, customer_uid:
                     'merchant_uid': merchant_uid,
                     'amount': amount,
                     'name': name,
-                    'schedule_at': (current + datetime.timedelta(days=calendar.monthrange(current.year, current.month)[1])).timestamp()
+                    'schedule_at': (current + datetime.timedelta(days=30)).timestamp()
                 }
             ]
         },
