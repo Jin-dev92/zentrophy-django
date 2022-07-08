@@ -9,3 +9,8 @@ class Prodcd(StrEnum):
     DIESEL = "D047" # 경우
     KEROSENE = "C004"   # 실내 등유
     BUTAN = "K015"  #   자동차 부탄
+
+
+class MerchantUIDType(Enum):
+    PRODUCT = 0
+    SUBSCRIPTION = 1

@@ -1,7 +1,6 @@
 from typing import List
 
 from django.db import transaction
-from django.db import IntegrityError
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from ninja import UploadedFile, Router, File
@@ -10,6 +9,7 @@ from ninja.orm import create_schema
 import conf.settings
 from conf.custom_exception import DisplayLineExceededSizeException, WrongParameterException, \
     UserNotAccessDeniedException
+from external.constant import MerchantUIDType
 from product.constant import ProductListSort, ProductLabel
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage, SubscriptionProduct
@@ -264,7 +264,7 @@ def update_or_create_subscription_product_list(request, payload: SubscriptionPro
     :return:
     """
     params = payload.dict()
-    params['merchant_uid'] = generate_merchant_uid()
+    params['merchant_uid'] = generate_merchant_uid(type=MerchantUIDType.SUBSCRIPTION)
     SubscriptionProduct.objects.update_or_create(merchant_uid=merchant_uid, defaults=params)
 
 

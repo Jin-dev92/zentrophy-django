@@ -12,12 +12,13 @@ from ninja.orm import create_schema
 
 from conf.custom_exception import WrongParameterException, ForgedOrderException
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, DEBUG
-from external.constant import Prodcd
+from external.constant import Prodcd, MerchantUIDType
 from order.models import Payment, Subscriptions, Order
 from order.schema import InicisAuthResultSchema, TestSchema, SubscriptionsCreateSchema, \
     RequestPaymentSubscriptionsScheduleSchema
 from product.models import SubscriptionProduct
 from util.externals import subscription_payment, iamport_is_complete_get_payment_data
+from util.number import generate_merchant_uid
 
 subscription_router = Router()
 payment_router = Router()
@@ -26,26 +27,32 @@ external_router = Router()
 
 @sync_to_async
 @payment_router.post('/complete/{order_id}', response=dict)
-def payment_is_complete(request, order_id: int, imp_uid: str, merchant_uid: str = None):
+def payment_is_complete(request, order_id: int, imp_uid: str):
     '''
     일반 결제 후 콜백 함수로 불러 주는 api , 위조 검증 로직 + DB 로그 저장 기능을 한다.
     :param order_id: 주문 아이디
     :param imp_uid: 결제 아이디
-    :param merchant_uid: 주문 번호 ( 로직 내에서 안 쓸 거 같음. 나중에 삭제 예정 )
     '''
     order_target = get_object_or_404(Order, id=order_id)
+
     if request.auth != order_target.owner:
+        print("1")
         raise ForgedOrderException
-    payment_data = asyncio.run(iamport_is_complete_get_payment_data(imp_uid=imp_uid))
+    payment_data = asyncio.run(iamport_is_complete_get_payment_data(imp_uid=imp_uid,
+                                                                    merchant_uid=generate_merchant_uid(type=MerchantUIDType.PRODUCT)))
+    if not payment_data:
+        raise ForgedOrderException
+
     status = payment_data.get('status')
     amount = payment_data.get('amount')
     if order_target.total == int(amount):
-        Payment.objects.create(order_id=order_id, result=payment_data, merchant_uid=merchant_uid)
+        Payment.objects.create(order_id=order_id, result=payment_data, merchant_uid=generate_merchant_uid(type=MerchantUIDType.PRODUCT))
     if status == 'ready':   # 가상 계좌 발급
         return {'message': '가상 계좌 발급이 완료 되었습니다.'}
     elif status == 'paid':  # 일반 결제 완료
         return {'message': '일반 결제가 완료 되었습니다.'}
     else:   # 결제 금액 불일치
+        print("3")
         raise ForgedOrderException
 
 

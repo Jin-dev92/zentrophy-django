@@ -2,9 +2,10 @@ import datetime
 import random
 import string
 
+from conf.custom_exception import WrongParameterException
 from conf.settings import LICENSE_NUMBER_LENGTH
+from external.constant import MerchantUIDType
 from history.models import AfterService
-from product.models import SubscriptionProduct
 
 random_variation = string.digits + string.ascii_uppercase
 
@@ -34,13 +35,14 @@ def check_invalid_product_params(params: list[dict]):
     return True
 
 
-def generate_merchant_uid():
-    uid = "ZENTROPY_" + generate_release_number()
-    try:
-        length = len(SubscriptionProduct.objects.filter(merchant_uid=uid))    # uid 중복이 되어 있는지?
-        if length == 0:
-            return uid
-        else:
-            generate_merchant_uid()
-    except Exception as e:
-        raise e
+def generate_merchant_uid(type: MerchantUIDType):
+    prefix = "ZENTROPY_"
+    if MerchantUIDType.PRODUCT:
+        infix = "PRODUCT_"
+    elif MerchantUIDType.SUBSCRIPTION:
+        infix = "SUBSCRIPTION_"
+    else:
+        raise WrongParameterException
+    suffix = generate_release_number()
+
+    return prefix + infix + suffix
