@@ -17,13 +17,13 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
         await get_access_token_task
 
         if get_access_token_task.result()['code'] == 0:
-            access_token = get_access_token_task.result().get('response').get('access_token')
+            access_token = get_access_token_task.result().get('response').get('access_token')   # 토큰 획득
             if access_token:
                 get_billing_key_response = asyncio.create_task(get_billing_key(
                     access_token=access_token,
                     customer_uid=customer_uid,
                 ))
-                await get_billing_key_response
+                await get_billing_key_response  # 빌링키 획득
                 if get_billing_key_response and get_billing_key_response.result().get('code') == 0:
                     request_payment_response = asyncio.create_task(request_payment(access_token=access_token,
                                                                                    customer_uid=customer_uid,
@@ -33,18 +33,33 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                                                                                    owned_vehicle_id=owned_vehicle_id,
                                                                                    )
                                                                    )
-                    await request_payment_response
+                    await request_payment_response  # 실제 결제
 
                     if request_payment_response and request_payment_response.result().get('code') == 0:
-                        schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription(
-                            access_token=access_token,
-                            customer_uid=customer_uid,
-                            amount=product.price,
-                            name=product.name,
-                            merchant_uid=merchant_uid,
-                        ))
+                        if request_payment_response.json()['code'] == '0':
+                            imp_uid = request_payment_response.json()['response']['imp_uid']
+                            callback_response = await iamport_schedule_callback(merchant_uid=merchant_uid,
+                                                                                access_token=access_token,
+                                                                                imp_uid=imp_uid)
+                            if callback_response.json()['code'] == 0 and callback_response.json()['status'] == 'paid': # 결제 유효성 검사 및 DB 로그 저장
+                                Subscriptions.objects.create(
+                                    owned_vehicle_id=owned_vehicle_id,
+                                    merchant_uid=merchant_uid,
+                                    customer_uid=customer_uid,
+                                    imp_uid=imp_uid,
+                                    response_raw=callback_response.json(),
+                                )
+                                schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription( # 다음 달 결제 예약
+                                    access_token=access_token,
+                                    customer_uid=customer_uid,
+                                    amount=product.price,
+                                    name=product.name,
+                                    merchant_uid=merchant_uid,
+                                ))
 
-                        await schedule_subscription_response
+                                await schedule_subscription_response
+                            else:
+                                return callback_response.json()
                     else:
                         return request_payment_response.result()
                 else:
@@ -95,13 +110,22 @@ async def request_payment(access_token: str, merchant_uid: str, customer_uid: st
         },
         timeout=5
     )
-    if request_payment_response.json()['code'] == '0':  # 요청이 성공 했을 경우
+    if request_payment_response.json()['code'] == '0':  # @todo 요청이 성공 했을 경우 callback 을 통해 해줘야 할듯?
         # DB에 저장 한다.
-        Subscriptions.objects.create(
-            owned_vehicle_id=owned_vehicle_id,
-            merchant_uid=merchant_uid,
-            customer_uid=customer_uid
-        )
+        imp_uid = request_payment_response.json()['response']['imp_uid']
+        callback_response = await iamport_schedule_callback(merchant_uid=merchant_uid,
+                                                      access_token=access_token,
+                                                      imp_uid=imp_uid)
+        if callback_response.json()['code'] == 0 and callback_response:
+            Subscriptions.objects.create(
+                owned_vehicle_id=owned_vehicle_id,
+                merchant_uid=merchant_uid,
+                customer_uid=customer_uid,
+                imp_uid=imp_uid,
+                response_raw=callback_response.json(),
+            )
+        else:
+            return callback_response.json()
     return request_payment_response.json()
 
 
@@ -146,7 +170,7 @@ async def iamport_schedule_callback(access_token: str, imp_uid: str, merchant_ui
                     'response_raw': payment_response.json()
                 })
 
-    return payment_response.json()
+    return payment_response
 
 
 async def iamport_is_complete_get_payment_data(imp_uid: str):
