@@ -44,14 +44,14 @@ class FileExistModel(): # 해당 클래스 상속 시, 해당 객체 삭제할 �
     class Meta:
         proxy = True  # 상속 할수 있게
 
-    @receiver(pre_delete)
+    @receiver(signal=pre_delete)
     def delete_receiver(self, sender, instance, **kwargs):
         try:
             sender.objects.get(id=instance.id)
         except sender.DoesNotExist:
             return False
-        except AttributeError:
-            return False
+        except Exception:
+            ...
 
         for field in sender._meta.fields:
             if type(field) == ImageField:   # 이미지 인 경우
