@@ -12,9 +12,7 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
     customer_uid = data.get('customer_uid')
     merchant_uid = data.get('merchant_uid')
     get_access_token_task = asyncio.create_task(get_iamport_access_token())
-    print("adaslkdjalskdjkl")
-    print(get_access_token_task)
-    print(get_access_token_task.result())
+    await get_access_token_task
     if get_access_token_task.result()['code'] == 0:
         access_token = get_access_token_task.result().get('response').get('access_token')   # 토큰 획득
         if access_token:
@@ -23,6 +21,9 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                 customer_uid=customer_uid,
             ))
             await get_billing_key_response  # 빌링키 획득
+            print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+            print("get_billing_key_response")
+            print(get_billing_key_response.result())
             if get_billing_key_response and get_billing_key_response.result().get('code') == 0:
                 request_payment_response = asyncio.create_task(request_payment(access_token=access_token,
                                                                                customer_uid=customer_uid,
@@ -33,7 +34,9 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                                                                                )
                                                                )
                 await request_payment_response  # 실제 결제
-
+                print(request_payment_response.result())
+                print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+                print("request_payment_response")
                 if request_payment_response and request_payment_response.result().get('code') == 0:
                     if request_payment_response.result()['code'] == '0':
                         imp_uid = request_payment_response.result()['response']['imp_uid']
@@ -56,6 +59,9 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                             ))
 
                             await schedule_subscription_response
+                            print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+                            print("schedule_subscription_response")
+                            print(schedule_subscription_response.result())
                             if schedule_subscription_response.result()['code'] != 0:
                                 return schedule_subscription_response.result()
                         else:
