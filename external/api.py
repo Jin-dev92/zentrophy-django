@@ -33,7 +33,7 @@ def payment_is_complete(request, order_id: int, imp_uid: str):
     :param order_id: 주문 아이디
     :param imp_uid: 결제 아이디
     '''
-    order_target = get_object_or_404(Order, id=order_id)
+    order_target = get_object_or_404(Order, id=order_id, owner=request.auth)
 
     if request.auth != order_target.owner:
         print("1")
@@ -53,6 +53,7 @@ def payment_is_complete(request, order_id: int, imp_uid: str):
         return {'message': '일반 결제가 완료 되었습니다.'}
     else:   # 결제 금액 불일치
         raise ForgedOrderException
+
 
 @sync_to_async
 @payment_router.post('/result/{order_id}', description="일반 결제 인증 결과 수신", deprecated=True)

@@ -233,16 +233,27 @@ def update_or_create_order(request, payload: OrderCreateSchema, id: int = None):
                 target.order_location_info.delete()
                 target.orderedproductoptions_set.all().delete()
                 target.orderedvehiclecolor_set.all().delete()
+
                 order_params['owner'] = target.owner
+                # update_params = {'order': target}
+                customer_object = CustomerInfo.objects.update_or_create(order=target,
+                                                                        defaults=customer_info_params)
+                location_object = OrderLocationInfo.objects.update_or_create(order=target,
+                                                                             defaults=order_location_info_params)
+                order_params['customer_info'] = customer_object[0]
+                order_params['order_location_info'] = location_object[0]
             else:   # 생성 로직 수행 전 데이터 세팅
-                target = None
                 order_params['owner'] = request.auth
+                customer_object = CustomerInfo.objects.create(**customer_info_params)
+                location_object = OrderLocationInfo.objects.create(**order_location_info_params)
+                order_params['customer_info'] = customer_object
+                order_params['order_location_info'] = location_object
 
-            customer_object = CustomerInfo.objects.update_or_create(order=target, defaults=customer_info_params)
-            location_object = OrderLocationInfo.objects.update_or_create(order=target, defaults=order_location_info_params)
+            # customer_object = CustomerInfo.objects.update_or_create(update_params, defaults=customer_info_params)
+            # location_object = OrderLocationInfo.objects.update_or_create(update_params, defaults=order_location_info_params)
 
-            order_params['customer_info'] = customer_object[0]
-            order_params['order_location_info'] = location_object[0]
+            # order_params['customer_info'] = customer_object[0]
+            # order_params['order_location_info'] = location_object[0]
 
             order_queryset = Order.objects.update_or_create(id=id, defaults=order_params)  # 주문 생성
 
