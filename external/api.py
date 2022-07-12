@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import hashlib
-from typing import List
+from typing import List, Optional
 
 import requests
 from asgiref.sync import sync_to_async
@@ -95,14 +95,17 @@ def get_list_subscriptions(request):
 
 
 @sync_to_async
-@subscription_router.post('/one_time', description="나이츠 페이먼츠 정기 결제 테스트", response=dict, auth=None)
+@subscription_router.post('/one_time', description="나이츠 페이먼츠 정기 결제 테스트", response=Optional[dict])
 def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: int, subscription_product_id: int):
-    product = get_object_or_404(SubscriptionProduct, id=subscription_product_id)
-    response = asyncio.run(subscription_payment(owned_vehicle_id=owned_vehicle_id,
+    try:
+        product = get_object_or_404(SubscriptionProduct, id=subscription_product_id)
+        task = asyncio.run(subscription_payment(owned_vehicle_id=owned_vehicle_id,
                                                 data=payload.dict(),
                                                 product=product),
                            debug=DEBUG)
-    return response
+        return task
+    except Exception as e:
+        raise e
 
 
 @sync_to_async
