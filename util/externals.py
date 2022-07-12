@@ -41,7 +41,7 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                 print("request_payment_response")
                 if request_payment_response:
                     if request_payment_response.result()['code'] == 0:
-                        status = request_payment_response.result().get('status')
+                        status = request_payment_response.result().get('response').get('status')
                         print(status)
                         if status and status == 'paid':
                             imp_uid = request_payment_response.result().get('response').get('imp_uid')
