@@ -41,21 +41,17 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                 print("request_payment_response")
                 if request_payment_response:
                     if request_payment_response.result()['code'] == 0:
-                        imp_uid = request_payment_response.result().get('response').get('imp_uid')
-                        callback_response = asyncio.create_task(iamport_schedule_callback(access_token=access_token,
-                                                                                          imp_uid=imp_uid))
-                        await callback_response
-                        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-                        print("callback_response")
-                        print(callback_response.result())
-                        if callback_response.result()['code'] == 0 and callback_response.result()['status'] == 'paid': # 결제 유효성 검사 및 DB 로그 저장
-                            Subscriptions.objects.create(
+                        status = request_payment_response.result()['status']
+                        if status == 'paid':
+                            imp_uid = request_payment_response.result().get('response').get('imp_uid')
+                            database_task = asyncio.create_task(Subscriptions.objects.create(
                                 owned_vehicle_id=owned_vehicle_id,
                                 merchant_uid=merchant_uid,
                                 customer_uid=customer_uid,
                                 imp_uid=imp_uid,
-                                response_raw=callback_response.result(),
-                            )
+                                response_raw=request_payment_response.result(),
+                            ))
+                            await database_task
                             schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription( # 다음 달 결제 예약
                                 access_token=access_token,
                                 customer_uid=customer_uid,
@@ -70,8 +66,8 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                             print(schedule_subscription_response.result())
                             if schedule_subscription_response.result()['code'] != 0:
                                 return schedule_subscription_response.result()
-                        else:
-                            return callback_response.result()
+                        else:   # 결제 실패 시
+                            return request_payment_response.result()
                 else:
                     return request_payment_response.result()
             else:

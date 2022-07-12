@@ -92,15 +92,20 @@ def get_list_subscriptions(request):
     return queryset
 
 
+@transaction.atomic(using='default')
 @sync_to_async
 @subscription_router.post('/one_time', description="나이츠 페이먼츠 정기 결제 테스트", response=dict)
 def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: int):
-    product = get_object_or_404(SubscriptionProduct, merchant_uid=payload.dict().get('merchant_uid'))
-    response = asyncio.run(subscription_payment(owned_vehicle_id=owned_vehicle_id,
-                                                data=payload.dict(),
-                                                product=product),
-                           debug=DEBUG)
-    return response
+    try:
+        with transaction.atomic():
+            product = get_object_or_404(SubscriptionProduct, merchant_uid=payload.dict().get('merchant_uid'))
+            response = asyncio.run(subscription_payment(owned_vehicle_id=owned_vehicle_id,
+                                                        data=payload.dict(),
+                                                        product=product),
+                                   debug=DEBUG)
+        return response
+    except Exception:
+        return {'message': '정기 결제 실패'}
 
 
 @sync_to_async
