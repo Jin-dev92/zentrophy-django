@@ -11,6 +11,7 @@ from order.models import Subscriptions
 async def subscription_payment(owned_vehicle_id: int, data: dict, product):
     customer_uid = data.get('customer_uid')
     merchant_uid = data.get('merchant_uid')
+    issue_billing = data.get('issue_billing')
     get_access_token_task = asyncio.create_task(get_iamport_access_token())
     await get_access_token_task
     if get_access_token_task.result()['code'] == 0:
@@ -19,6 +20,7 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
             get_billing_key_response = asyncio.create_task(get_billing_key(
                 access_token=access_token,
                 customer_uid=customer_uid,
+                data=issue_billing,
             ))
             await get_billing_key_response  # 빌링키 획득
             print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
@@ -95,10 +97,11 @@ async def get_iamport_access_token():
     return token_response.json()
 
 
-async def get_billing_key(access_token: str, customer_uid: str):
+async def get_billing_key(access_token: str, customer_uid: str, data: dict):
     issue_billing_response = requests.post(
         url=ISSUE_BILLING_INFO['url'] + customer_uid,
         headers={'Authorization': access_token},
+        json=data,
         timeout=5
     )
     return issue_billing_response.json()
