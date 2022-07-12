@@ -60,7 +60,9 @@ def payment_is_complete(request, order_id: int, imp_uid: str):
 def response_normal_payment_auth_result(request, order_id: int, payload: InicisAuthResultSchema):
     # 인증 결과를 저장 ( 로그 쌓기 )
     auth_result = payload.dict()
-    queryset = Payment.objects.create(owner=request.auth, auth_result=auth_result, order_id=order_id)
+    merchant_uid = generate_merchant_uid(type=MerchantUIDType.PRODUCT)
+
+    queryset = Payment.objects.create(owner=request.auth, auth_result=auth_result, order_id=order_id, merchant_uid=merchant_uid)
     if auth_result['resultCode'] == '0000':  # 성공
         try:
             auth_token = auth_result['authToken']
@@ -94,10 +96,10 @@ def get_list_subscriptions(request):
 
 @transaction.atomic(using='default')
 @subscription_router.post('/one_time', description="나이츠 페이먼츠 정기 결제 테스트", response=dict, auth=None)
-def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: int):
+def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: int, subscription_product_id: int):
     try:
         with transaction.atomic():
-            product = get_object_or_404(SubscriptionProduct, merchant_uid=payload.dict().get('merchant_uid'))
+            product = get_object_or_404(SubscriptionProduct, id=subscription_product_id)
             response = asyncio.run(subscription_payment(owned_vehicle_id=owned_vehicle_id,
                                                         data=payload.dict(),
                                                         product=product),

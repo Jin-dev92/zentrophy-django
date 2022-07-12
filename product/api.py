@@ -9,13 +9,11 @@ from ninja.orm import create_schema
 import conf.settings
 from conf.custom_exception import DisplayLineExceededSizeException, WrongParameterException, \
     UserNotAccessDeniedException
-from external.constant import MerchantUIDType
 from product.constant import ProductListSort, ProductLabel
 from product.models import Product, ProductDisplayLine, ProductOptions, ProductImage, Vehicle, VehicleColor, \
     VehicleImage, SubscriptionProduct
 from product.schema import ProductListSchema, ProductInsertSchema, ProductDisplayLineSchema, ProductDisplayInsertSchema, \
     VehicleListSchema, VehicleInsertSchema, SubscriptionProductCreateSchema
-from util.number import generate_merchant_uid
 from util.params import prepare_for_query
 from util.permission import is_admin
 
@@ -253,24 +251,22 @@ def get_subscription_product_list(request):
 
 
 @subscription_product_router.post('/')
-def update_or_create_subscription_product_list(request, payload: SubscriptionProductCreateSchema, merchant_uid: str = None):
+def update_or_create_subscription_product_list(request, payload: SubscriptionProductCreateSchema, id: str = None):
     if not is_admin(request.auth):
         raise UserNotAccessDeniedException
     """
     구독 상품 생성 or 수정 하는 API
-    수정을 원할 시 merchant_uid 파라 미터에 넣어 준다.
+    수정을 원할 시 id 파라 미터에 넣어 준다.
     :param payload: SubscriptionProductCreateSchema
-    :param merchant_uid: SubscriptionProduct의 unique key
     :return:
     """
     params = payload.dict()
-    params['merchant_uid'] = generate_merchant_uid(type=MerchantUIDType.SUBSCRIPTION)
-    SubscriptionProduct.objects.update_or_create(merchant_uid=merchant_uid, defaults=params)
+    SubscriptionProduct.objects.update_or_create(id=id, defaults=params)
 
 
 @subscription_product_router.delete('/', description="구독 상품 삭제")
-def delete_subscription_product_list(request, merchant_uid: str):
+def delete_subscription_product_list(request, id: str):
     if not is_admin(request.auth):
         raise UserNotAccessDeniedException
-    target = get_object_or_404(SubscriptionProduct, merchant_uid=merchant_uid)
+    target = get_object_or_404(SubscriptionProduct, id=id)
     target.soft_delete()

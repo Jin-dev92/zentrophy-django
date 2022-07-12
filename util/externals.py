@@ -5,12 +5,15 @@ import datetime
 import requests
 
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
+from external.constant import MerchantUIDType
 from order.models import Subscriptions
+from util.number import generate_merchant_uid
 
 
 async def subscription_payment(owned_vehicle_id: int, data: dict, product):
     customer_uid = data.get('customer_uid')
-    merchant_uid = data.get('merchant_uid')
+    # merchant_uid = data.get('merchant_uid')
+    merchant_uid = generate_merchant_uid(MerchantUIDType.SUBSCRIPTION)
     issue_billing = data.get('issue_billing')
     get_access_token_task = asyncio.create_task(get_iamport_access_token())
     await get_access_token_task

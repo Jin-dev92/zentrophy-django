@@ -191,5 +191,5 @@ class RequestPaymentSubscriptionsScheduleSchema(Schema): # 삭제 예정
 
 class TestSchema(Schema):
     customer_uid: str = Field(None, description="pg 에서 가져 오는 uid")
-    merchant_uid: str = Field(None, description="구독 상품 uid")
+    # merchant_uid: str = Field(None, description="구독 상품 uid")
     issue_billing: SubscriptionsSchema = Field(None, description="빌링키 생성 시 필요한 파라 미터")
