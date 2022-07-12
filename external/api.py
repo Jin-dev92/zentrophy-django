@@ -104,9 +104,9 @@ def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: 
                                                         product=product),
                                    debug=DEBUG)
         return response
-    except Exception:
-        return {'code': -1, 'raw': response}
-
+    except Exception as e:
+        print(response)
+        raise e
 
 @sync_to_async
 @subscription_router.post('/issue_billing', description="나이츠 페이먼츠 정기 결제", deprecated=True)
