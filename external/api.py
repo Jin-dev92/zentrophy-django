@@ -97,16 +97,12 @@ def get_list_subscriptions(request):
 @sync_to_async
 @subscription_router.post('/one_time', description="나이츠 페이먼츠 정기 결제 테스트", response=dict, auth=None)
 def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: int, subscription_product_id: int):
-    try:
-        product = get_object_or_404(SubscriptionProduct, id=subscription_product_id)
-        response = asyncio.run(subscription_payment(owned_vehicle_id=owned_vehicle_id,
-                                                        data=payload.dict(),
-                                                        product=product),
-                                   debug=DEBUG)
-        print(response)
-        return response
-    except Exception as e:
-        raise e
+    product = get_object_or_404(SubscriptionProduct, id=subscription_product_id)
+    response = asyncio.run(subscription_payment(owned_vehicle_id=owned_vehicle_id,
+                                                data=payload.dict(),
+                                                product=product),
+                           debug=DEBUG)
+    return response
 
 
 @sync_to_async
