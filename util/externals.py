@@ -39,9 +39,9 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                 print(request_payment_response.result())
                 print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
                 print("request_payment_response")
-                if request_payment_response and request_payment_response.result().get('code') == 0:
-                    if request_payment_response.result()['code'] == '0':
-                        imp_uid = request_payment_response.result()['response']['imp_uid']
+                if request_payment_response:
+                    if request_payment_response.result()['code'] == 0:
+                        imp_uid = request_payment_response.result().get('response').get('imp_uid')
                         callback_response = asyncio.create_task(iamport_schedule_callback(access_token=access_token,
                                                                                           imp_uid=imp_uid))
                         await callback_response
