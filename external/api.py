@@ -105,7 +105,7 @@ def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: 
                                    debug=DEBUG)
         return response
     except Exception:
-        return {'message': '정기 결제 실패'}
+        return {'code': -1, 'raw': response}
 
 
 @sync_to_async
