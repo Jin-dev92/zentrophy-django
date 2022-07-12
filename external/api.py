@@ -95,6 +95,7 @@ def get_list_subscriptions(request):
 
 
 @transaction.atomic(using='default')
+@sync_to_async
 @subscription_router.post('/one_time', description="나이츠 페이먼츠 정기 결제 테스트", response=dict, auth=None)
 def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: int, subscription_product_id: int):
     try:
