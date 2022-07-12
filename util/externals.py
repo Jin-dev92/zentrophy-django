@@ -42,15 +42,19 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                 if request_payment_response and request_payment_response.result().get('code') == 0:
                     if request_payment_response.result()['code'] == '0':
                         imp_uid = request_payment_response.result()['response']['imp_uid']
-                        callback_response = await iamport_schedule_callback(access_token=access_token,
-                                                                            imp_uid=imp_uid)
-                        if callback_response.json()['code'] == 0 and callback_response.json()['status'] == 'paid': # 결제 유효성 검사 및 DB 로그 저장
+                        callback_response = asyncio.create_task(iamport_schedule_callback(access_token=access_token,
+                                                                                          imp_uid=imp_uid))
+                        await callback_response
+                        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+                        print("callback_response")
+                        print(callback_response.result())
+                        if callback_response.result()['code'] == 0 and callback_response.result()['status'] == 'paid': # 결제 유효성 검사 및 DB 로그 저장
                             Subscriptions.objects.create(
                                 owned_vehicle_id=owned_vehicle_id,
                                 merchant_uid=merchant_uid,
                                 customer_uid=customer_uid,
                                 imp_uid=imp_uid,
-                                response_raw=callback_response.json(),
+                                response_raw=callback_response.result(),
                             )
                             schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription( # 다음 달 결제 예약
                                 access_token=access_token,
@@ -67,7 +71,7 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                             if schedule_subscription_response.result()['code'] != 0:
                                 return schedule_subscription_response.result()
                         else:
-                            return callback_response.json()
+                            return callback_response.result()
                 else:
                     return request_payment_response.result()
             else:
