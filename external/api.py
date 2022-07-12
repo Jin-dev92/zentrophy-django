@@ -102,6 +102,7 @@ def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: 
                                                         data=payload.dict(),
                                                         product=product),
                                    debug=DEBUG)
+            print(response)
         return response
     except Exception as e:
         raise e

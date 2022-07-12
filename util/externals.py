@@ -68,6 +68,8 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                             if schedule_subscription_response.result()['code'] != 0:
                                 return schedule_subscription_response.result()
                         else:   # 결제 실패 시
+                            print("request_payment_response fail")
+                            print(request_payment_response.result())
                             return request_payment_response.result()
                 else:
                     return request_payment_response.result()
