@@ -45,7 +45,7 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                     if request_payment_response.result()['code'] == 0:
                         status = request_payment_response.result().get('response').get('status')
                         print(status)
-                        if status and status == 'paid':
+                        if status and status == 'paid': # 결제 유효성 및 결제 제대로 되었는지 확인.
                             imp_uid = request_payment_response.result().get('response').get('imp_uid')
                             database_task = asyncio.create_task(Subscriptions.objects.create(
                                 owned_vehicle_id=owned_vehicle_id,
@@ -54,8 +54,8 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                                 imp_uid=imp_uid,
                                 response_raw=request_payment_response.result(),
                             ))
-                            await database_task
-                            schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription( # 다음 달 결제 예약
+                            await database_task # db 에 로그 생성
+                            schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription( #    다음 달 결제 예약
                                 access_token=access_token,
                                 customer_uid=customer_uid,
                                 amount=product.price,
@@ -126,22 +126,6 @@ async def request_payment(access_token: str, merchant_uid: str, customer_uid: st
         },
         timeout=5
     )
-    if request_payment_response.json()['code'] == '0':  # @todo 요청이 성공 했을 경우 callback 을 통해 해줘야 할듯?
-        # DB에 저장 한다.
-        imp_uid = request_payment_response.json()['response']['imp_uid']
-        callback_response = await iamport_schedule_callback(
-                                                      access_token=access_token,
-                                                      imp_uid=imp_uid)
-        if callback_response.json()['code'] == 0 and callback_response:
-            Subscriptions.objects.create(
-                owned_vehicle_id=owned_vehicle_id,
-                merchant_uid=merchant_uid,
-                customer_uid=customer_uid,
-                imp_uid=imp_uid,
-                response_raw=callback_response.json(),
-            )
-        else:
-            return callback_response.json()
     return request_payment_response.json()
 
 
