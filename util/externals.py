@@ -1,13 +1,21 @@
 import asyncio
 import calendar
 import datetime
+import os
 
+import django
 import requests
 
 from conf.settings import GET_TOKEN_INFO, ISSUE_BILLING_INFO, REQUEST_PAYMENT
 from external.constant import MerchantUIDType
 from order.models import Subscriptions
 from util.number import generate_merchant_uid
+
+
+def setting_async_unsafe(bool: bool):
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rest.settings')
+    os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = str(bool)
+    django.setup()
 
 
 async def subscription_payment(owned_vehicle_id: int, data: dict, product):
@@ -34,43 +42,41 @@ async def subscription_payment(owned_vehicle_id: int, data: dict, product):
                                                                                owned_vehicle_id=owned_vehicle_id,
                                                                                )
                                                                )
+
                 await request_payment_response  # 실제 결제
                 print(request_payment_response.result())
                 print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
                 print("request_payment_response")
-                if request_payment_response:
-                    if request_payment_response.result()['code'] == 0:
-                        status = request_payment_response.result().get('response').get('status')
-                        if status and status == 'paid': # 결제 유효성 및 결제 제대로 되었는지 확인.
-                            imp_uid = request_payment_response.result().get('response').get('imp_uid')
-                            database_task = asyncio.create_task(Subscriptions.objects.create(
-                                owned_vehicle_id=owned_vehicle_id,
-                                merchant_uid=merchant_uid,
-                                customer_uid=customer_uid,
-                                imp_uid=imp_uid,
-                                response_raw=request_payment_response.result(),
-                            ))
-                            await database_task # db 에 로그 생성
-                            schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription( #    다음 달 결제 예약
-                                access_token=access_token,
-                                customer_uid=customer_uid,
-                                amount=product.price,
-                                name=product.name,
-                                merchant_uid=merchant_uid,
-                            ))
+                if request_payment_response.result()['code'] == 0:
+                    status = request_payment_response.result().get('response').get('status')
+                    if status and status == 'paid': # 결제 유효성 및 결제 제대로 되었는지 확인.
+                        imp_uid = request_payment_response.result().get('response').get('imp_uid')
+                        database_task = asyncio.create_task(Subscriptions.objects.create(
+                            owned_vehicle_id=owned_vehicle_id,
+                            merchant_uid=merchant_uid,
+                            customer_uid=customer_uid,
+                            imp_uid=imp_uid,
+                            response_raw=request_payment_response.result(),
+                        ))
+                        await database_task # db 에 로그 생성
+                        schedule_subscription_response = asyncio.create_task(request_payment_schedule_subscription( #    다음 달 결제 예약
+                            access_token=access_token,
+                            customer_uid=customer_uid,
+                            amount=product.price,
+                            name=product.name,
+                            merchant_uid=merchant_uid,
+                        ))
 
-                            await schedule_subscription_response
-                            print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
-                            print("schedule_subscription_response")
-                            print(schedule_subscription_response.result())
-                            if schedule_subscription_response.result()['code'] != 0:
-                                return schedule_subscription_response.result()
-                        else:   # 결제 실패 시
-                            print("request_payment_response fail")
-                            print(request_payment_response.result())
-                            return request_payment_response.result()
-                else:
-                    return request_payment_response.result()
+                        await schedule_subscription_response
+                        print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+                        print("schedule_subscription_response")
+                        print(schedule_subscription_response.result())
+                        if schedule_subscription_response.result()['code'] != 0:
+                            return schedule_subscription_response.result()
+                    else:   # 결제 실패 시
+                        print("request_payment_response fail")
+                        print(request_payment_response.result())
+                        return request_payment_response.result()
             else:
                 return get_billing_key_response.result()
         else:

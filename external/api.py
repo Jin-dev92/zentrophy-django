@@ -17,7 +17,7 @@ from order.models import Payment, Subscriptions, Order
 from order.schema import InicisAuthResultSchema, TestSchema, SubscriptionsCreateSchema, \
     RequestPaymentSubscriptionsScheduleSchema
 from product.models import SubscriptionProduct
-from util.externals import subscription_payment, iamport_is_complete_get_payment_data
+from util.externals import subscription_payment, iamport_is_complete_get_payment_data, setting_async_unsafe
 from util.number import generate_merchant_uid
 
 subscription_router = Router()
@@ -97,14 +97,17 @@ def get_list_subscriptions(request):
 @sync_to_async
 @subscription_router.post('/one_time', description="나이츠 페이먼츠 정기 결제 테스트", response=Optional[dict])
 def create_subscription_onetime(request, payload: TestSchema, owned_vehicle_id: int, subscription_product_id: int):
+    setting_async_unsafe(True)
     try:
         product = get_object_or_404(SubscriptionProduct, id=subscription_product_id)
         task = asyncio.run(subscription_payment(owned_vehicle_id=owned_vehicle_id,
                                                 data=payload.dict(),
                                                 product=product),
                            debug=DEBUG)
+        setting_async_unsafe(False)
         return task
     except Exception as e:
+        setting_async_unsafe(False)
         raise e
 
 
