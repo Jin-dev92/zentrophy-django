@@ -252,14 +252,14 @@ def get_subscription_product_list(request):
 
 @subscription_product_router.post('/')
 def update_or_create_subscription_product_list(request, payload: SubscriptionProductCreateSchema, id: str = None):
-    if not is_admin(request.auth):
-        raise UserNotAccessDeniedException
     """
     구독 상품 생성 or 수정 하는 API
     수정을 원할 시 id 파라 미터에 넣어 준다.
     :param payload: SubscriptionProductCreateSchema
     :return:
     """
+    if not is_admin(request.auth):
+        raise UserNotAccessDeniedException
     params = payload.dict()
     SubscriptionProduct.objects.update_or_create(id=id, defaults=params)
 
